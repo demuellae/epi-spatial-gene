@@ -25,6 +25,7 @@ ISH data interaction matrix analysis
 \maketitle
 
 \section{Initial Analysis}
+\subsection{Sample matrix}
 I performed some initial analysis on the sample interaction data present at \url{http://www.eurexpress.org/ee/tools/EurExpressCluster_01.zip}.
 At first, I tested whether there are certain classes of genes those are expressed in different anatomy ( those are significantly more than expected, like the housekeeping genes analysis similar to \cite{eisenberg2003human}). Figures ~\ref{fig:strongHist} , \ref{fig:mildlyHist} and \ref{fig:weaklyHist} respectively shows the histogram of strongly expressed, mildly expressed ( genes those are highly or mildly expressed) and weakly expressed genes ( highly, mildly or weakly expressed).  
 I have also overlay corresponding null distribution for each of the cases. I assumed binomial distribution with mean equal to observed mean as the null distribution. 
@@ -70,9 +71,61 @@ It seems the genes, which are strongly expressed across many anatomies, are enri
 are significantly compared to all mouse genes as background). 
 
 
+\subsection{Interaction matrix 5510x811}
+
+I performed analysis similar to performed on sample matrix. At first, I compared the distribution of number of tissue type in which gene
+expressed to the null distribution. The null distribution assumed be binomial distribution ( with $n = 811$ and $p = \frac{#  \textit{non-zero entries in interaction matrix}}{\textit{total size of interaction matrix}}$). I performed 3 separate analysis 1.  strong expression only (figure \ref{fig:strongEx}), 2. medium or strong expression (figure \ref{fig:mediumEx})and 3. weak, medium or strong expression (figure \ref{fig:weakEx}).
+
+\begin{figure}[ht]
+	\begin{center}
+		\includegraphics[width=0.5\textwidth]{stronglyExpressed.pdf}
+	\end{center}
+	\caption{ Distribution of number of tissue in which gene are strongly expressed and null distribution.}
+	\label{fig:strongEx}
+\end{figure}
+
+\begin{figure}[ht]
+	\begin{center}
+		\includegraphics[width=0.5\textwidth]{mediumExpressed.pdf}
+	\end{center}
+	\caption{ Distribution of number of tissue in which gene have strong or medium expression and null distribution.}
+	\label{fig:mediumEx}
+\end{figure}
+
+\begin{figure}[ht]
+	\begin{center}
+		\includegraphics[width=0.5\textwidth]{weakExpressed.pdf}
+	\end{center}
+	\caption{ Distribution of number of tissue in which gene have expression and null distribution.}
+	\label{fig:weakEx}
+\end{figure}
 
 
+\subsection{Unsupervised clustering and visualization}
+
+The complete matrix is shown in 
+figure ~/ref{fig:intM}. Since the matrix is sparse, any structure is not discernible. 
+In order to find any prominent structure in the interaction matrix. I performed unsupervised clustering by two method: 1. Principal component
+analysis (figure ~\ref{fig:intMPCA} 2. Hierarchical clustering (figure ~/ref{fig:intMHierarchical}.
+
+
+\begin{figure}[ht]
+	\begin{center}
+		\includegraphics{interactionMatrix.pdf}
+	\end{center}
+	\caption{Interaction matrix}
+	\label{fig:intM}
+\end{figure}
+
+
+\begin{figure}[ht]
+	\begin{center}
+		\includegraphics{interactionMatrix.pdf}
+	\end{center}
+	\caption{Interaction matrix}
+	\label{fig:intM}
+\end{figure}
 \bibliographystyle{apalike}	% (uses file "plain.bst")
 \bibliography{diary}		% expects file "myrefs.bib"
 
-\end{document}
+\end{document}  
