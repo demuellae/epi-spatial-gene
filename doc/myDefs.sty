@@ -1,0 +1,360 @@
+\newcommand{\VEC}{\operatorname{vec}}
+\newcommand{\vecc}{\operatorname{vec}}
+\newcommand{\svec}{\operatorname{svec}}
+\newcommand{\cond}{\operatorname{cond}}
+\newcommand{\cone}{\operatorname{cone}}
+\newcommand{\conv}{\operatorname{conv}}
+\newcommand{\argmin}{\operatorname{argmin}}
+\newcommand{\rk}{\operatornamewithlimits{rk}}
+\newcommand{\range}{\operatorname{Range}}
+\newcommand{\Ker}{\operatorname{Ker}}
+\newcommand{\Null}{\operatorname{Null}}
+\newcommand{\codim}{\operatorname{co-dim}}
+\newcommand{\Mod}{\operatorname{Mod}}
+\newcommand{\Span}{\operatorname{span}}
+\newcommand{\jrk}[1]{\rk_{#1}}
+\newcommand{\rank}{\operatorname{rank}}
+\newcommand{\Arw}{\operatorname{Arw}}
+\newcommand{\Ocomm}{C_{\J}}
+\newcommand{\Comm}{\mathfrak{C}}
+\newcommand{\bigO}{\mathcal{O}}
+\newcommand{\Cn}{\mathcal{C}_n}
+\newcommand{\defeq}{\stackrel{\mathrm{def}}{=}}
+\newcommand{\pd}{\succ}
+\newcommand{\xbar}{\bar{x}}
+%\newcommand{\Th}[1]{$#1^\mathrm{th}$}
+\newcommand{\Th}[1]{#1\textsuperscript{th}}
+\newcommand{\ubar}{\bar{u}}
+\newcommand{\tlup}[1]{\widetilde{#1}}
+\newcommand{\tldn}[1]{\undertilde{#1}}
+%\newcommand{\tlup}[1]{\tilde{#1}}
+%\newcommand{\tldn}[1]{\undertilde{#1}}
+\newcommand{\bd}{\operatorname{bd}}
+\newcommand{\cl}{\operatorname{cl}}
+\newcommand{\Int}{\operatorname{Int}}
+\newcommand{\sgn}{\operatornamewithlimits{sgn}}
+\newcommand{\norminf}[1]{\left\|{#1}\right\|_\infty}
+\newcommand{\normone}[1]{\left\|{#1}\right\|_1}
+\newcommand{\normp}[1]{\left\|{#1}\right\|_p}
+\newcommand{\normq}[1]{\left\|{#1}\right\|_q}
+\newcommand{\normtwo}[1]{\left\|{#1}\right\|_2}
+\newcommand{\normF}[1]{\left\|{#1}\right\|_{\mathrm{F}}}
+\newcommand{\jnormF}[2]{\left\| {#1}\right\|_{\mathrm{F/{#2}}}}
+\newcommand{\scp}[2]{\langle{#1},{#2}\rangle}
+\newcommand{\jscp}[3]{\langle{#1},{#2}\rangle_{#3}}
+\newcommand{\tr}{\operatorname{tr}}
+\newcommand{\trace}{\operatorname{trace}}
+\newcommand{\jtr}[1]{\tr_{#1}}
+\newcommand{\Det}{\operatorname{Det}}
+\newcommand{\jdet}[1]{\det_{#1}}
+\newcommand{\Tr}{\operatorname{Trace}}
+\newcommand{\Trace}{\operatorname{Trace}}
+\newcommand{\op}[1]{{#1}^{\text{old}}} %old solution
+\newcommand{\np}[1]{{#1}^{\text{new}}} %new solution
+\newcommand{\Qp}[1]{\mathbf{Q}_{#1}}
+\newcommand{\jprod}{\circ}\newcommand{\vzero}{\mathbf{0}}
+
+\newcommand{\PR}{&\propto&}
+
+\newcommand{\vone}{\mathbf{1}}
+\newcommand{\va}{\mathbf{a}}
+\newcommand{\vb}{\mathbf{b}}
+\newcommand{\vc}{\mathbf{c}}
+\newcommand{\vd}{\mathbf{d}}
+\newcommand{\ve}{\mathbf{e}}
+\newcommand{\vf}{\mathbf{f}}
+\newcommand{\vg}{\mathbf{g}}
+\newcommand{\vh}{\mathbf{h}}
+\newcommand{\vi}{\mathbf{i}}
+\newcommand{\vj}{\mathbf{j}}
+\newcommand{\vk}{\mathbf{k}}
+\newcommand{\vl}{\mathbf{l}}
+\newcommand{\vm}{\mathbf{m}}
+\newcommand{\vn}{\mathbf{n}}
+\newcommand{\vo}{\mathbf{o}}
+\newcommand{\vp}{\mathbf{p}}
+\newcommand{\vq}{\mathbf{q}}
+\newcommand{\vr}{\mathbf{r}}
+\newcommand{\vs}{\mathbf{s}}
+\newcommand{\vt}{\mathbf{t}}
+\newcommand{\vu}{\mathbf{u}}
+\newcommand{\vv}{\mathbf{v}}
+\newcommand{\vw}{\mathbf{w}}
+\newcommand{\vx}{\mathbf{x}}
+\newcommand{\vy}{\mathbf{y}}
+\newcommand{\vz}{\mathbf{z}}
+\newcommand{\valpha}{\boldsymbol{\alpha}}
+\newcommand{\vbeta}{\boldsymbol{\beta}}
+\newcommand{\vgamma}{\boldsymbol{\gamma}}
+\newcommand{\vdelta}{\boldsymbol{\delta}}
+\newcommand{\vepsilon}{\boldsymbol{\epsilon}}
+\newcommand{\vvarepsilon}{\boldsymbol{\varepsilon}}
+\newcommand{\vzeta}{\boldsymbol{\zeta}}
+\newcommand{\veta}{\boldsymbol{\eta}}
+\newcommand{\vtheta}{\boldsymbol{\theta}}
+\newcommand{\vTheta}{\boldsymbol{\Theta}}
+\newcommand{\vPsi}{\boldsymbol{\Psi}}
+\newcommand{\vvartheta}{\boldsymbol{\vartheta}}
+\newcommand{\viota}{\boldsymbol{\iota}}
+\newcommand{\vkappa}{\boldsymbol{\kappa}}
+\newcommand{\vlambda}{\boldsymbol{\lambda}}
+\newcommand{\vLambda}{\boldsymbol{\lambda}}
+\newcommand{\vmu}{\boldsymbol{\mu}}
+\newcommand{\vnu}{\boldsymbol{\nu}}
+\newcommand{\vxi}{\boldsymbol{\xi}}
+\newcommand{\vomicron}{\boldsymbol{o}}
+\newcommand{\vpi}{\boldsymbol{\pi}}
+\newcommand{\vvarpi}{\boldsymbol{\varpi}}
+\newcommand{\vrho}{\boldsymbol{\rho}}
+\newcommand{\vvarrho}{\boldsymbol{\varrho}}
+\newcommand{\vsigma}{\boldsymbol{\sigma}}
+\newcommand{\vvarsigma}{\boldsymbol{\varsigma}}
+\newcommand{\vtau}{\boldsymbol{\tau}}
+\newcommand{\vupsilon}{\boldsymbol{\upsilon}}
+\newcommand{\vphi}{\boldsymbol{\phi}}
+\newcommand{\vvarphi}{\boldsymbol{\varphi}}
+\newcommand{\vchi}{\boldsymbol{\chi}}
+\newcommand{\vpsi}{\boldsymbol{\psi}}
+\newcommand{\vomega}{\boldsymbol{\omega}}
+
+\newcommand{\bva}{\overline{\mathbf{a}}}
+\newcommand{\bvb}{\overline{\mathbf{b}}}
+\newcommand{\bvc}{\overline{\mathbf{c}}}
+\newcommand{\bvd}{\overline{\mathbf{d}}}
+\newcommand{\bve}{\overline{\mathbf{e}}}
+\newcommand{\bvf}{\overline{\mathbf{f}}}
+\newcommand{\bvg}{\overline{\mathbf{g}}}
+\newcommand{\bvh}{\overline{\mathbf{h}}}
+\newcommand{\bvi}{\overline{\mathbf{i}}}
+\newcommand{\bvj}{\overline{\mathbf{j}}}
+\newcommand{\bvk}{\overline{\mathbf{k}}}
+\newcommand{\bvl}{\overline{\mathbf{l}}}
+\newcommand{\bvm}{\overline{\mathbf{m}}}
+\newcommand{\bvn}{\overline{\mathbf{n}}}
+\newcommand{\bvo}{\overline{\mathbf{o}}}
+\newcommand{\bvp}{\overline{\mathbf{p}}}
+\newcommand{\bvq}{\overline{\mathbf{q}}}
+\newcommand{\bvr}{\overline{\mathbf{r}}}
+\newcommand{\bvs}{\overline{\mathbf{s}}}
+\newcommand{\bvt}{\overline{\mathbf{t}}}
+\newcommand{\bvu}{\overline{\mathbf{u}}}
+\newcommand{\bvv}{\overline{\mathbf{v}}}
+\newcommand{\bvw}{\overline{\mathbf{w}}}
+\newcommand{\bvx}{\overline{\mathbf{x}}}
+\newcommand{\bvy}{\overline{\mathbf{y}}}
+\newcommand{\bvz}{\overline{\mathbf{z}}}
+
+\newcommand{\bvA}{{\mathbf{A}}}
+\newcommand{\bvB}{{\mathbf{B}}}
+\newcommand{\bvC}{{\mathbf{C}}}
+\newcommand{\bvD}{{\mathbf{D}}}
+\newcommand{\bvE}{{\mathbf{E}}}
+\newcommand{\bvF}{{\mathbf{F}}}
+\newcommand{\bvG}{{\mathbf{G}}}
+\newcommand{\bvH}{{\mathbf{H}}}
+\newcommand{\bvI}{{\mathbf{I}}}
+\newcommand{\bvJ}{{\mathbf{J}}}
+\newcommand{\bvK}{{\mathbf{K}}}
+\newcommand{\bvL}{{\mathbf{L}}}
+\newcommand{\bvM}{{\mathbf{M}}}
+\newcommand{\bvN}{{\mathbf{N}}}
+\newcommand{\bvO}{{\mathbf{O}}}
+\newcommand{\bvP}{{\mathbf{P}}}
+\newcommand{\bvQ}{{\mathbf{Q}}}
+\newcommand{\bvR}{{\mathbf{R}}}
+\newcommand{\bvS}{{\mathbf{S}}}
+\newcommand{\bvT}{{\mathbf{T}}}
+\newcommand{\bvU}{{\mathbf{U}}}
+\newcommand{\bvV}{{\mathbf{V}}}
+\newcommand{\bvW}{{\mathbf{W}}}
+\newcommand{\bvX}{{\mathbf{X}}}
+\newcommand{\bvY}{{\mathbf{Y}}}
+\newcommand{\bvZ}{{\mathbf{Z}}}
+
+\newcommand{\hva}{{\mathbf{\hat a}}}
+\newcommand{\hvb}{{\mathbf{\hat b}}}
+\newcommand{\hvc}{{\mathbf{\hat c}}}
+\newcommand{\hvd}{{\mathbf{\hat d}}}
+\newcommand{\hve}{{\mathbf{\hat e}}}
+\newcommand{\hvf}{{\mathbf{\hat f}}}
+\newcommand{\hvg}{{\mathbf{\hat g}}}
+\newcommand{\hvh}{{\mathbf{\hat h}}}
+\newcommand{\hvi}{{\mathbf{\hat i}}}
+\newcommand{\hvj}{{\mathbf{\hat j}}}
+\newcommand{\hvk}{{\mathbf{\hat k}}}
+\newcommand{\hvl}{{\mathbf{\hat l}}}
+\newcommand{\hvm}{{\mathbf{\hat m}}}
+\newcommand{\hvn}{{\mathbf{\hat n}}}
+\newcommand{\hvo}{{\mathbf{\hat o}}}
+\newcommand{\hvp}{{\mathbf{\hat p}}}
+\newcommand{\hvq}{{\mathbf{\hat q}}}
+\newcommand{\hvr}{{\mathbf{\hat r}}}
+\newcommand{\hvs}{{\mathbf{\hat s}}}
+\newcommand{\hvt}{{\mathbf{\hat t}}}
+\newcommand{\hvu}{{\mathbf{\hat u}}}
+\newcommand{\hvv}{{\mathbf{\hat v}}}
+\newcommand{\hvw}{{\mathbf{\hat w}}}
+\newcommand{\hvx}{{\mathbf{\hat x}}}
+\newcommand{\hvy}{{\mathbf{\hat y}}}
+\newcommand{\hvz}{{\mathbf{\hat z}}}
+
+\newcommand{\xt}{\tlup{\vx}}
+\newcommand{\wt}{\tlup{\vw}}
+\newcommand{\st}{\tldn{\vs}}
+\newcommand{\ct}{\tldn{\vc}}
+\newcommand{\at}{\tldn{\va_i}}
+\newcommand{\At}{\tldn{A}}
+\newcommand{\Xt}{\tilde{X}}
+\newcommand{\St}{\tldn{S}}
+\newcommand{\dXt}{\widetilde{\dX}}
+\newcommand{\dSt}{\tldn{\dS}}
+\newcommand{\dxt}{\tlup{\dx}}
+\newcommand{\dst}{\tldn{\ds}}
+\newcommand{\onehalf}{{1\!/\!2}}
+\newcommand{\nonehalf}{{-\!1\!/\!2}}
+\newcommand{\xtsq}{\xt^{\onehalf}}
+\newcommand{\xtisq}{\xt^{\nonehalf}}
+\newcommand{\stsq}{\st^{\onehalf}}
+\newcommand{\stisq}{\st^{\nonehalf}}
+\newcommand{\Xtsq}{\Xt^{\onehalf}}
+\newcommand{\Xtisq}{\Xt^{\nonehalf}}
+\newcommand{\Stsq}{\St^{\onehalf}}
+\newcommand{\Stisq}{\tldn{S}^{\nonehalf}}
+\newcommand{\Xsq}{X^{\onehalf}}
+\newcommand{\Xisq}{X^{\nonehalf}}
+\newcommand{\Ssq}{S^{\onehalf}}
+\newcommand{\Sisq}{S^{\nonehalf}}
+\newcommand{\xsq}{\vx^{\onehalf}}
+\newcommand{\xisq}{\vx^{\nonehalf}}
+\newcommand{\ssq}{\vs^{\onehalf}}
+\newcommand{\sisq}{\vs^{\nonehalf}}
+
+\newcommand{\dx}{\Delta \vx}
+\newcommand{\dy}{\Delta \vy}
+\newcommand{\ds}{\Delta \vs}
+\newcommand{\sh}{\hat{\vs}}
+
+
+
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\B}{\mathcal{B}}
+\newcommand{\Bn}{\mathcal{B}_n}
+\newcommand{\C}{\mathcal{C}}
+\newcommand{\D}{\mathcal{D}}
+\newcommand{\E}{\mathcal{E}}
+\newcommand{\F}{\mathcal{F}}
+\newcommand{\G}{\mathcal{G}}
+\newcommand{\Gp}{\mathcal{G}_+}
+\renewcommand{\H}{\mathcal{H}}
+\newcommand{\I}{\mathcal{I}}
+\newcommand{\J}{\mathcal{J}}
+\newcommand{\K}{\mathcal{K}}
+\newcommand{\Lo}{\mathcal{L}}
+\newcommand{\M}{\mathcal{M}}
+\newcommand{\N}{\mathcal{N}}
+\newcommand{\Po}{\mathcal{P}}
+\newcommand{\Q}{\mathcal{Q}}
+\newcommand{\Oc}{\mathcal{O}}
+\newcommand{\Sy}{\mathcal{S}}
+\newcommand{\T}{\mathcal{T}}
+\newcommand{\U}{\mathcal{U}}
+\newcommand{\V}{\mathcal{V}}
+\newcommand{\W}{\mathcal{W}}
+\newcommand{\X}{\mathcal{X}}
+\newcommand{\Y}{\mathcal{Y}}
+\newcommand{\Z}{\mathcal{Z}}
+
+\newcommand{\matA}{\mathfrak{A}}
+\newcommand{\matB}{\mathfrak{B}}
+\newcommand{\matC}{\mathfrak{C}}
+\newcommand{\matD}{\mathfrak{D}}
+\newcommand{\matE}{\mathfrak{E}}
+\newcommand{\matF}{\mathfrak{F}}
+\newcommand{\matG}{\mathfrak{G}}
+\newcommand{\matH}{\mathfrak{H}}
+\newcommand{\matI}{\mathfrak{I}}
+\newcommand{\matJ}{\mathfrak{J}}
+\newcommand{\matK}{\mathfrak{K}}
+\newcommand{\matL}{\mathfrak{L}}
+\newcommand{\matM}{\mathfrak{M}}
+\newcommand{\matN}{\mathfrak{N}}
+\newcommand{\matO}{\mathfrak{O}}
+\newcommand{\matP}{\mathfrak{P}}
+\newcommand{\matQ}{\mathfrak{Q}}
+\newcommand{\matR}{\mathfrak{R}}
+\newcommand{\matS}{\mathfrak{S}}
+\newcommand{\matT}{\mathfrak{T}}
+\newcommand{\matU}{\mathfrak{U}}
+\newcommand{\matV}{\mathfrak{V}}
+\newcommand{\matW}{\mathfrak{W}}
+\newcommand{\matX}{\mathfrak{X}}
+\newcommand{\matY}{\mathfrak{Y}}
+\newcommand{\matZ}{\mathfrak{Z}}
+
+\newcommand{\bbA}{\mathbb{A}}
+\newcommand{\bbB}{\mathbb{B}}
+\newcommand{\bbC}{\mathbb{C}}
+\newcommand{\bbD}{\mathbb{D}}
+\newcommand{\bbE}{\mathbb{E}}
+\newcommand{\bbF}{\mathbb{F}}
+\newcommand{\bbG}{\mathbb{G}}
+\newcommand{\bbH}{\mathbb{H}}
+\newcommand{\bbI}{\mathbb{I}}
+\newcommand{\bbJ}{\mathbb{J}}
+\newcommand{\bbK}{\mathbb{K}}
+\newcommand{\bbL}{\mathbb{L}}
+\newcommand{\bbM}{\mathbb{M}}
+\newcommand{\bbN}{\mathbb{N}}
+\newcommand{\bbO}{\mathbb{O}}
+\newcommand{\bbP}{\mathbb{P}}
+\newcommand{\bbQ}{\mathbb{Q}}
+\newcommand{\bbR}{\mathbb{R}}
+\newcommand{\bbS}{\mathbb{S}}
+\newcommand{\bbT}{\mathbb{T}}
+\newcommand{\bbU}{\mathbb{U}}
+\newcommand{\bbV}{\mathbb{V}}
+\newcommand{\bbW}{\mathbb{W}}
+\newcommand{\bbX}{\mathbb{X}}
+\newcommand{\bbY}{\mathbb{Y}}
+\newcommand{\bbZ}{\mathbb{Z}}
+
+\newcommand{\real}{\mathbb{R}}
+\newcommand{\realS}{\mathbb{S}}
+\newcommand{\realH}{\mathbb{H}}
+\newcommand{\realQ}{\mathbb{Q}}
+\newcommand{\realO}{\mathbb{O}}
+
+\newcommand{\ST}{{\text{s.t.}}}
+\newcommand{\NF}[1]{\N_{F/{#1}}}
+\newcommand{\Quart}{\mbox{\boldmath H}}
+\newcommand{\psd}{\succcurlyeq}
+\newcommand{\pdef}{\succ}
+%\newcommand{\pd}{\succ} %use for strict semidefinite inequality
+\newcommand{\Qgeq}{\succcurlyeq_\Q}
+\newcommand{\Qgt}{\succ_\Q}
+\newcommand{\Kgeq}{\succcurlyeq_\K}
+\newcommand{\Kgt}{\succ_\K}
+\newcommand{\skron}{\circledast}
+\newcommand{\kron}{\otimes}
+\newcommand{\Diag}{\operatorname{Diag}}
+\newcommand{\diag}{\mathbf{diag}} %diag
+\newcommand{\dt}{\Delta} %Delta
+\DeclareMathOperator*{\Bd}{bd} %For boundary
+\DeclareMathOperator*{\Cl}{cl}%For closure
+%Use the following for definitions lemmas etc.
+
+\newtheorem{definition}{Definition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{note}{Note}
+\newtheorem{proposition}{Proposition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{claim}{Claim}
+\newtheorem{remark}{Remark}
+\newtheorem{example}{Example}
+\newtheorem{corollary}{Corollary}
+\newtheorem{observation}{Observation}
+\newtheorem{fact}{Fact}
+\newenvironment{Example}[1]{\begin{example}[#1]\rm}{{\hfill\rule{2mm}{2mm}\par}\end{example}}
+\newenvironment{Remark}{\begin{remark}\rm}{{\hfill\rule{2mm}{2mm}\par}\end{remark}}
+\newenvironment{proof}{{\noindent \textbf{Proof:}}}{\hfill\rule{2mm}{2mm}\par}
+%
