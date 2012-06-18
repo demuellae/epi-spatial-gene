@@ -43,7 +43,8 @@ dev.off()
 
 #trying to visualize the matrix if there are some patterns. 
 pdf("../doc/interactionMatrix.pdf")
-image(z=z<-as.matrix(intM), col=heat.colors(11), xlab="tissue type", ylab="gene expression")
+image(z=z<-as.matrix(intM), col=topo.colors(11), xlab="tissue type", ylab="gene expression")
+image.plotim(z=z<-as.matrix(intM), xlab="tissue type", col=gray(seq(256,0)/256),ylab="gene expression")
 dev.off()
 
 # PCA and sorting according to first principal component along tissue

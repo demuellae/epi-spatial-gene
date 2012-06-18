@@ -8,7 +8,7 @@
 \usepackage{myDefs}
 \usepackage{url}
 %In order to be consistent use the following notation in your notes:
-
+\graphicspath{{./fig/}}
 \title{
 ISH data interaction matrix analysis
 }
@@ -33,7 +33,7 @@ As seen from the figure the class genes are significantly compared to null distr
 
 \begin{figure}
 	\begin{center}
-		\includegraphics[scale=0.5]{../../data/strongExpressed.jpg}
+		\includegraphics[scale=0.5]{strongExpressed.jpg}
 	\end{center}
 	\caption{Strongly expressed  gene histogram }
 	\label{fig:strongHist}
@@ -41,7 +41,7 @@ As seen from the figure the class genes are significantly compared to null distr
 
 \begin{figure}	
 	\begin{center}
-		\includegraphics[scale=0.5]{../../data/midlyExpressed.jpg}
+		\includegraphics[scale=0.5]{midlyExpressed.jpg}
 	\end{center}
 	\caption{mildly expressed gene histogram}
 	\label{fig:mildlyHist}
@@ -49,7 +49,7 @@ As seen from the figure the class genes are significantly compared to null distr
 
 \begin{figure}
 	\begin{center}
-		\includegraphics[scale=0.5]{../../data/weaklyExpressed.jpg}
+		\includegraphics[scale=0.5]{weaklyExpressed.jpg}
 	\end{center}
 	\caption{weakly expressed gene histogram}
 	\label{fig:weaklyHist}
@@ -73,14 +73,14 @@ are significantly compared to all mouse genes as background).
 
 \subsection{Interaction matrix 5510x811}
 
-I performed analysis similar to performed on sample matrix. At first, I compared the distribution of number of tissue type in which gene
-expressed to the null distribution. The null distribution assumed be binomial distribution ( with $n = 811$ and $p = \frac{#  \textit{non-zero entries in interaction matrix}}{\textit{total size of interaction matrix}}$). I performed 3 separate analysis 1.  strong expression only (figure \ref{fig:strongEx}), 2. medium or strong expression (figure \ref{fig:mediumEx})and 3. weak, medium or strong expression (figure \ref{fig:weakEx}).
+I performed analysis similar to performed on the sample matrix. At first, I compared the distributions of number of tissue types in which gene
+expressed with its null distribution. The null distribution assumed to be binomial distribution ( with $n = 811$ and $p = \frac{  \textit{non-zero entries in interaction matrix}}{\textit{total size of interaction matrix}}$). I performed 3 separate analysis 1.  Strong expression only (figure \ref{fig:strongEx}), 2. Medium or strong expression (figure \ref{fig:mediumEx})and 3. Weak, medium or strong expression (figure \ref{fig:weakEx}).
 
 \begin{figure}[ht]
 	\begin{center}
 		\includegraphics[width=0.5\textwidth]{stronglyExpressed.pdf}
 	\end{center}
-	\caption{ Distribution of number of tissue in which gene are strongly expressed and null distribution.}
+	\caption{ Distribution of number of tissues that have strong gene expression and corresponding null distribution.}
 	\label{fig:strongEx}
 \end{figure}
 
@@ -108,22 +108,39 @@ figure ~/ref{fig:intM}. Since the matrix is sparse, any structure is not discern
 In order to find any prominent structure in the interaction matrix. I performed unsupervised clustering by two method: 1. Principal component
 analysis (figure ~\ref{fig:intMPCA} 2. Hierarchical clustering (figure ~/ref{fig:intMHierarchical}.
 
-
 \begin{figure}[ht]
 	\begin{center}
-		\includegraphics{interactionMatrix.pdf}
+		\includegraphics[scale=0.7]{interactionMatrix.pdf}
 	\end{center}
 	\caption{Interaction matrix}
 	\label{fig:intM}
 \end{figure}
 
+\begin{figure}[ht]
+	\begin{center}
+		\includegraphics[scale=0.7]{interactionMatrixGenePC.pdf}
+	\end{center}
+	\caption{Principal component analysis with row arranged according to the first PC across gene.}
+	\label{fig:intMPCG}
+\end{figure}
+
 
 \begin{figure}[ht]
 	\begin{center}
-		\includegraphics{interactionMatrix.pdf}
+		\includegraphics[scale=0.7]{interactionMatrixTissueGenePC.pdf}
 	\end{center}
-	\caption{Interaction matrix}
-	\label{fig:intM}
+	\caption{Principal component analysis across tissue and genes row  and column arranged according to the first PC.}
+	\label{fig:intMPCA}
+\end{figure}
+
+
+
+\begin{figure}[ht]
+	\begin{center}
+		\includegraphics[scale=0.7]{interactionMatrixHirarchichal.pdf}
+	\end{center}
+	\caption{Hierarchical clustering with of interaction matrix.}
+	\label{fig:intMH}
 \end{figure}
 \bibliographystyle{apalike}	% (uses file "plain.bst")
 \bibliography{diary}		% expects file "myrefs.bib"
