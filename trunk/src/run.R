@@ -42,9 +42,12 @@ dev.off()
 
 
 #trying to visualize the matrix if there are some patterns. 
+col<-gray(seq(256,0)/256)
+
 pdf("../doc/interactionMatrix.pdf")
-image(z=z<-as.matrix(intM), col=topo.colors(11), xlab="tissue type", ylab="gene expression")
-image.plotim(z=z<-as.matrix(intM), xlab="tissue type", col=gray(seq(256,0)/256),ylab="gene expression")
+image(z=z<-as.matrix(intM), col=col, xlab="tissue type", ylab="gene expression")
+
+image(z=z<-as.matrix(intM), xlab="tissue type", col=col,ylab="gene expression")
 dev.off()
 
 # PCA and sorting according to first principal component along tissue
@@ -52,9 +55,9 @@ pdf("../doc/interactionMatrixtissuePC1.pdf")
 Mpca <- prcomp(intM)
 
 Mpc1 <- intM[,order(Mpca$rotation[1,])]
-image(z=z<-as.matrix(Mpc1), col=heat.colors(11), xlab="tissue type", ylab="gene exp")
+image(z=z<-as.matrix(Mpc1), col=col, xlab="tissue type", ylab="gene exp")
 dev.off()
-col<-heat.colors(11)
+
 # PCA and sorting according to first principal component along gene
 pdf("../doc/interactionMatrixGenePC.pdf")
 MpcaG <- prcomp(t(intM))
@@ -75,5 +78,66 @@ MclustA   <- hclust(as.dist((1 - cor(t(intM)))/2))
 hclustM <- intM[MclustA$order, MclustG$order]
 image(z=z<-as.matrix(hclustM), col=col, xlab="anatomy", ylab="gene exp")
 dev.off()
+
+
+#some initial biclustering
+
+library(biclust)
+
+
+
+
+
+#finding GO annotations for a given gene set
+
+
+#Convert MGI gene identifiers to entrez gene id
+#source("http://bioconductor.org/biocLite.R")
+#biocLite("org.Mm.eg.db") 
+library(org.Mm.eg.db)
+xx  <- as.list(org.Mm.egALIAS2EG) 
+#xx  <- xx[!is.na(xx)]
+# NOTE there are some duplicate entries and NA 
+temp  <- xx[rownames(intM)]
+entrezName  <- unlist(lapply(names(temp), function(x) (temp[[x]][1])))
+
+#GO annontation example
+library(GOstats); library(GO.db);  library(annotate) # Loads the required libraries.
+library(ALL); library(genefilter); library(RColorBrewer); library(xtable); library(Rgraphviz)
+#goann <- as.list(GOTERM) # Retrieves full set of GO annotations.
+#zz <- eapply(GOTERM, function(x) x@Ontology); table(unlist(zz)) # Calculates the number of annotations for each ontology category.
+
+#library(ath1121501.db); affySample <- c("266592_at", "266703_at", "266199_at", "246949_at", "267370_at", "267115_s_at", "266489_at", "259845_at", "266295_at", "262632_at"); geneSample <- as.vector(unlist(mget(affySample, ath1121501ACCNUM, ifnotfound=NA))); library(ath1121501cdf); affyUniverse <- ls(ath1121501cdf); geneUniverse <- as.vector(unlist(mget(affyUniverse, ath1121501ACCNUM, ifnotfound=NA))); params <- new("GOHyperGParams", geneIds = geneSample, universeGeneIds = geneUniverse, annotation="ath1121501", ontology = "MF", pvalueCutoff = 0.5, conditional = FALSE, testDirection = "over"); hgOver <- hyperGTest(params); summary(hgOver); htmlReport(hgOver, file = "MyhyperGresult.html")
+
+#geneSample <- as.vector(unlist(mget(entrezName, org.Mm.egACCNUM, ifnotfound=NA)));
+#geneSample  <-  unlist(lapply(names(geneSample), function(x) (geneSample[[x]][1])))
+#geneUniverse <- as.vector(unlist(mget(entrezName, org.Mm.egACCNUM, ifnotfound=NA)));
+#geneUniverse  <-  unlist(lapply(names(geneUniverse), function(x) (geneUniverse[[x]][1])))
+params <- new("GOHyperGParams", geneIds = as.vector(entrezName[1:1000]) , universeGeneIds = as.vector(entrezName), annotation="org.Mm.eg.db", ontology = "MF", pvalueCutoff = 0.5, conditional = FALSE, testDirection = "over"); 
+hgOver <- hyperGTest(params); summary(hgOver); htmlReport(hgOver, file = "MyhyperGresult.html")
+
+
+# alternative go annotation using GOHyperGAll function 
+
+source("GOHyperGAll.txt")
+readGOorg(myfile="../data/gene_association.mgi", colno=c(5,11,9), org="Mus muscus")
+gene2GOlist(rootUK=T)
+
+#creating a binary interaction matrix
+
+intM.binary <- as.matrix(intM)
+intM.binary[,] <- 0
+intM.binary[intM > 0] <- 1
+
+
+
+
+
+# BCXmotif
+pdf("../doc/intMBCB.pdf")
+intMBCB <-biclust(intM.binary, method=BCBimax(), minr = 100, minc=20, number=100)
+ bubbleplot(intM.binary, intMBCB)
+dev.off()
+
 
 
