@@ -80,10 +80,6 @@ image(z=z<-as.matrix(hclustM), col=col, xlab="anatomy", ylab="gene exp")
 dev.off()
 
 
-#some initial biclustering
-
-library(biclust)
-
 
 
 
@@ -95,15 +91,14 @@ library(biclust)
 #source("http://bioconductor.org/biocLite.R")
 #biocLite("org.Mm.eg.db") 
 library(org.Mm.eg.db)
-xx  <- as.list(org.Mm.egALIAS2EG) 
 #xx  <- xx[!is.na(xx)]
 # NOTE there are some duplicate entries and NA 
-temp  <- xx[rownames(intM)]
-entrezName  <- unlist(lapply(names(temp), function(x) (temp[[x]][1])))
+entrezName  <- as.list(org.Mm.egALIAS2EG)
 
 #GO annontation example
 library(GOstats); library(GO.db);  library(annotate) # Loads the required libraries.
-library(ALL); library(genefilter); library(RColorBrewer); library(xtable); library(Rgraphviz)
+library(RColorBrewer); library(xtable); library(Rgraphviz)
+#library(ALL); library(genefilter); 
 #goann <- as.list(GOTERM) # Retrieves full set of GO annotations.
 #zz <- eapply(GOTERM, function(x) x@Ontology); table(unlist(zz)) # Calculates the number of annotations for each ontology category.
 
@@ -123,6 +118,10 @@ source("GOHyperGAll.txt")
 readGOorg(myfile="../data/gene_association.mgi", colno=c(5,11,9), org="Mus muscus")
 gene2GOlist(rootUK=T)
 
+#some initial biclustering
+
+library(biclust)
+
 #creating a binary interaction matrix
 
 intM.binary <- as.matrix(intM)
@@ -130,14 +129,18 @@ intM.binary[,] <- 0
 intM.binary[intM > 0] <- 1
 
 
+intM.binary <- discretize(intM)
+
 
 
 
 # BCXmotif
 pdf("../doc/intMBCB.pdf")
-intMBCB <-biclust(intM.binary, method=BCBimax(), minr = 100, minc=20, number=100)
- bubbleplot(intM.binary, intMBCB)
+intMBCB <-biclust(intM.binary, method=BCBimax(), minr = 100, minc=16, number=50)
+#intMBCB <-biclust(intM.binary, method=BCXmotifs(), alpha=0.5, number=100) 
+parallelCoordinates( x=intM.binary, bicResult=intMBCB, number=4)  
+bubbleplot(intM.binary, intMBCB)
 dev.off()
-
-
-
+source("./myFunc.R")
+goSignificantCluster(intMBCB, intM, entrezName)
+#htmlReport(hgOver, file = "MyhyperGresult.html")
