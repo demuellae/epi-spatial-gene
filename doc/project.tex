@@ -26,7 +26,7 @@ ISH data interaction matrix analysis
 
 \section{Initial Analysis}
 \subsection{Sample matrix}
-I performed some initial analysis on the sample interaction data present at \url{http://www.eurexpress.org/ee/tools/EurExpressCluster_01.zip}.
+%I performed some initial analysis on the sample interaction data present at \url{http://www.eurexpress.org/ee/tools/EurExpressCluster_01.zip}.
 At first, I tested whether there are certain classes of genes those are expressed in different anatomy ( those are significantly more than expected, like the housekeeping genes analysis similar to \cite{eisenberg2003human}). Figures ~\ref{fig:strongHist} , \ref{fig:mildlyHist} and \ref{fig:weaklyHist} respectively shows the histogram of strongly expressed, mildly expressed ( genes those are highly or mildly expressed) and weakly expressed genes ( highly, mildly or weakly expressed).  
 I have also overlay corresponding null distribution for each of the cases. I assumed binomial distribution with mean equal to observed mean as the null distribution. 
 As seen from the figure the class genes are significantly compared to null distribution, particular in (1) classes where a gene is expressed in fewer number of anatomies (Probably this is not very interesting). (2) classes where a gene is expressed many tissues. 
@@ -144,7 +144,39 @@ analysis (figure ~\ref{fig:intMPCG}, ~\ref{fig:intMPCA}) 2. Hierarchical cluster
 \end{figure}
 
 
+
+\section{GO annotation analysis}
+Many approaches have used GO enrichment analysis on gene set to quantify the bi-clusters of gene expression data. \cite{tanay2002discovering} used prediction accuracy of annotation of gene inside bicluster as quantifying criteria. They used 
+fourth level of GO annotation as classification of genes, choose biclusters with low p-value ($P \le 10^{-4}$) and 
+60\% of annotated members have same class. \cite{prelic2006systematic} used percentage of biclusters those one or more 
+significantly enriched GO annotation as quantifying criteria.  The other method widely employed in the literature is find the 
+number of GO annotation enriched in the 
+
+To use the GO annotation enrichment as cross-validation quantifying criteria for regression over parameter space of
+a clustering technique ( or space of different clusterings technique), we should use either both or a score combining both as our
+quantifying criteria.
+
+
+Using the P-value directly for quantification of clustering algorithm is bit risky. There are 2 main problem in this aspect be cause of dependence,
+1) gene expression are not independent 2) GO terms have are directed acyclic graph, child being subset of parents, 
+
+\subsection{Regression over parameter space}
+To find the best cluster, we performed regression over 1) clustering method 2) parameters of each clustering method and 3) number of clusters.
+
+\begin{itemize}
+	\item Number of cluster : While performing the analysis over number of cluster, the significance level of P-value is needed to be
+		changed. This is because if each cluster contains only one gene than the GO enrichment P-value will be very high in 
+		such case. Therefore, while comparing p-values between number of clusters it is important to normalized the p-values.
+		The bonforoni correction is not appropiate as it is too conservative.
+		
+		\par I have to perform FDR analysis. Another technique
+		that can be employed is z-score. It is a measure of mutual information of clusters, when compared to a random cluster. 
+\end{itemize}
+We performed he
+
+
+
+
 \bibliographystyle{apalike}	% (uses file "plain.bst")
 \bibliography{diary}		% expects file "myrefs.bib"
-
 \end{document}  
