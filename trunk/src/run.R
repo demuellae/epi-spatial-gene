@@ -87,6 +87,8 @@ dev.off()
 #finding GO annotations for a given gene set
 
 
+
+
 #Convert MGI gene identifiers to entrez gene id
 #source("http://bioconductor.org/biocLite.R")
 #biocLite("org.Mm.eg.db") 
@@ -111,7 +113,6 @@ library(RColorBrewer); library(xtable); library(Rgraphviz)
 params <- new("GOHyperGParams", geneIds = as.vector(entrezName[1:1000]) , universeGeneIds = as.vector(entrezName), annotation="org.Mm.eg.db", ontology = "MF", pvalueCutoff = 0.5, conditional = FALSE, testDirection = "over"); 
 hgOver <- hyperGTest(params); summary(hgOver); htmlReport(hgOver, file = "MyhyperGresult.html")
 
-
 # alternative go annotation using GOHyperGAll function 
 
 source("GOHyperGAll.txt")
@@ -124,23 +125,102 @@ library(biclust)
 
 #creating a binary interaction matrix
 
-intM.binary <- as.matrix(intM)
-intM.binary[,] <- 0
-intM.binary[intM > 0] <- 1
-
+#intM.binary <- as.matrix(intM)
+#intM.binary[,] <- 0
+#intM.binary[intM > 0] <- 1
 
 intM.binary <- discretize(intM)
 
-
-
-
 # BCXmotif
 pdf("../doc/intMBCB.pdf")
-intMBCB <-biclust(intM.binary, method=BCBimax(), minr = 100, minc=16, number=50)
+intMBCB <-biclust(intM.binary, method=BCBimax(), minr = 100, minc=16, number=100)
 #intMBCB <-biclust(intM.binary, method=BCXmotifs(), alpha=0.5, number=100) 
 parallelCoordinates( x=intM.binary, bicResult=intMBCB, number=4)  
 bubbleplot(intM.binary, intMBCB)
 dev.off()
+
+
 source("./myFunc.R")
-goSignificantCluster(intMBCB, intM, entrezName)
-#htmlReport(hgOver, file = "MyhyperGresult.html")
+outC  <- NULL
+x  <- c(1e-6)
+#choosing best threshold to obtain best clusters.
+for(i in seq(1,1)){
+
+	out  <- goSignificantCluster(intMBCB, intM, entrezName, pvalueCutoff=x[i] )
+	outC  <- cbind(outC , out)
+}
+
+
+# temperary run on all clusters 
+numCluster  <- 100
+intMBCB <-biclust(intM.binary, method=BCBimax(), minr = ceiling(5000/(1.5 * numCluster)), minc=ceiling(800/(1.5 * numCluster)) , number=numCluster)
+out  <- goSignificantCluster(intMBCB, intM, entrezName, pvalueCutoff=5e-6 )
+
+pThershold  <- 1e-2 ;
+sigBicluster  <- 0
+for(i in seq(1, numCluster)){
+	pVal  <- pvalues(out$Allcluster[[i]])
+       #print(pVal[1])	
+	print(sum(pVal  < pThershold))
+	if (sum(pVal  < pThershold) > 0)
+		sigBicluster  <- sigBicluster + 1
+	print(sigBicluster)
+}
+
+
+
+
+
+
+
+
+
+#choosing the optimal number of clusters
+numClusterTest  <-  c(25,50,100,150, 250)
+outC  <- NULL
+for(i in seq(1,length(numClusterTest))){
+	numCluster  <-   numClusterTest[i]
+
+	intMBCB <-biclust(intM.binary, method=BCBimax(), minr = ceiling(5000/(1.5 * numCluster)), minc=ceiling(800/(1.5 * numCluster)) , number=numCluster)
+	out  <- goSignificantCluster(intMBCB, intM, entrezName, pvalueCutoff=5e-6 )
+	outC  <- cbind(outC , out)
+	print(i)
+}
+
+#numClusterTest  <-  c(25,50,100,150, 250)
+numClusterTest  <-  c(1)
+outC1  <- NULL
+for(i in seq(1,length(numClusterTest))){
+	numCluster  <-   numClusterTest[i]
+
+	intMBCCC <-biclust(as.matrix(intM), method=BCCC(), delta=1.5,  alpha=1, number=numCluster)
+	out  <- goSignificantCluster(intMBCCC, intM, entrezName, pvalueCutoff=5e-6 )
+	outC1  <- cbind(outC1 , out)
+	print(i)
+}
+
+
+
+#plotting beta function for the doc
+colors <- c("red", "blue", "black")
+x <- seq(0,1,by=0.01)
+jpeg("../doc/beta.jpg")
+plot(x, dbeta(x, 2, 40), type="l", ylab="PDF", lty=2)
+lines(x, dbeta(x, 2, 5), lwd=2, col=colors[1])
+lines(x, dbeta(x, 20, 2), lwd=2, col=colors[2])
+labels <- c("active", "variable", "inactive")
+legend("topright", inset=.05, title="Beta priors",
+       labels, lwd=2, lty=c(1, 1, 2), col=colors)
+dev.off()
+
+
+
+# xml tree parser
+library(XML)
+tissue.tree <- xmlTreeParse("../data/EMAPtree.xml", 
+			    handlers=list(anatomy=function(x,attr) {x},
+					  component=function(x,attr) {x}, 
+					  childrenId=function(x,attr) {x}, 
+					  startElement=function(x,attr){ NULL}),
+			    asTree=T)
+v <- treeApply(x$children, function(x) cat(class(x),"\n"))
