@@ -79,15 +79,7 @@ hclustM <- intM[MclustA$order, MclustG$order]
 image(z=z<-as.matrix(hclustM), col=col, xlab="anatomy", ylab="gene exp")
 dev.off()
 
-
-
-
-
-
 #finding GO annotations for a given gene set
-
-
-
 
 #Convert MGI gene identifiers to entrez gene id
 #source("http://bioconductor.org/biocLite.R")
@@ -100,44 +92,26 @@ entrezName  <- as.list(org.Mm.egALIAS2EG)
 #GO annontation example
 library(GOstats); library(GO.db);  library(annotate) # Loads the required libraries.
 library(RColorBrewer); library(xtable); library(Rgraphviz)
-#library(ALL); library(genefilter); 
-#goann <- as.list(GOTERM) # Retrieves full set of GO annotations.
-#zz <- eapply(GOTERM, function(x) x@Ontology); table(unlist(zz)) # Calculates the number of annotations for each ontology category.
-
-#library(ath1121501.db); affySample <- c("266592_at", "266703_at", "266199_at", "246949_at", "267370_at", "267115_s_at", "266489_at", "259845_at", "266295_at", "262632_at"); geneSample <- as.vector(unlist(mget(affySample, ath1121501ACCNUM, ifnotfound=NA))); library(ath1121501cdf); affyUniverse <- ls(ath1121501cdf); geneUniverse <- as.vector(unlist(mget(affyUniverse, ath1121501ACCNUM, ifnotfound=NA))); params <- new("GOHyperGParams", geneIds = geneSample, universeGeneIds = geneUniverse, annotation="ath1121501", ontology = "MF", pvalueCutoff = 0.5, conditional = FALSE, testDirection = "over"); hgOver <- hyperGTest(params); summary(hgOver); htmlReport(hgOver, file = "MyhyperGresult.html")
-
-#geneSample <- as.vector(unlist(mget(entrezName, org.Mm.egACCNUM, ifnotfound=NA)));
-#geneSample  <-  unlist(lapply(names(geneSample), function(x) (geneSample[[x]][1])))
-#geneUniverse <- as.vector(unlist(mget(entrezName, org.Mm.egACCNUM, ifnotfound=NA)));
-#geneUniverse  <-  unlist(lapply(names(geneUniverse), function(x) (geneUniverse[[x]][1])))
-params <- new("GOHyperGParams", geneIds = as.vector(entrezName[1:1000]) , universeGeneIds = as.vector(entrezName), annotation="org.Mm.eg.db", ontology = "MF", pvalueCutoff = 0.5, conditional = FALSE, testDirection = "over"); 
-hgOver <- hyperGTest(params); summary(hgOver); htmlReport(hgOver, file = "MyhyperGresult.html")
 
 # alternative go annotation using GOHyperGAll function 
 
-source("GOHyperGAll.txt")
-readGOorg(myfile="../data/gene_association.mgi", colno=c(5,11,9), org="Mus muscus")
-gene2GOlist(rootUK=T)
 
-#some initial biclustering
 
 library(biclust)
 
 #creating a binary interaction matrix
 
-#intM.binary <- as.matrix(intM)
-#intM.binary[,] <- 0
-#intM.binary[intM > 0] <- 1
+intM.binary <- as.matrix(intM)
+intM.binary[,] <- 0
+intM.binary[intM > 0] <- 1
+#intM.binary <- discretize(intM)
 
-intM.binary <- discretize(intM)
-
-# BCXmotif
-pdf("../doc/intMBCB.pdf")
-intMBCB <-biclust(intM.binary, method=BCBimax(), minr = 100, minc=16, number=100)
-#intMBCB <-biclust(intM.binary, method=BCXmotifs(), alpha=0.5, number=100) 
-parallelCoordinates( x=intM.binary, bicResult=intMBCB, number=4)  
-bubbleplot(intM.binary, intMBCB)
-dev.off()
+#pdf("../doc/intMBCB.pdf")
+#intMBCB <-biclust(intM.binary, method=BCBimax(), minr = 100, minc=16, number=100)
+##intMBCB <-biclust(intM.binary, method=BCXmotifs(), alpha=0.5, number=100) 
+#parallelCoordinates( x=intM.binary, bicResult=intMBCB, number=4)  
+#bubbleplot(intM.binary, intMBCB)
+#dev.off()
 
 
 source("./myFunc.R")
@@ -167,14 +141,6 @@ for(i in seq(1, numCluster)){
 	print(sigBicluster)
 }
 
-
-
-
-
-
-
-
-
 #choosing the optimal number of clusters
 numClusterTest  <-  c(25,50,100,150, 250)
 outC  <- NULL
@@ -188,17 +154,9 @@ for(i in seq(1,length(numClusterTest))){
 }
 
 #numClusterTest  <-  c(25,50,100,150, 250)
-numClusterTest  <-  c(1)
-outC1  <- NULL
-for(i in seq(1,length(numClusterTest))){
-	numCluster  <-   numClusterTest[i]
 
-	intMBCCC <-biclust(as.matrix(intM), method=BCCC(), delta=1.5,  alpha=1, number=numCluster)
-	out  <- goSignificantCluster(intMBCCC, intM, entrezName, pvalueCutoff=5e-6 )
-	outC1  <- cbind(outC1 , out)
-	print(i)
-}
-
+outC1  <- biClustSearch(intM, entrezName)
+outC2  <- biClustPSQM(intM, entrezName)
 
 
 #plotting beta function for the doc
