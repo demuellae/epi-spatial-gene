@@ -5,8 +5,8 @@ goSignificantCluster  <- function(cluster, geneMat, entrezName, pvalueCutoff = 0
 	sigBicluter <- 0
 	Allcluster  <- NULL 
 	sigGO  <- NULL
-	for(i in seq(1,1)){
-	#for(i in seq(1,cluster@Number)){
+	#for(i in seq(1,1)){
+	for(i in seq(1,cluster@Number)){
 		print(i)
 		geneSample  <- entrezName[rownames(geneMat)[intMBCB@RowxNumber[,i]]]
 		geneSample.entrez  <- 	unlist(lapply(names(geneSample), function(x) (geneSample[[x]][1])))
@@ -62,9 +62,8 @@ biClustSearch  <- function(intM, entrezName){
 	#creates an regression over biclustering methods, number of clusters and parameter of bicluster.
 	numClusterTest  <-  c(25,50,100,250)
 	pvalueCutoff  <- 1e-3
-	outC  <- NULL
 	#biclustMethods  <- ("BCCC", "BCXmotifs", "BCPlaid", "BCSpectral", "BCBimax", "BCQuest")
-	biclustMethods  <- list("BCCC", "BCBimax")
+	biclustMethods  <- ("BCCC", "BCBimax")
 	for(numCluster in numClusterTest){
 		for(biclustmethod in biclustMethods){
 			if (biclustmethod == "BCBimax"){	
@@ -78,84 +77,7 @@ biClustSearch  <- function(intM, entrezName){
 				out  <- goSignificantCluster(intMClust, intM, entrezName, pvalueCutoff=pvalueCutoff )
 			}
 			out$runParam  <- list(biclustmethod,pvalueCutoff, numCluster )
-			outC  <- cbind(outC , out)
+			outC1  <- cbind(outC1 , out)
 		}
 	}
-	return(outC)
-}
-
-biClustPSQM  <- function(intM, entrezName){
-	#creates an regression over biclustering methods, number of clusters and parameter of bicluster.
-	numClusterTest  <-  c(25,50,100,250)
-	numEigens  <-  c(1,2,5)
-	pvalueCutoff  <- 1e-3
-	outC  <- NULLbiclustMethods  <- list("BCXmotifs", "BCPlaid")
-	biclustMethods  <- list("BCXmotifs", "BCPlaid")
-	for(numCluster in numClusterTest){
-		for(biclustmethod in biclustMethods){
-			if (biclustmethod == "BCXmotifs"){	
-				intMClust <- biclust(as.matrix(intM), method=BCXmotifs(), ns=20, nd=20, sd=5, alpha=0.01, number=numCluster)
-			} else if(biclustmethod == "BCPlaid"){
-     intMClust  <- biclust(as.matrix(intM), method=BCQuest(), ns=10, nd=10, sd=5, alpha=0.05, number=numCluster)
-			}
-			out  <- goSignificantCluster(intMClust, intM, entrezName, pvalueCutoff=pvalueCutoff )
-			while(out$sigBicluter == 1){
-				pvalueCutoff  <- pvalueCutoff/10
-				out  <- goSignificantCluster(intMClust, intM, entrezName, pvalueCutoff=pvalueCutoff )
-			}
-			out$runParam  <- list(biclustmethod,pvalueCutoff, numCluster )
-			outC  <- cbind(outC , out)
-		}
-	}
-	for(numEigen in numEigens){
-	  
-		intMClust <-biclust(as.matrix(intM), method=BCSpectral(), numberOfEigenvalues=numEigen)
-		out  <- goSignificantCluster(intMClust, intM, entrezName, pvalueCutoff=pvalueCutoff )
-		out$runParam  <- list("BCSpectral",pvalueCutoff, numEigens )
-		outC  <- cbind(outC , out)
-	}
-		
-	intMClust <-biclust(as.matrix(intM), method=BCPlaid(), verbose=False)
-	out  <- goSignificantCluster(intMClust, intM, entrezName, pvalueCutoff=pvalueCutoff )
-	#out$runParam  <- list("BCPlaid",pvalueCutoff, numCluster )
-	#outC  <- cbind(outC , out)
-	return(outC)
-}
-
-biClustPSQM  <- function(intM, entrezName){
-	#creates an regression over biclustering methods, number of clusters and parameter of bicluster.
-	numClusterTest  <-  c(25,50,100,250)
-	numEigens  <-  c(1,2,5)
-	pvalueCutoff  <- 1e-3
-	outC  <- NULLbiclustMethods  <- list("BCXmotifs", "BCPlaid")
-	biclustMethods  <- list("BCXmotifs", "BCPlaid")
-	#for(numCluster in numClusterTest){
-		#for(biclustmethod in biclustMethods){
-			#if (biclustmethod == "BCXmotifs"){	
-				#intMClust <- biclust(as.matrix(intM), method=BCXmotifs(), ns=20, nd=20, sd=5, alpha=0.01, number=numCluster)
-			#} else if(biclustmethod == "BCPlaid"){
-     #intMClust  <- biclust(as.matrix(intM), method=BCQuest(), ns=10, nd=10, sd=5, alpha=0.05, number=numCluster)
-			#}
-			#out  <- goSignificantCluster(intMClust, intM, entrezName, pvalueCutoff=pvalueCutoff )
-			#while(out$sigBicluter == 1){
-				#pvalueCutoff  <- pvalueCutoff/10
-				#out  <- goSignificantCluster(intMClust, intM, entrezName, pvalueCutoff=pvalueCutoff )
-			#}
-			#out$runParam  <- list(biclustmethod,pvalueCutoff, numCluster )
-			#outC  <- cbind(outC , out)
-		#}
-	#}
-	for(numEigen in numEigens){
-	  
-		intMClust <-biclust(as.matrix(intM), method=BCSpectral(), numberOfEigenvalues=numEigen)
-		out  <- goSignificantCluster(intMClust, intM, entrezName, pvalueCutoff=pvalueCutoff )
-		out$runParam  <- list("BCSpectral",pvalueCutoff, numEigens )
-		outC  <- cbind(outC , out)
-	}
-		
-	intMClust <-biclust(as.matrix(intM), method=BCPlaid(), verbose=False)
-	out  <- goSignificantCluster(intMClust, intM, entrezName, pvalueCutoff=pvalueCutoff )
-	out$runParam  <- list("BCPlaid",pvalueCutoff, numCluster )
-	outC  <- cbind(outC , out)
-	return(outC)
 }

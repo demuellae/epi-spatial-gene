@@ -158,6 +158,17 @@ for(i in seq(1,length(numClusterTest))){
 outC1  <- biClustSearch(intM, entrezName)
 outC2  <- biClustPSQM(intM, entrezName)
 
+bimax25C1.table <- genetabNAN[genetabNAN$entrezgene %in% geneIds(temp[[1]][[2]]),]
+bimax25C1 <- data.frame(regionId = paste("chr",bimax25C1.table$chromosome_name,"_",bimax25C1.table$start_position,"_",bimax25C1.table$end_position,sep=""), ensemblId = bimax25C1.table$ensembl_gene_id)
+
+write.table(file="../data/biclusters/bimax25C1.txt",x=bimax25C1, quote=F, row.names=F)
+
+background.table <- genetabNAN[genetabNAN$entrezgene %in% geneIds(temp[[1]][[2]]),]
+background <- data.frame(regionId = paste("chr",background.table$chromosome_name,"_",background.table$start_position,"_",background.table$end_position,sep=""), ensemblId = background.table$ensembl_gene_id)
+
+write.table(file="../data/biclusters/background.txt",x=background, quote=F, row.names=F)
+
+
 
 #plotting beta function for the doc
 colors <- c("red", "blue", "black")
