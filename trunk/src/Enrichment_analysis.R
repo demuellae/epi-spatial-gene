@@ -134,12 +134,12 @@ loadBedFiles = function(directory=character(0),filepaths=character(0),includeExt
     print(paste("Loading:",filename))
     temp = numeric(0)
     temp = tryCatch(read.table(filename,header=T,sep="\t",comment.char="",quote=""),error=function(x) { return(numeric(0)) })
-    if (length(temp)!=0) {
+    if ((length(temp)!=0) & (sum(names(temp)=="X.chrom")) {
       # bed files starting with a header row: "#chrom  chromStart  chromEnd  name"
       names(temp)[names(temp)=="X.chrom"] = "chrom"
     } else {
       # bed files starting with a track row: "track name='E2A_GSM546517_Pre-Pro-B-Cells' description='E2A_GSM546517_Pre-Pro-B-Cells.bed' color=255,0,0"
-      temp = read.table(filename,header=F,skip=1,sep="\t",comment.char="",quote="")
+      temp = read.table(filename,header=F,sep="\t",comment.char="track",quote="")
       colnames = "chrom\tchromStart\tchromEnd\tname\tscore\tstrand"
       if (mode(temp[,1])=="numeric") colnames = paste("bin\t",colnames,sep="")
       curNames = unlist(strsplit(colnames,"\t"))
