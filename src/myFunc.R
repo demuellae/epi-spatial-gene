@@ -1,4 +1,6 @@
-goSignificantCluster  <- function(cluster, geneMat, entrezName, pvalueCutoff = 0.5 ){  
+goSignificantCluster  <- function(cluster, geneMat, entrezName, pvalueCutoff = 0.5 ){ 
+	library(biclust)
+	library(GOstats)
 	geneUniverse  <- entrezName[rownames(intM)]
 	geneUniverse.entrez  <- unlist(lapply(names(geneUniverse), function(x) (geneUniverse[[x]][1])))
 
@@ -60,10 +62,10 @@ treeApply <- function(x, func, post=NULL, pre=NULL, ...) {
 
 biClustSearch  <- function(intM, entrezName){
 	#creates an regression over biclustering methods, number of clusters and parameter of bicluster.
-	numClusterTest  <-  c(25,50,100,250)
+	numClusterTest  <-  c(25,100,250)
 	pvalueCutoff  <- 1e-3
 	#biclustMethods  <- ("BCCC", "BCXmotifs", "BCPlaid", "BCSpectral", "BCBimax", "BCQuest")
-	biclustMethods  <- ("BCCC", "BCBimax")
+	biclustMethods  <- c("BCCC", "BCBimax")
 	for(numCluster in numClusterTest){
 		for(biclustmethod in biclustMethods){
 			if (biclustmethod == "BCBimax"){	

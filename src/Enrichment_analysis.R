@@ -123,7 +123,8 @@ loadBedFiles = function(directory=character(0),filepaths=character(0),includeExt
   }
   filenames = character(0)
   if (length(directory)>0) {    
-    filenames = paste(directory,dir(directory,pattern=extensionPattern),sep="/")
+    #filenames = paste(directory,dir(directory,pattern=extensionPattern),sep="/")
+    filenames = dir(directory,pattern=extensionPattern, full.names=TRUE)
   }
   if (length(filepaths)>0) {
     filenames = c(filenames,filepaths)
@@ -544,7 +545,11 @@ loadEpigraphAnnotations = function(curType,regionType="") {
 
 # prepare enrichment analysis
 #chromatinAnnotations = loadBedFiles(annotation_dir)
-chromatinAnnotations = loadBedFiles("analysis_config/regions_mm9")
+chromatinDir = c("analysis_config/regions_mm9",
+	       	"dataset/mm9/histone/encode/caltech","dataset/mm9/histone/encode/licr", "dataset/mm9/histone/encode/psu", "dataset/mm9/histone/encode/sydh",
+	       	"dataset/mm9/tfbs/encode/caltech","dataset/mm9/tfbs/encode/licr", "dataset/mm9/tfbs/encode/psu", "dataset/mm9/tfbs/encode/sydh",
+		"dataset/mm9/uw")
+chromatinAnnotations = loadBedFiles(chromatinDir, includeExtension=c("bed","narrowPeak","broadPeak"))
 regionType="1kb_tiling"
 #geneSets = loadGeneSets(paste(annotation_dir, "/msigdb.v3.0.symbols.gmt", sep=""))
 geneSets = loadGeneSets("analysis_config/regions_mm9/msigdb.v3.0.symbols.gmt")
@@ -568,7 +573,7 @@ save.image(paste("session_enrichmentAnalysis.",analysis,regionType,".bin",sep=""
 
 
 
-performBicluster = TRUE
+performBicluster = FALSE
 sepSymbol=":"
 biclusterDir="./biclusters/"
 if (!file.exists(biclusterDir)) dir.create(biclusterDir)
