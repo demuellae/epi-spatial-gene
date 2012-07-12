@@ -568,20 +568,24 @@ save.image(paste("session_enrichmentAnalysis.",analysis,regionType,".bin",sep=""
 
 
 
-
+performBicluster = TRUE
 sepSymbol=":"
-biclusterDir="biclusters/"
+biclusterDir="./biclusters/"
+if (!file.exists(biclusterDir)) dir.create(biclusterDir)
 # BICLUSTERING using BCBimax with parameters chosen by grid search giving best GO enrichment
-if(exists(performBicluster)){
+if(exists("performBicluster")){
   if(performBicluster){
     library(biclust)
     library(biomaRt)
 
     #reading the file matrix.csv is comma separated with 3 lines removed from  matrix_1224667147767.txt        
-    intM = read.table(file="../data/eurexpress/matrix.csv", header=TRUE, row.names=2, check.names=FALSE, sep=",")
+    intM = read.table(file="eurexpress/matrix.csv", header=TRUE, row.names=2, check.names=FALSE, sep=",")
     # removing the first column as it have assay information. intM is now numeric 
     intM = intM[,-1:0]
     numCluster = 25
+    intM.binary <- as.matrix(intM)
+    intM.binary[,] <- 0
+    intM.binary[intM > 0] <- 1
     intMClust = biclust(intM.binary, method=BCBimax(), minr = ceiling(5000/(1.5 * numCluster)), minc=ceiling(800/(1.5 * numCluster)) , number=numCluster)
 
 
@@ -592,7 +596,7 @@ if(exists(performBicluster)){
     sepSymbol=":"
     geneUniverse = rownames(intM)
     background.table =  genetabNAN[genetabNAN$mgi_symbol %in% geneUniverse,] 
-    background = data.frame(regionId = paste("chr",background.table$chromosome_name,sepSymbol,background.table$start_position,sepSymbol,background.table$end_position,sep=""), ensemblId = background.table$ensembl:gene_id)
+    background = data.frame(regionId = paste("chr",background.table$chromosome_name,sepSymbol,background.table$start_position,sepSymbol,background.table$end_position,sep=""), ensemblId = background.table$ensembl_gene_id)
     filename  <- paste(biclusterDir,"background.txt",sep="")
     write.table(file=filename,x=background, quote=F, row.names=F)
     for(clust in seq(1,numCluster)){
@@ -610,7 +614,9 @@ if(exists(performBicluster)){
 # MANUALLY PERFORMING AN ENRICHMENT ANALYSIS
 # configure analysis based on region IDs
 a = "manual_enrichment_analyses Jul 10th"
-outputDir = "../result/12jul/manual_enrichment_analyses"
+outputDir = "../result/12jul/"
+if (!file.exists(outputDir)) dir.create(outputDir)
+outputDir = "../result/12jul/manual_enrichment_analyses/"
 if (!file.exists(outputDir)) dir.create(outputDir)
 regionIdList = list()
 ensemblIdList = list()
