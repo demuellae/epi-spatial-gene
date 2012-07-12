@@ -8,7 +8,7 @@ goSignificantCluster  <- function(cluster, geneMat, entrezName, pvalueCutoff = 0
 	#for(i in seq(1,1)){
 	for(i in seq(1,cluster@Number)){
 		print(i)
-		geneSample  <- entrezName[rownames(geneMat)[intMBCB@RowxNumber[,i]]]
+		geneSample  <- entrezName[rownames(geneMat)[cluster@RowxNumber[,i]]]
 		geneSample.entrez  <- 	unlist(lapply(names(geneSample), function(x) (geneSample[[x]][1])))
 		params <- new("GOHyperGParams", geneIds = as.vector(geneSample.entrez) , universeGeneIds = as.vector(geneUniverse.entrez), annotation="org.Mm.eg.db", ontology = "MF", pvalueCutoff = pvalueCutoff, conditional = TRUE, testDirection = "over")
 		hgOver <- hyperGTest(params)

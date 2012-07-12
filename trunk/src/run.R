@@ -4,8 +4,8 @@
 #reading the file matrix.csv is comma separated with 3 lines removed from  matrix_1224667147767.txt        
 intM <- read.table(file="../data/eurexpress/matrix.csv", header=TRUE, row.names=2, check.names=FALSE, sep=",")
 # removing the first column as it have assay information. intM is now numeric 
-
 intM<-intM[,-1:0]
+
 Mdim <- dim(intM)
 #dim(intM) (gene x tissue)
 #[1] 5510  811
@@ -156,7 +156,7 @@ for(i in seq(1,length(numClusterTest))){
 #numClusterTest  <-  c(25,50,100,150, 250)
 
 outC1  <- biClustSearch(intM, entrezName)
-outC2  <- biClustPSQM(intM, entrezName)
+outC3  <- biClustPSQM(intM, entrezName)
 
 bimax25C1.table <- genetabNAN[genetabNAN$entrezgene %in% geneIds(temp[[1]][[2]]),]
 bimax25C1 <- data.frame(regionId = paste("chr",bimax25C1.table$chromosome_name,"_",bimax25C1.table$start_position,"_",bimax25C1.table$end_position,sep=""), ensemblId = bimax25C1.table$ensembl_gene_id)
