@@ -550,6 +550,8 @@ loadEpigraphAnnotations = function(curType,regionType="") {
 
 # prepare enrichment analysis
 #chromatinAnnotations = loadBedFiles(annotation_dir)
+loadInputData = FALSE
+if(loadInputData){
 chromatinDir = c("analysis_config/regions_mm9",
 	       	"dataset/mm9/histone/encode/caltech","dataset/mm9/histone/encode/licr", "dataset/mm9/histone/encode/psu", "dataset/mm9/histone/encode/sydh",
 	       	"dataset/mm9/tfbs/encode/caltech","dataset/mm9/tfbs/encode/licr", "dataset/mm9/tfbs/encode/psu", "dataset/mm9/tfbs/encode/sydh",
@@ -562,7 +564,7 @@ epigraphAnnotations = list()
 epigraphAnnotations[["meth"]] = loadEpigraphAnnotations("meth",regionType)
 epigraphAnnotations[["expr"]] = loadEpigraphAnnotations("expr",regionType)
 annotatedTableChromatin = list()
-for (curType in c("meth","expr")) {  # !!! ,"cpg")) {
+for (curType in c("meth","expr")) {  
   print(curType)
   curBackground = character(0)
   for (curName in names(regionItemSets[[curType]])) curBackground = unique(c(curBackground,regionItemSets[[curType]][[curName]]))
@@ -573,12 +575,11 @@ for (curType in c("meth","expr")) {  # !!! ,"cpg")) {
     annotatedTableChromatin[[curType]] = character(0)
   }
 } 
-
-save.image(paste("session_enrichmentAnalysis.",analysis,regionType,".bin",sep=""))
-
+save.image(paste("session_enrichmentAnalysis.","analysis.",regionType,".bin",sep=""))
 
 
-performBicluster = FALSE
+
+performBicluster = TRUE
 sepSymbol=":"
 biclusterDir="./biclusters/"
 if (!file.exists(biclusterDir)) dir.create(biclusterDir)
@@ -621,73 +622,82 @@ if(exists("performBicluster")){
 
 }
 
+}
+
 # MANUALLY PERFORMING AN ENRICHMENT ANALYSIS
 # configure analysis based on region IDs
-a = "manual_enrichment_analyses Jul 10th"
-outputDir = "../result/12jul/"
+date = Sys.Date()
+outputDir = paste("../results/",date,".manual_enrichment_analyses",sep="") 
 if (!file.exists(outputDir)) dir.create(outputDir)
 outputDir = "../result/12jul/manual_enrichment_analyses/"
 if (!file.exists(outputDir)) dir.create(outputDir)
-regionIdList = list()
-ensemblIdList = list()
-#input gene set
-#inputTable = read.table("analysis_config/Manual_enrichment_Jul10__Gain_methylation_composite_no_oldsmalls_singlemiss.txt",header=T,sep="\t",comment.char="",quote="") 
-#inputTable = read.table(paste(biclsuterDir,"/bimax25C1.txt", sep="", header=T)
-filename = paste(biclusterDir, "biclusters/bimax25C.1.txt", sep="")
-inputTable = read.table(filename, sep="", header=T)
-regionIdList[["Manual_enrichment_Jul10__Gain_methylation_composite_no_oldsmalls_singlemiss"]] = inputTable[,"regionId"]
-ensemblIdList[["Manual_enrichment_Jul10__Gain_methylation_composite_no_oldsmalls_singlemiss"]] = inputTable[,"ensemblId"]
+clustRange = seq(2,10)
+clusterMethod = "bimax"
+totalCluster = "25"
+for(clust in clustRange){
+  print(paste("start enrichment analysis for cluster number:",clust, clusterMethod ))
+  regionIdList = list()
+  ensemblIdList = list()
+  #input gene set
+  #inputTable = read.table("analysis_config/Manual_enrichment_Jul10__Gain_methylation_composite_no_oldsmalls_singlemiss.txt",header=T,sep="\t",comment.char="",quote="") 
+  #inputTable = read.table(paste(biclsuterDir,"/bimax25C1.txt", sep="", header=T)
+  clustfile = paste(clusterMethod,totalCluster,"C.",clust,".txt", sep="")
+  filename = paste(biclusterDir,clustfile,sep="") 
+  inputTable = read.table(filename, sep="", header=T)
+  label = paste(date, "manual_enrichment", sep="")
+  regionIdList[[label]] = inputTable[,"regionId"]
+  ensemblIdList[[label]] = inputTable[,"ensemblId"]
 
-# load regionId background
-#inputTable = read.table("analysis_config/Manual_jointBackground_regionIds.txt",header=T,sep="\t",comment.char="",quote="")
-filename = paste(biclusterDir, "biclusters/background.txt", sep="")
-inputTable = read.table(filename, sep="", header=T)
-regionIdList[["background"]] = inputTable[,"regionId"]
-regionIdAll = unname(unlist(regionIdList))
+  # load regionId background
+  #inputTable = read.table("analysis_config/Manual_jointBackground_regionIds.txt",header=T,sep="\t",comment.char="",quote="")
+  filename = paste(biclusterDir, "background.txt", sep="")
+  inputTable = read.table(filename, sep="", header=T)
+  regionIdList[["background"]] = inputTable[,"regionId"]
+  regionIdAll = unname(unlist(regionIdList))
 
-# retrieve ensemblId background
-print("Retrieving gene annotations from BioMart")
-library(biomaRt)
-ensembl = useMart("ensembl", dataset="mmusculus_gene_ensembl")
-geneMapping = getBM(attributes=c("ensembl_gene_id","mgi_symbol"), mart=ensembl)
-ensemblIdList[["background"]] = toupper(unique(geneMapping[,"ensembl_gene_id"]))
+  # retrieve ensemblId background
+  print("Retrieving gene annotations from BioMart")
+  library(biomaRt)
+  ensembl = useMart("ensembl", dataset="mmusculus_gene_ensembl")
+  geneMapping = getBM(attributes=c("ensembl_gene_id","mgi_symbol"), mart=ensembl)
+  ensemblIdList[["background"]] = toupper(unique(geneMapping[,"ensembl_gene_id"]))
 
-# load data for chromatin analysis
-annotatedTableChromatin = list()
-annotatedTableChromatin[[curType]] = identifyOverlap(regionId2regionTable(curType,regionIdAll,sep=sepSymbol),chromatinAnnotations,includeLabels=F)
-
-# perform enrichment analysis
-maxDigits = 3
-for (i in 1:length(names(regionIdList))) {
-  for (j in 1:length(names(regionIdList))) {
-    if (i >=j ) next
-    first = names(regionIdList)[i]
-    second = names(regionIdList)[j]
-    curLabel = paste(first,"_vs_",second,sep="")    
-    if (first %in% names(regionIdList)) {
-      print(paste("Chromatin analysis for:",curLabel))
-      # prepare region-based analysis
-      casesRegionId = sort(unique(regionIdList[[first]]))
-      backgroundRegionId = sort(unique(union(regionIdList[[first]],regionIdList[[second]])))
-      # chromatin analysis
-      temp = performChromatinAnalysis(casesRegionId,backgroundRegionId,annotatedTableChromatin[[curType]],listGenes=T)      
-      filename = paste(outputDir,"/EnrichedChromatin_",curLabel,".txt",sep="")
-      write.table(format(temp,trim=T,digits=maxDigits),filename,sep="\t",quote=F,row.names=F)            
-    }
-    if(FALSE){
-    if (first %in% names(ensemblIdList)) {
-      print(paste("Gene set analysis for:",curLabel))
-      # prepare gene-based analysis
-      casesEnsemblId = sort(unique(deconvoluteGeneSet(ensemblIdList[[first]])))
-      backgroundEnsemblId = sort(unique(union(deconvoluteGeneSet(ensemblIdList[[first]]),deconvoluteGeneSet(ensemblIdList[[second]]))))
+  # load data for chromatin analysis
+  annotatedTableChromatin = list()
+  annotatedTableChromatin[[curType]] = identifyOverlap(regionId2regionTable(curType,regionIdAll,sep=sepSymbol),chromatinAnnotations,includeLabels=F)
+  # perform enrichment analysis
+  maxDigits = 3
+  for (i in 1:length(names(regionIdList))) {
+    for (j in 1:length(names(regionIdList))) {
+      if (i >=j ) next
+      first = names(regionIdList)[i]
+      second = names(regionIdList)[j]
       curLabel = paste(first,"_vs_",second,sep="")    
-      print(curLabel)
-      # chromatin analysis
-      temp = performTranscriptomeAnalysis(casesEnsemblId,backgroundEnsemblId,geneSets)
-      filename = paste(outputDir,"/EnrichedGeneSets_",curLabel,".txt",sep="")
-      write.table(format(temp,trim=T,digits=maxDigits),filename,sep="\t",quote=F,row.names=F)            
-    }
+      if (first %in% names(regionIdList)) {
+	print(paste("Chromatin analysis for:",curLabel))
+	# prepare region-based analysis
+	casesRegionId = sort(unique(regionIdList[[first]]))
+	backgroundRegionId = sort(unique(union(regionIdList[[first]],regionIdList[[second]])))
+	# chromatin analysis
+	temp = performChromatinAnalysis(casesRegionId,backgroundRegionId,annotatedTableChromatin[[curType]],listGenes=T)      
+	filename = paste(outputDir,"/EnrichedChromatin_",curLabel,clustfile,".txt",sep="")
+	write.table(format(temp,trim=T,digits=maxDigits),filename,sep="\t",quote=F,row.names=F)            
+      }
+      if(FALSE){
+	if (first %in% names(ensemblIdList)) {
+	  print(paste("Gene set analysis for:",curLabel))
+	  # prepare gene-based analysis
+	  casesEnsemblId = sort(unique(deconvoluteGeneSet(ensemblIdList[[first]])))
+	  backgroundEnsemblId = sort(unique(union(deconvoluteGeneSet(ensemblIdList[[first]]),deconvoluteGeneSet(ensemblIdList[[second]]))))
+	  curLabel = paste(first,"_vs_",second,sep="")    
+	  print(curLabel)
+	  # chromatin analysis
+	  temp = performTranscriptomeAnalysis(casesEnsemblId,backgroundEnsemblId,geneSets)
+	  filename = paste(outputDir,"/EnrichedGeneSets_",curLabel,".txt",sep="")
+	  write.table(format(temp,trim=T,digits=maxDigits),filename,sep="\t",quote=F,row.names=F)            
+	}
+      }
     }
   }
-}
 
+}
