@@ -5,111 +5,111 @@ options(stringsAsFactors=F); options(width=Sys.getenv("COLUMNS"));
 # speed-improved Fisher test (a version of the R function that is reduced to the bare essentials)
 hashTable = list()
 fast.fisher = function (x, y = NULL, workspace = 2e+05, hybrid = FALSE, control = list(), 
-    or = 1, alternative = "two.sided", conf.int = TRUE, conf.level = 0.95, 
-    simulate.p.value = FALSE, B = 2000, cache=F) 
+			or = 1, alternative = "two.sided", conf.int = TRUE, conf.level = 0.95, 
+			simulate.p.value = FALSE, B = 2000, cache=F) 
 {
-    if (nrow(x)!=2 | ncol(x)!=2) stop("Incorrect input format for fast.fisher")
-    if (max(is.na(x))!=0) {
-    
-      RVAL <- list(p.value=NA, estimate=NA, null.value=NA, alternative=NA, method="fast.fisher", data.name=NA)
-      attr(RVAL, "class") <- "htest"
-      return(RVAL)
-    }   
-    if (cache) {
-      key = paste(x,collapse="_")
-      cachedResult = hashTable[[key]]
-      if (!is.null(cachedResult)) {
-        return(cachedResult)
-      }
-    }
-    # ---- START: cut version of fisher.test ----
-    DNAME <- deparse(substitute(x))
-    METHOD <- "fast.fisher"
-    nr <- nrow(x)
-    nc <- ncol(x)
-    PVAL <- NULL
-    if ((nr == 2) && (nc == 2)) {
-        m <- sum(x[, 1])
-        n <- sum(x[, 2])
-        k <- sum(x[1, ])
-        x <- x[1, 1]
-        lo <- max(0, k - n)
-        hi <- min(k, m)
-        NVAL <- or
-        names(NVAL) <- "odds ratio"
-        support <- lo:hi
-        logdc <- dhyper(support, m, n, k, log = TRUE)
-        dnhyper <- function(ncp) {
-            d <- logdc + log(ncp) * support
-            d <- exp(d - max(d))
-            d/sum(d)
-        }
-        mnhyper <- function(ncp) {
-            if (ncp == 0) 
-                return(lo)
-            if (ncp == Inf) 
-                return(hi)
-            sum(support * dnhyper(ncp))
-        }
-        pnhyper <- function(q, ncp = 1, upper.tail = FALSE) {
-            if (ncp == 1) {
-                if (upper.tail) 
-                  return(phyper(x - 1, m, n, k, lower.tail = FALSE))
-                else return(phyper(x, m, n, k))
-            }
-            if (ncp == 0) {
-                if (upper.tail) 
-                  return(as.numeric(q <= lo))
-                else return(as.numeric(q >= lo))
-            }
-            if (ncp == Inf) {
-                if (upper.tail) 
-                  return(as.numeric(q <= hi))
-                else return(as.numeric(q >= hi))
-            }
-            d <- dnhyper(ncp)
-            if (upper.tail) 
-                sum(d[support >= q])
-            else sum(d[support <= q])
-        }
-        if (is.null(PVAL)) {
-            PVAL <- switch(alternative, less = pnhyper(x, or), 
-                greater = pnhyper(x, or, upper.tail = TRUE), 
-                two.sided = {
-                  if (or == 0) 
-                    as.numeric(x == lo)
-                  else if (or == Inf) 
-                    as.numeric(x == hi)
-                  else {
-                    relErr <- 1 + 10^(-7)
-                    d <- dnhyper(or)
-                    sum(d[d <= d[x - lo + 1] * relErr])
-                  }
-                })
-            RVAL <- list(p.value = PVAL)
-        }
-        mle <- function(x) {
-            if (x == lo) 
-                return(0)
-            if (x == hi) 
-                return(Inf)
-            mu <- mnhyper(1)
-            if (mu > x) 
-                uniroot(function(t) mnhyper(t) - x, c(0, 1))$root
-            else if (mu < x) 
-                1/uniroot(function(t) mnhyper(1/t) - x, c(.Machine$double.eps, 
-                  1))$root
-            else 1
-        }
-        ESTIMATE <- mle(x)
-        #names(ESTIMATE) <- "odds ratio"
-        RVAL <- c(RVAL, estimate = ESTIMATE, null.value = NVAL)
-    }
-    RVAL <- c(RVAL, alternative = alternative, method = METHOD, data.name = DNAME)
+  if (nrow(x)!=2 | ncol(x)!=2) stop("Incorrect input format for fast.fisher")
+  if (max(is.na(x))!=0) {
+
+    RVAL <- list(p.value=NA, estimate=NA, null.value=NA, alternative=NA, method="fast.fisher", data.name=NA)
     attr(RVAL, "class") <- "htest"
-    # ---- END: cut version of fisher.test ----    
-    if (cache) hashTable[[key]] <<- RVAL # write to global variable
-    return(RVAL)                                                                         
+    return(RVAL)
+  }   
+  if (cache) {
+    key = paste(x,collapse="_")
+    cachedResult = hashTable[[key]]
+    if (!is.null(cachedResult)) {
+      return(cachedResult)
+    }
+  }
+  # ---- START: cut version of fisher.test ----
+  DNAME <- deparse(substitute(x))
+  METHOD <- "fast.fisher"
+  nr <- nrow(x)
+  nc <- ncol(x)
+  PVAL <- NULL
+  if ((nr == 2) && (nc == 2)) {
+    m <- sum(x[, 1])
+    n <- sum(x[, 2])
+    k <- sum(x[1, ])
+    x <- x[1, 1]
+    lo <- max(0, k - n)
+    hi <- min(k, m)
+    NVAL <- or
+    names(NVAL) <- "odds ratio"
+    support <- lo:hi
+    logdc <- dhyper(support, m, n, k, log = TRUE)
+    dnhyper <- function(ncp) {
+      d <- logdc + log(ncp) * support
+      d <- exp(d - max(d))
+      d/sum(d)
+    }
+    mnhyper <- function(ncp) {
+      if (ncp == 0) 
+	return(lo)
+      if (ncp == Inf) 
+	return(hi)
+      sum(support * dnhyper(ncp))
+    }
+    pnhyper <- function(q, ncp = 1, upper.tail = FALSE) {
+      if (ncp == 1) {
+	if (upper.tail) 
+	  return(phyper(x - 1, m, n, k, lower.tail = FALSE))
+	else return(phyper(x, m, n, k))
+      }
+      if (ncp == 0) {
+	if (upper.tail) 
+	  return(as.numeric(q <= lo))
+	else return(as.numeric(q >= lo))
+      }
+      if (ncp == Inf) {
+	if (upper.tail) 
+	  return(as.numeric(q <= hi))
+	else return(as.numeric(q >= hi))
+      }
+      d <- dnhyper(ncp)
+      if (upper.tail) 
+	sum(d[support >= q])
+      else sum(d[support <= q])
+    }
+    if (is.null(PVAL)) {
+      PVAL <- switch(alternative, less = pnhyper(x, or), 
+		     greater = pnhyper(x, or, upper.tail = TRUE), 
+		     two.sided = {
+		       if (or == 0) 
+			 as.numeric(x == lo)
+		       else if (or == Inf) 
+			 as.numeric(x == hi)
+		       else {
+			 relErr <- 1 + 10^(-7)
+			 d <- dnhyper(or)
+			 sum(d[d <= d[x - lo + 1] * relErr])
+		       }
+		     })
+      RVAL <- list(p.value = PVAL)
+    }
+    mle <- function(x) {
+      if (x == lo) 
+	return(0)
+      if (x == hi) 
+	return(Inf)
+      mu <- mnhyper(1)
+      if (mu > x) 
+	uniroot(function(t) mnhyper(t) - x, c(0, 1))$root
+      else if (mu < x) 
+	1/uniroot(function(t) mnhyper(1/t) - x, c(.Machine$double.eps, 
+						  1))$root
+      else 1
+    }
+    ESTIMATE <- mle(x)
+    #names(ESTIMATE) <- "odds ratio"
+    RVAL <- c(RVAL, estimate = ESTIMATE, null.value = NVAL)
+  }
+  RVAL <- c(RVAL, alternative = alternative, method = METHOD, data.name = DNAME)
+  attr(RVAL, "class") <- "htest"
+  # ---- END: cut version of fisher.test ----    
+  if (cache) hashTable[[key]] <<- RVAL # write to global variable
+  return(RVAL)                                                                         
 }
 
 # load BED files into a list
@@ -204,10 +204,10 @@ identifyOverlap = function(curTab,annotations,includeLabels=F) {
       isOverlapping[is.na(isOverlapping)] = F
       if (sum(isOverlapping)==0) next
       if (includeLabels) {        
-        temp = apply(overlapTab[isOverlapping,],1,function(x) { paste(unique(curSelection[(x["left"]+1):x["right"],"name"]),collapse=",") })
-        result[!is.na(result$chrom)&result$chrom==curChrom,][isOverlapping,annotationColName] = temp
+	temp = apply(overlapTab[isOverlapping,],1,function(x) { paste(unique(curSelection[(x["left"]+1):x["right"],"name"]),collapse=",") })
+	result[!is.na(result$chrom)&result$chrom==curChrom,][isOverlapping,annotationColName] = temp
       } else {      
-        result[!is.na(result$chrom)&result$chrom==curChrom,][isOverlapping,annotationColName] = 1      
+	result[!is.na(result$chrom)&result$chrom==curChrom,][isOverlapping,annotationColName] = 1      
       }
     }
     overlapCount = sum(!is.na(result[,ncol(result)]))
@@ -320,7 +320,7 @@ lookupGenes = function(curRegionId,curLookupTable) {
 
 
 # PREPARATIONS FOR THE ENRICHMENT ANALYSIS (not sure if needed)
- 
+
 # conversion of region IDs into Ensembl identifiers
 #config_file <- ""
 config_dir  <- "."
@@ -329,44 +329,44 @@ bed_file <- ""
 
 # most probably this part creates a mapping function for ensembl genes
 if(FALSE){
-geneTable_promoterNarrow = loadBedFiles(filepaths=c("analysis_config/Genes_Ensembl_promoter.bed")) # -5kb to +1kb
-ensemblId2region_promoterNarrow = obtainRegionsById(geneTable_promoterNarrow[[1]],selectionMode="middle")
-ensemblId2region_promoterNarrow$regionId = getRegionId("meth",ensemblId2region_promoterNarrow)
-geneTable_promoterWide = loadBedFiles(filepaths=c("analysis_config/mm9.52.Ensembl_TSS_20kb.bed")) # -10kb to +10kb
-ensemblId2region_promoterWide = obtainRegionsById(geneTable_promoterWide[[1]],selectionMode="middle")
-ensemblId2region_promoterWide$regionId = getRegionId("meth",ensemblId2region_promoterWide)
-#geneTable_locus = loadBedFiles(filepaths=c("analysis_config/mm9.51.Ensembl_locus.bed")) # txstart-50kb to txend+50kb
-geneTable_locus = loadBedFiles(filepaths=c("analysis_config/Genes_Ensembl_locus.bed")) # txstart-50kb to txend+50kb
-ensemblId2region_locus = obtainRegionsById(geneTable_locus[[1]],selectionMode="range")
-ensemblId2region_locus$regionId = getRegionId("meth",ensemblId2region_locus)
-regionId2ensemblId_promoterNarrow = list()
-regionId2ensemblId_promoterWide = list()
-regionId2ensemblId_locus = list()
-for (curType in c("meth","cpg")) {
-  if (curType=="meth") curTab = meanTab[[curType]][,c("chrom","chromStart","chromEnd")]
-  if (curType=="cpg") curTab = data.frame(chrom=meanTab[[curType]]$chrom,chromStart=meanTab[[curType]]$chromstart,chromEnd=meanTab[[curType]]$chromstart+1)
-  print(paste(curType,"promoter-narrow"))
-  temp = identifyOverlap(curTab,geneTable_promoterNarrow,includeLabels=T)
-  regionId2ensemblId_promoterNarrow[[curType]] = temp[,4]
-  names(regionId2ensemblId_promoterNarrow[[curType]]) = getRegionId(curType,meanTab[[curType]])
-  print(paste(curType,"promoter-wide"))
-  temp = identifyOverlap(curTab,geneTable_promoterWide,includeLabels=T)
-  regionId2ensemblId_promoterWide[[curType]] = temp[,4]
-  names(regionId2ensemblId_promoterWide[[curType]]) = getRegionId(curType,meanTab[[curType]])
-  print(paste(curType,"locus"))
-  temp = identifyOverlap(curTab,geneTable_locus,includeLabels=T)
-  regionId2ensemblId_locus[[curType]] = temp[,4]
-  names(regionId2ensemblId_locus[[curType]]) = getRegionId(curType,meanTab[[curType]])
-}  
-ensemblIds = c(unlist(regionId2ensemblId_promoterNarrow),unlist(regionId2ensemblId_promoterWide),unlist(regionId2ensemblId_locus))
-ensemblIds = ensemblIds[!is.na(ensemblIds)]
-ensemblIds = unlist(strsplit(ensemblIds,","))
-ensemblIds = unique(ensemblIds)
-ensemblId2geneName = getGeneNames(ensemblIds,"mm9","analysis_config")
+  geneTable_promoterNarrow = loadBedFiles(filepaths=c("analysis_config/Genes_Ensembl_promoter.bed")) # -5kb to +1kb
+  ensemblId2region_promoterNarrow = obtainRegionsById(geneTable_promoterNarrow[[1]],selectionMode="middle")
+  ensemblId2region_promoterNarrow$regionId = getRegionId("meth",ensemblId2region_promoterNarrow)
+  geneTable_promoterWide = loadBedFiles(filepaths=c("analysis_config/mm9.52.Ensembl_TSS_20kb.bed")) # -10kb to +10kb
+  ensemblId2region_promoterWide = obtainRegionsById(geneTable_promoterWide[[1]],selectionMode="middle")
+  ensemblId2region_promoterWide$regionId = getRegionId("meth",ensemblId2region_promoterWide)
+  #geneTable_locus = loadBedFiles(filepaths=c("analysis_config/mm9.51.Ensembl_locus.bed")) # txstart-50kb to txend+50kb
+  geneTable_locus = loadBedFiles(filepaths=c("analysis_config/Genes_Ensembl_locus.bed")) # txstart-50kb to txend+50kb
+  ensemblId2region_locus = obtainRegionsById(geneTable_locus[[1]],selectionMode="range")
+  ensemblId2region_locus$regionId = getRegionId("meth",ensemblId2region_locus)
+  regionId2ensemblId_promoterNarrow = list()
+  regionId2ensemblId_promoterWide = list()
+  regionId2ensemblId_locus = list()
+  for (curType in c("meth","cpg")) {
+    if (curType=="meth") curTab = meanTab[[curType]][,c("chrom","chromStart","chromEnd")]
+    if (curType=="cpg") curTab = data.frame(chrom=meanTab[[curType]]$chrom,chromStart=meanTab[[curType]]$chromstart,chromEnd=meanTab[[curType]]$chromstart+1)
+    print(paste(curType,"promoter-narrow"))
+    temp = identifyOverlap(curTab,geneTable_promoterNarrow,includeLabels=T)
+    regionId2ensemblId_promoterNarrow[[curType]] = temp[,4]
+    names(regionId2ensemblId_promoterNarrow[[curType]]) = getRegionId(curType,meanTab[[curType]])
+    print(paste(curType,"promoter-wide"))
+    temp = identifyOverlap(curTab,geneTable_promoterWide,includeLabels=T)
+    regionId2ensemblId_promoterWide[[curType]] = temp[,4]
+    names(regionId2ensemblId_promoterWide[[curType]]) = getRegionId(curType,meanTab[[curType]])
+    print(paste(curType,"locus"))
+    temp = identifyOverlap(curTab,geneTable_locus,includeLabels=T)
+    regionId2ensemblId_locus[[curType]] = temp[,4]
+    names(regionId2ensemblId_locus[[curType]]) = getRegionId(curType,meanTab[[curType]])
+  }  
+  ensemblIds = c(unlist(regionId2ensemblId_promoterNarrow),unlist(regionId2ensemblId_promoterWide),unlist(regionId2ensemblId_locus))
+  ensemblIds = ensemblIds[!is.na(ensemblIds)]
+  ensemblIds = unlist(strsplit(ensemblIds,","))
+  ensemblIds = unique(ensemblIds)
+  ensemblId2geneName = getGeneNames(ensemblIds,"mm9","analysis_config")
 
-# load data for chromatin analysis
-chromatinAnnotations = loadBedFiles("analysis_config/regions_mm9")
-writeBedFiles(chromatinAnnotations,"analysis_config/regions_mm9/bigBed")
+  # load data for chromatin analysis
+  chromatinAnnotations = loadBedFiles("analysis_config/regions_mm9")
+  writeBedFiles(chromatinAnnotations,"analysis_config/regions_mm9/bigBed")
 }
 
 
@@ -552,152 +552,234 @@ loadEpigraphAnnotations = function(curType,regionType="") {
 #chromatinAnnotations = loadBedFiles(annotation_dir)
 loadInputData = FALSE
 if(loadInputData){
-chromatinDir = c("analysis_config/regions_mm9",
-	       	"dataset/mm9/histone/encode/caltech","dataset/mm9/histone/encode/licr", "dataset/mm9/histone/encode/psu", "dataset/mm9/histone/encode/sydh",
-	       	"dataset/mm9/tfbs/encode/caltech","dataset/mm9/tfbs/encode/licr", "dataset/mm9/tfbs/encode/psu", "dataset/mm9/tfbs/encode/sydh",
-		"dataset/mm9/uw")
-chromatinAnnotations = loadBedFiles(chromatinDir, includeExtension=c("bed","narrowPeak","broadPeak"))
-regionType="1kb_tiling"
-#geneSets = loadGeneSets(paste(annotation_dir, "/msigdb.v3.0.symbols.gmt", sep=""))
-geneSets = loadGeneSets("analysis_config/regions_mm9/msigdb.v3.0.symbols.gmt")
-epigraphAnnotations = list()
-epigraphAnnotations[["meth"]] = loadEpigraphAnnotations("meth",regionType)
-epigraphAnnotations[["expr"]] = loadEpigraphAnnotations("expr",regionType)
-annotatedTableChromatin = list()
-for (curType in c("meth","expr")) {  
-  print(curType)
-  curBackground = character(0)
-  for (curName in names(regionItemSets[[curType]])) curBackground = unique(c(curBackground,regionItemSets[[curType]][[curName]]))
-  curBackground = curBackground[!is.na(curBackground)]
-  if (length(curBackground) > 0) {
-    annotatedTableChromatin[[curType]] = identifyOverlap(regionId2regionTable(curType,curBackground),chromatinAnnotations,includeLabels=F)
-  } else {
-    annotatedTableChromatin[[curType]] = character(0)
+  chromatinDir = c("analysis_config/regions_mm9",
+		   "dataset/mm9/histone/encode/caltech","dataset/mm9/histone/encode/licr", "dataset/mm9/histone/encode/psu", "dataset/mm9/histone/encode/sydh",
+		   "dataset/mm9/tfbs/encode/caltech","dataset/mm9/tfbs/encode/licr", "dataset/mm9/tfbs/encode/psu", "dataset/mm9/tfbs/encode/sydh",
+		   "dataset/mm9/uw")
+  chromatinAnnotations = loadBedFiles(chromatinDir, includeExtension=c("bed","narrowPeak","broadPeak"))
+  regionType="1kb_tiling"
+  #geneSets = loadGeneSets(paste(annotation_dir, "/msigdb.v3.0.symbols.gmt", sep=""))
+  geneSets = loadGeneSets("analysis_config/regions_mm9/msigdb.v3.0.symbols.gmt")
+  epigraphAnnotations = list()
+  epigraphAnnotations[["meth"]] = loadEpigraphAnnotations("meth",regionType)
+  epigraphAnnotations[["expr"]] = loadEpigraphAnnotations("expr",regionType)
+  annotatedTableChromatin = list()
+  for (curType in c("meth","expr")) {  
+    print(curType)
+    curBackground = character(0)
+    for (curName in names(regionItemSets[[curType]])) curBackground = unique(c(curBackground,regionItemSets[[curType]][[curName]]))
+    curBackground = curBackground[!is.na(curBackground)]
+    if (length(curBackground) > 0) {
+      annotatedTableChromatin[[curType]] = identifyOverlap(regionId2regionTable(curType,curBackground),chromatinAnnotations,includeLabels=F)
+    } else {
+      annotatedTableChromatin[[curType]] = character(0)
+    }
+  } 
+  save.image(paste("session_enrichmentAnalysis.","analysis.",regionType,".bin",sep=""))
+chromatinAnnotations = loadBedFiles("analysis_config/regions_mm9")
+save(file="chromatinAnnotation.RData", chromatinAnnotations)
+}else{
+load(file="chromatinAnnotation.RData")
+}
+
+
+# BICLUSTERING using BCBimax with parameters chosen by grid search giving best GO enrichment
+#performBicluster = TRUE
+
+
+
+performBicluster  <-  function(intM, novartis=FALSE, genetab.common = genetab.common, biclusterDir="bicluster", sepSymbol=":", numCluster = 25){
+  library(biclust)
+  if (!file.exists(biclusterDir)) dir.create(biclusterDir)
+  #discretize
+  intM.binary <- as.matrix(intM)
+  intM.binary[,] <- 0
+  intM.binary[intM > 0] <- 1
+  intMClust = biclust(intM.binary, method=BCBimax(), minr = ceiling(5000/(1.5 * numCluster)), minc=ceiling(800/(1.5 * numCluster)) , number=numCluster)
+  out  <- goSignificantCluster(intMBCB, intM, entrezName, pvalueCutoff=5e-6 )
+
+  geneUniverse = rownames(intM)
+  if(noavartis){
+    geneIdNames = "ensembl_gene_id"
+  }else{
+    geneIdNames = "tmp_gene_symbol"
   }
-} 
-save.image(paste("session_enrichmentAnalysis.","analysis.",regionType,".bin",sep=""))
+
+  background.table =  genetab.common[genetab.common$geneIdNames %in% geneUniverse,] 
+  background = data.frame(regionId = paste("chr",background.table$chromosome_name,sepSymbol, background.table$start_position,sepSymbol,background.table$end_position,sep=""), 
+			  ensemblId = background.table$ensembl_gene_id)
+  filename  <- paste(biclusterDir,"background.txt",sep="")
+  write.table(file=filename,x=background, quote=F, row.names=F)
+  for(clust in seq(1,numCluster)){
+    geneSample  <- rownames(intM)[intMClust@RowxNumber[,clust]]
+    background.table =  genetab.common[genetab.common$geneIdNames %in% geneSample,] 
+    if(novartis) ext <- ".Nova."
+    bimax = data.frame(regionId = paste("chr",bimax.table$chromosome_name,sepSymbol,bimax.table$start_position,sepSymbol,bimax.table$end_position,sep=""), ensemblId = bimax.table$ensembl_gene_id)
+    filename  <- paste(biclusterDir,"bimax",numCluster,"C.",clust, ext,".txt",sep="")
+    write.table(file=filename,x=bimax, quote=F, row.names=F)
+  }
+}
 
 
 
-performBicluster = TRUE
-sepSymbol=":"
+
+enrichmentCluster <- function(
+			      clustRange = seq(1,10),
+			      clusterMethod = "bimax",
+			      totalCluster = "25",
+			      analysisNovartis=FALSE){
+  for(clust in clustRange){
+    print(paste("start enrichment analysis for cluster number:",clust, clusterMethod ))
+    #regionIdList = list()
+    #ensemblIdList = list()
+    if (analysisNovartis){
+      ext=".Nova."
+    }else{
+      ext=""
+    }
+    #input gene set
+    clustfile = paste(clusterMethod,totalCluster,"C.",clust,ext,".txt", sep="")
+    filename = paste(biclusterDir,clustfile,sep="/") 
+    inputTable = read.table(filename, sep="", header=T)
+    label = paste(date, "manual_enrichment", sep="")
+    regionIdList[[label]] = inputTable[,"regionId"]
+    ensemblIdList[[label]] = inputTable[,"ensemblId"]
+
+    # perform enrichment analysis
+    maxDigits = 3
+    #for (i in 1:length(names(regionIdList))) {
+    #for (j in 1:length(names(regionIdList))) {
+    #if (i >=j ) next
+    #first = names(regionIdList)[i]
+    first = label
+    #second = names(regionIdList)[j]
+    if (novartis){
+      second = "background.Nova"
+    }else{
+      second = "background"
+    }
+    curLabel = paste(first,"_vs_",second,sep="")    
+    if (first %in% names(regionIdList)) {
+      print(paste("Chromatin analysis for:",curLabel))
+      # prepare region-based analysis
+      casesRegionId = sort(unique(regionIdList[[first]]))
+      backgroundRegionId = sort(unique(union(regionIdList[[first]],regionIdList[[second]])))
+      # chromatin analysis
+      temp = performChromatinAnalysis(casesRegionId,backgroundRegionId,annotatedTableChromatin,listGenes=T)      
+      filename = paste(outputDir,"/EnrichedChromatin_",curLabel,clustfile,"ext",".txt",sep="")
+      write.table(format(temp,trim=T,digits=maxDigits),filename,sep="\t",quote=F,row.names=F)            
+    }
+    if(FALSE){
+    if (first %in% names(ensemblIdList)) {
+      print(paste("Gene set analysis for:",curLabel))
+      # prepare gene-based analysis
+      casesEnsemblId = sort(unique(deconvoluteGeneSet(ensemblIdList[[first]])))
+      backgroundEnsemblId = sort(unique(union(deconvoluteGeneSet(ensemblIdList[[first]]),deconvoluteGeneSet(ensemblIdList[[second]]))))
+      curLabel = paste(first,"_vs_",second,sep="")    
+      print(curLabel)
+      # chromatin analysis
+      temp = performTranscriptomeAnalysis(casesEnsemblId,backgroundEnsemblId,geneSets)
+      filename = paste(outputDir,"/EnrichedGeneSets_",curLabel,"ext",".txt",sep="")
+      write.table(format(temp,trim=T,digits=maxDigits),filename,sep="\t",quote=F,row.names=F)            
+    }
+    }
+    #}
+    #}
+
+  }
+}
+
+
+#finding biclusters ISH and NOVARTIS dataset and enrichment analysis
+date = Sys.Date()
+outputDir = paste("../results/",date,sep="") 
+if (!file.exists(outputDir)) dir.create(outputDir)
+outputDir = paste(outputDir,"manual_enrichment_analyses",sep="") 
+if (!file.exists(outputDir)) dir.create(outputDir)
+
+library(biomaRt)
+ensembl = useMart("ensembl", dataset="mmusculus_gene_ensembl")
+genetab.ensembl = getBM(attributes = c("chromosome_name", "start_position", "end_position", "ensembl_gene_id", "entrezgene", "mgi_symbol" ), mart=ensembl)
+#sepSymbol=":"
 biclusterDir="./biclusters/"
 if (!file.exists(biclusterDir)) dir.create(biclusterDir)
-# BICLUSTERING using BCBimax with parameters chosen by grid search giving best GO enrichment
-if(exists("performBicluster")){
-  if(performBicluster){
-    library(biclust)
-    library(biomaRt)
 
+Bicluster=FALSE
+if(exists("Bicluster")){
+  if(Bicluster){
+    print("starting the biclsutering process of ISH data")
+    library(biomaRt)
+    eurexpress = useMart("Eurexpress Biomart", dataset="template")
+    genetab.eurexpress = getBM(attributes = c("tmp_chromosone_location", "tmp_gene_id", "tmp_gene_symbol", "tmp_entrez_id" ), mart=eurexpress) 
+    genetab.common = merge(x=genetab.eurexpress, y=genetab.ensembl, by.x="tmp_entrez_id", by.y="entrezgene")
+    save("file=genetab.common.RData",genetab.common)
+    load("file=genetab.common.RData")
     #reading the file matrix.csv is comma separated with 3 lines removed from  matrix_1224667147767.txt        
     intM = read.table(file="eurexpress/matrix.csv", header=TRUE, row.names=2, check.names=FALSE, sep=",")
     # removing the first column as it have assay information. intM is now numeric 
     intM = intM[,-1:0]
-    numCluster = 25
-    intM.binary <- as.matrix(intM)
-    intM.binary[,] <- 0
-    intM.binary[intM > 0] <- 1
-    intMClust = biclust(intM.binary, method=BCBimax(), minr = ceiling(5000/(1.5 * numCluster)), minc=ceiling(800/(1.5 * numCluster)) , number=numCluster)
-
-
-    ensembl = useMart("ensembl", dataset="mmusculus_gene_ensembl")
-    genetab = getBM(attributes = c("chromosome_name", "start_position", "end_position", "ensembl_gene_id", "entrezgene", "mgi_symbol" ), mart=ensembl)
-    genetabNAN = genetab[!is.na(genetab$mgi_symbol),]
-    #background.table <- genetabNAN[genetabNAN$entrezgene %in% entrezName(rownames(intM)),] # through entrezName
-    sepSymbol=":"
-    geneUniverse = rownames(intM)
-    background.table =  genetabNAN[genetabNAN$mgi_symbol %in% geneUniverse,] 
-    background = data.frame(regionId = paste("chr",background.table$chromosome_name,sepSymbol,background.table$start_position,sepSymbol,background.table$end_position,sep=""), ensemblId = background.table$ensembl_gene_id)
-    filename  <- paste(biclusterDir,"background.txt",sep="")
-    write.table(file=filename,x=background, quote=F, row.names=F)
-    for(clust in seq(1,numCluster)){
-      geneSample  <- rownames(intM)[intMClust@RowxNumber[,clust]]
-      bimax.table =  genetabNAN[genetabNAN$mgi_symbol %in% geneSample,] 
-      bimax = data.frame(regionId = paste("chr",bimax.table$chromosome_name,sepSymbol,bimax.table$start_position,sepSymbol,bimax.table$end_position,sep=""), ensemblId = bimax.table$ensembl_gene_id)
-      filename  <- paste(biclusterDir,"bimax",numCluster,"C.",clust,".txt",sep="")
-      write.table(file=filename,x=bimax, quote=F, row.names=F)
-
-    }
+    performBicluster(intM, genetab.common=genetab.common)
   }
-
 }
 
+print("Finished the biclsutering process of ISH data")
+novartisCluster=TRUE
+Bicluster=TRUE
+if(exists("novartisCluster")){
+  if(novartisCluster){
+    print("started the biclsutering process of novartis data.....")
+    #save("file=genetab.novartis.RData",genetab.novartis)
+    #load("file=genetab.novartis.RData")
+    load("./dataset/novartis/downloaded/GSE1133_GPL1073_GNF1M_mouse.RData")
+    library(Biobase)
+    library(BiocGenerics)
+    intNovartis = exprs(mouse)
+    #GNF1M = parse.table("./dataset/processed/gnf1m.annot2007.tsv")
+    #save(file="./GNF1M_annotMapping.RData",GNF1M)
+    load(file="./GNF1M_annotMapping.RData")
+    intNovartis.annotated  <- intNovartis[rownames(intNovartis) %in% rownames(GNF1M),]
+    intNovartis.ensembl  <- intNovartis.annotated[!is.na(GNF1M[match(rownames(intNovartis.annotated), rownames(GNF1M)) , "Ensembl"]),] 
+    ensemblId = GNF1M[match(rownames(intNovartis.ensembl), rownames(GNF1M)) , "Ensembl"] 
+    #ensemblID = GNF1M[rownames(intNovartis.annotated), "Ensembl"]
+    rownames(intNovartis.ensembl)  <- ensemblId
+    performBicluster(intNovartis.ensembl, novartis=TRUE, genetab.common=genetab.ensembl)
+  }
 }
 
+print("Finished the biclsutering process of novartis data")
 # MANUALLY PERFORMING AN ENRICHMENT ANALYSIS
 # configure analysis based on region IDs
-date = Sys.Date()
-outputDir = paste("../results/",date,".manual_enrichment_analyses",sep="") 
-if (!file.exists(outputDir)) dir.create(outputDir)
-outputDir = "../result/12jul/manual_enrichment_analyses/"
-if (!file.exists(outputDir)) dir.create(outputDir)
-clustRange = seq(2,10)
-clusterMethod = "bimax"
-totalCluster = "25"
-for(clust in clustRange){
-  print(paste("start enrichment analysis for cluster number:",clust, clusterMethod ))
-  regionIdList = list()
-  ensemblIdList = list()
-  #input gene set
-  #inputTable = read.table("analysis_config/Manual_enrichment_Jul10__Gain_methylation_composite_no_oldsmalls_singlemiss.txt",header=T,sep="\t",comment.char="",quote="") 
-  #inputTable = read.table(paste(biclsuterDir,"/bimax25C1.txt", sep="", header=T)
-  clustfile = paste(clusterMethod,totalCluster,"C.",clust,".txt", sep="")
-  filename = paste(biclusterDir,clustfile,sep="") 
-  inputTable = read.table(filename, sep="", header=T)
-  label = paste(date, "manual_enrichment", sep="")
-  regionIdList[[label]] = inputTable[,"regionId"]
-  ensemblIdList[[label]] = inputTable[,"ensemblId"]
+# retrieve ensemblId background
+#print("Retrieving gene annotations from BioMart")
+#library(biomaRt)
+#ensembl = useMart("ensembl", dataset="mmusculus_gene_ensembl")
+#geneMapping = getBM(attributes=c("ensembl_gene_id","mgi_symbol"), mart=ensembl)
+ensemblIdList[["background"]] = toupper(unique(genetab.ensembl[,"ensembl_gene_id"]))
 
-  # load regionId background
-  #inputTable = read.table("analysis_config/Manual_jointBackground_regionIds.txt",header=T,sep="\t",comment.char="",quote="")
-  filename = paste(biclusterDir, "background.txt", sep="")
-  inputTable = read.table(filename, sep="", header=T)
-  regionIdList[["background"]] = inputTable[,"regionId"]
-  regionIdAll = unname(unlist(regionIdList))
+# load regionId background
+#inputTable = read.table("analysis_config/Manual_jointBackground_regionIds.txt",header=T,sep="\t",comment.char="",quote="")
+filename = paste(biclusterDir, "background.txt", sep="")
+inputTable = read.table(filename, sep="", header=T)
+regionIdList[["background"]] = inputTable[,"regionId"]
 
-  # retrieve ensemblId background
-  print("Retrieving gene annotations from BioMart")
-  library(biomaRt)
-  ensembl = useMart("ensembl", dataset="mmusculus_gene_ensembl")
-  geneMapping = getBM(attributes=c("ensembl_gene_id","mgi_symbol"), mart=ensembl)
-  ensemblIdList[["background"]] = toupper(unique(geneMapping[,"ensembl_gene_id"]))
+filename = paste(biclusterDir, "background.Nova.txt", sep="")
+inputTable = read.table(filename, sep="", header=T)
+regionIdList[["background.Nova"]] = inputTable[,"regionId"]
 
-  # load data for chromatin analysis
-  annotatedTableChromatin = list()
-  annotatedTableChromatin[[curType]] = identifyOverlap(regionId2regionTable(curType,regionIdAll,sep=sepSymbol),chromatinAnnotations,includeLabels=F)
-  # perform enrichment analysis
-  maxDigits = 3
-  for (i in 1:length(names(regionIdList))) {
-    for (j in 1:length(names(regionIdList))) {
-      if (i >=j ) next
-      first = names(regionIdList)[i]
-      second = names(regionIdList)[j]
-      curLabel = paste(first,"_vs_",second,sep="")    
-      if (first %in% names(regionIdList)) {
-	print(paste("Chromatin analysis for:",curLabel))
-	# prepare region-based analysis
-	casesRegionId = sort(unique(regionIdList[[first]]))
-	backgroundRegionId = sort(unique(union(regionIdList[[first]],regionIdList[[second]])))
-	# chromatin analysis
-	temp = performChromatinAnalysis(casesRegionId,backgroundRegionId,annotatedTableChromatin[[curType]],listGenes=T)      
-	filename = paste(outputDir,"/EnrichedChromatin_",curLabel,clustfile,".txt",sep="")
-	write.table(format(temp,trim=T,digits=maxDigits),filename,sep="\t",quote=F,row.names=F)            
-      }
-      if(FALSE){
-	if (first %in% names(ensemblIdList)) {
-	  print(paste("Gene set analysis for:",curLabel))
-	  # prepare gene-based analysis
-	  casesEnsemblId = sort(unique(deconvoluteGeneSet(ensemblIdList[[first]])))
-	  backgroundEnsemblId = sort(unique(union(deconvoluteGeneSet(ensemblIdList[[first]]),deconvoluteGeneSet(ensemblIdList[[second]]))))
-	  curLabel = paste(first,"_vs_",second,sep="")    
-	  print(curLabel)
-	  # chromatin analysis
-	  temp = performTranscriptomeAnalysis(casesEnsemblId,backgroundEnsemblId,geneSets)
-	  filename = paste(outputDir,"/EnrichedGeneSets_",curLabel,".txt",sep="")
-	  write.table(format(temp,trim=T,digits=maxDigits),filename,sep="\t",quote=F,row.names=F)            
-	}
-      }
-    }
-  }
+regionIdAll = unname(unlist(regionIdList))
 
+# load data for chromatin analysis
+findOverlap=T
+if(findOverlap){
+  #annotatedTableChromatin = list()
+  annotatedTableChromatin = identifyOverlap(regionId2regionTable(curType,regionIdAll,sep=sepSymbol),chromatinAnnotations,includeLabels=F)
+  save(file="annotatedTableChromatin.RData", annotatedTableChromatin) 
+}else{
+  load(file="annotatedTableChromatin.RData") 
 }
+
+print("starting the enrichment  analysis of ISH data.... ")
+enrichmentCluster(clustRange = seq(1,2), clusterMethod = "bimax",  totalCluster = "25", analysisNovartis=FALSE)
+print("starting the enrichment  analysis of novartis data.... ")
+enrichmentCluster(clustRange = seq(1,2), clusterMethod = "bimax",  totalCluster = "25", analysisNovartis=TRUE)
+print("Finished enrichment analysis of novartis data")
