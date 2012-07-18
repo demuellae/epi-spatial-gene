@@ -169,6 +169,29 @@ background <- data.frame(regionId = paste("chr",background.table$chromosome_name
 write.table(file="../data/biclusters/background.txt",x=background, quote=F, row.names=F)
 
 
+#novartis go analysis
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #plotting beta function for the doc
 colors <- c("red", "blue", "black")

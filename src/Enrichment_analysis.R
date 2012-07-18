@@ -297,6 +297,7 @@ obtainRegionsById = function(curTable,selectionMode="middle") {
 }                 
 
 # high-speed lookup in a named list using a temporary hash
+if(FALSE){
 library(hash)
 lookupGenes2 = function(curId,curLookupTable) {
   n = 5000
@@ -304,7 +305,7 @@ lookupGenes2 = function(curId,curLookupTable) {
   result = temp[curId]
   return(result)
 }
-
+}
 # high-speed lookup in a named list (only one gene per item, no support for comma-separated values)
 lookupGenes = function(curRegionId,curLookupTable) {
   batchSize = 10000
@@ -584,38 +585,38 @@ load(file="chromatinAnnotation.RData")
 
 
 # BICLUSTERING using BCBimax with parameters chosen by grid search giving best GO enrichment
-#performBicluster = TRUE
 
-
-
-performBicluster  <-  function(intM, novartis=FALSE, genetab.common = genetab.common, biclusterDir="bicluster", sepSymbol=":", numCluster = 25){
+performBicluster  <-  function(intM, novartis=FALSE, genetab.common = genetab.common, biclusterDir="biclusters/", sepSymbol=":", numCluster = 25, threshold =0){
   library(biclust)
   if (!file.exists(biclusterDir)) dir.create(biclusterDir)
   #discretize
   intM.binary <- as.matrix(intM)
   intM.binary[,] <- 0
-  intM.binary[intM > 0] <- 1
-  intMClust = biclust(intM.binary, method=BCBimax(), minr = ceiling(5000/(1.5 * numCluster)), minc=ceiling(800/(1.5 * numCluster)) , number=numCluster)
-  out  <- goSignificantCluster(intMBCB, intM, entrezName, pvalueCutoff=5e-6 )
+  intM.binary[intM > threshold] <- 1
+  Mdim <- dim(intM)
+  #intMClust = biclust(intM.binary, method=BCBimax(), minr = ceiling(Mdim[1]/(1.5 * numCluster)), minc=ceiling(Mdim[2]/(1.5 * numCluster)) , number=numCluster)
+  intMClust = biclust(intM.binary, method=BCBimax(), minr = 10, minc=10 , number=numCluster)
+  #out  <- goSignificantCluster(intMBCB, intM, entrezName, pvalueCutoff=5e-6 )
 
   geneUniverse = rownames(intM)
-  if(noavartis){
-    geneIdNames = "ensembl_gene_id"
+  if(novartis){
+    geneIdNames = "mgi_symbol"
+    ext <- ".Nova"
   }else{
     geneIdNames = "tmp_gene_symbol"
+    ext  <- ""
   }
 
-  background.table =  genetab.common[genetab.common$geneIdNames %in% geneUniverse,] 
+  background.table =  genetab.common[genetab.common[,geneIdNames] %in% geneUniverse,] 
   background = data.frame(regionId = paste("chr",background.table$chromosome_name,sepSymbol, background.table$start_position,sepSymbol,background.table$end_position,sep=""), 
 			  ensemblId = background.table$ensembl_gene_id)
-  filename  <- paste(biclusterDir,"background.txt",sep="")
+  filename  <- paste(biclusterDir,"/","background",ext,".txt",sep="")
   write.table(file=filename,x=background, quote=F, row.names=F)
-  for(clust in seq(1,numCluster)){
+  for(clust in seq(1,intMClust@Number)){
     geneSample  <- rownames(intM)[intMClust@RowxNumber[,clust]]
-    background.table =  genetab.common[genetab.common$geneIdNames %in% geneSample,] 
-    if(novartis) ext <- ".Nova."
+    bimax.table =  genetab.common[genetab.common[,geneIdNames] %in% geneSample,] 
     bimax = data.frame(regionId = paste("chr",bimax.table$chromosome_name,sepSymbol,bimax.table$start_position,sepSymbol,bimax.table$end_position,sep=""), ensemblId = bimax.table$ensembl_gene_id)
-    filename  <- paste(biclusterDir,"bimax",numCluster,"C.",clust, ext,".txt",sep="")
+    filename  <- paste(biclusterDir,"/","bimax",numCluster,"C.",clust, ext,".txt",sep="")
     write.table(file=filename,x=bimax, quote=F, row.names=F)
   }
 }
@@ -627,13 +628,13 @@ enrichmentCluster <- function(
 			      clustRange = seq(1,10),
 			      clusterMethod = "bimax",
 			      totalCluster = "25",
-			      analysisNovartis=FALSE){
+			      novartis=FALSE){
   for(clust in clustRange){
     print(paste("start enrichment analysis for cluster number:",clust, clusterMethod ))
     #regionIdList = list()
     #ensemblIdList = list()
-    if (analysisNovartis){
-      ext=".Nova."
+    if (novartis){
+      ext=".Nova"
     }else{
       ext=""
     }
@@ -666,7 +667,7 @@ enrichmentCluster <- function(
       backgroundRegionId = sort(unique(union(regionIdList[[first]],regionIdList[[second]])))
       # chromatin analysis
       temp = performChromatinAnalysis(casesRegionId,backgroundRegionId,annotatedTableChromatin,listGenes=T)      
-      filename = paste(outputDir,"/EnrichedChromatin_",curLabel,clustfile,"ext",".txt",sep="")
+      filename = paste(outputDir,"/EnrichedChromatin_",curLabel,clustfile,sep="")
       write.table(format(temp,trim=T,digits=maxDigits),filename,sep="\t",quote=F,row.names=F)            
     }
     if(FALSE){
@@ -691,15 +692,16 @@ enrichmentCluster <- function(
 
 
 #finding biclusters ISH and NOVARTIS dataset and enrichment analysis
-date = Sys.Date()
-outputDir = paste("../results/",date,sep="") 
+if(FALSE){
+  date = Sys.Date()
+outputDir = "../result/" 
 if (!file.exists(outputDir)) dir.create(outputDir)
-outputDir = paste(outputDir,"manual_enrichment_analyses",sep="") 
+outputDir = paste(outputDir,date,"manual_enrichment_analyses",sep="") 
 if (!file.exists(outputDir)) dir.create(outputDir)
 
 library(biomaRt)
 ensembl = useMart("ensembl", dataset="mmusculus_gene_ensembl")
-genetab.ensembl = getBM(attributes = c("chromosome_name", "start_position", "end_position", "ensembl_gene_id", "entrezgene", "mgi_symbol" ), mart=ensembl)
+genetab.ensembl = getBM(attributes = c("chromosome_name", "start_position", "end_position", "ensembl_gene_id", "entrezgene", "mgi_symbol", "ensembl_transcript_id" ), mart=ensembl)
 #sepSymbol=":"
 biclusterDir="./biclusters/"
 if (!file.exists(biclusterDir)) dir.create(biclusterDir)
@@ -712,8 +714,8 @@ if(exists("Bicluster")){
     eurexpress = useMart("Eurexpress Biomart", dataset="template")
     genetab.eurexpress = getBM(attributes = c("tmp_chromosone_location", "tmp_gene_id", "tmp_gene_symbol", "tmp_entrez_id" ), mart=eurexpress) 
     genetab.common = merge(x=genetab.eurexpress, y=genetab.ensembl, by.x="tmp_entrez_id", by.y="entrezgene")
-    save("file=genetab.common.RData",genetab.common)
-    load("file=genetab.common.RData")
+    save(file="genetab.common.RData",genetab.common)
+    load(file="genetab.common.RData")
     #reading the file matrix.csv is comma separated with 3 lines removed from  matrix_1224667147767.txt        
     intM = read.table(file="eurexpress/matrix.csv", header=TRUE, row.names=2, check.names=FALSE, sep=",")
     # removing the first column as it have assay information. intM is now numeric 
@@ -721,7 +723,6 @@ if(exists("Bicluster")){
     performBicluster(intM, genetab.common=genetab.common)
   }
 }
-
 print("Finished the biclsutering process of ISH data")
 novartisCluster=TRUE
 Bicluster=TRUE
@@ -738,11 +739,21 @@ if(exists("novartisCluster")){
     #save(file="./GNF1M_annotMapping.RData",GNF1M)
     load(file="./GNF1M_annotMapping.RData")
     intNovartis.annotated  <- intNovartis[rownames(intNovartis) %in% rownames(GNF1M),]
-    intNovartis.ensembl  <- intNovartis.annotated[!is.na(GNF1M[match(rownames(intNovartis.annotated), rownames(GNF1M)) , "Ensembl"]),] 
-    ensemblId = GNF1M[match(rownames(intNovartis.ensembl), rownames(GNF1M)) , "Ensembl"] 
+    intNovartis.symbol  <- intNovartis.annotated[!is.na(GNF1M[match(rownames(intNovartis.annotated), rownames(GNF1M)) , "Symbol"]),] 
+    symbol = GNF1M[match(rownames(intNovartis.symbol), rownames(GNF1M)) , "Symbol"] 
+    rownames(intNovartis.symbol)  <- symbol
     #ensemblID = GNF1M[rownames(intNovartis.annotated), "Ensembl"]
-    rownames(intNovartis.ensembl)  <- ensemblId
-    performBicluster(intNovartis.ensembl, novartis=TRUE, genetab.common=genetab.ensembl)
+    #sum( GNF1M[match(rownames(intNovartis.annotated), rownames(GNF1M)) , "Symbol"] %in% genetab.ensembl$mgi_symbol)
+    #calculation of the quantile threshold based on the proportion of nonzeros in intM
+    #thresholdQuantile = sum(intM.binary ==1)/4468610
+    #intNovartis.sort = sort(unlist(as.list(intNovartis)))
+    #novartisExprThereshold = intNovartis.sort[ceiling(length(intNovartis.list)*thresholdQuantile)]
+    novartisExprThereshold <- 1133.4
+    #intNovartis.binary <- as.matrix(intNovartis)
+    #intNovartis.binary[,] <- 0
+    #intNovartis.binary[intNovartis > novartisExprThereshold] = 1
+    #intMClust = biclust(intNovartis.binary, method=BCBimax(), minr = 10, minc=10 , number=25)
+    performBicluster(intNovartis.symbol, novartis=TRUE, genetab.common=genetab.ensembl, threshold=novartisExprThereshold)
   }
 }
 
@@ -754,12 +765,14 @@ print("Finished the biclsutering process of novartis data")
 #library(biomaRt)
 #ensembl = useMart("ensembl", dataset="mmusculus_gene_ensembl")
 #geneMapping = getBM(attributes=c("ensembl_gene_id","mgi_symbol"), mart=ensembl)
+ensemblIdList <-  list()
 ensemblIdList[["background"]] = toupper(unique(genetab.ensembl[,"ensembl_gene_id"]))
 
 # load regionId background
 #inputTable = read.table("analysis_config/Manual_jointBackground_regionIds.txt",header=T,sep="\t",comment.char="",quote="")
 filename = paste(biclusterDir, "background.txt", sep="")
 inputTable = read.table(filename, sep="", header=T)
+regionIdList  <-  list()
 regionIdList[["background"]] = inputTable[,"regionId"]
 
 filename = paste(biclusterDir, "background.Nova.txt", sep="")
@@ -772,14 +785,17 @@ regionIdAll = unname(unlist(regionIdList))
 findOverlap=T
 if(findOverlap){
   #annotatedTableChromatin = list()
+  sepSymbol = ":"
+  curType = "meth"
   annotatedTableChromatin = identifyOverlap(regionId2regionTable(curType,regionIdAll,sep=sepSymbol),chromatinAnnotations,includeLabels=F)
   save(file="annotatedTableChromatin.RData", annotatedTableChromatin) 
 }else{
   load(file="annotatedTableChromatin.RData") 
 }
 
+} # false
 print("starting the enrichment  analysis of ISH data.... ")
-enrichmentCluster(clustRange = seq(1,2), clusterMethod = "bimax",  totalCluster = "25", analysisNovartis=FALSE)
+enrichmentCluster(clustRange = seq(1,2), clusterMethod = "bimax",  totalCluster = "25", novartis=FALSE)
 print("starting the enrichment  analysis of novartis data.... ")
-enrichmentCluster(clustRange = seq(1,2), clusterMethod = "bimax",  totalCluster = "25", analysisNovartis=TRUE)
+enrichmentCluster(clustRange = seq(1,2), clusterMethod = "bimax",  totalCluster = "25", novartis=TRUE)
 print("Finished enrichment analysis of novartis data")
