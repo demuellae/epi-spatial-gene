@@ -142,12 +142,16 @@ for(i in seq(1, numCluster)){
 }
 
 #choosing the optimal number of clusters
-numClusterTest  <-  c(25,50,100,150, 250)
+#numClusterTest  <-  c(25,50,100,150, 250)
+numClusterTest  <-  c(25)
 outC  <- NULL
 for(i in seq(1,length(numClusterTest))){
 	numCluster  <-   numClusterTest[i]
 
-	intMBCB <-biclust(intM.binary, method=BCBimax(), minr = ceiling(5000/(1.5 * numCluster)), minc=ceiling(800/(1.5 * numCluster)) , number=numCluster)
+	#intMBCB <-biclust(intM.binary, method=BCBimax(), minr = ceiling(5000/(1.5 * numCluster)), minc=ceiling(800/(1.5 * numCluster)) , number=numCluster)
+	intMBCB <-biclust(intM.binary, method=BCBimax(), minr = 10,
+			  minc=10,
+			  number=numCluster)
 	out  <- goSignificantCluster(intMBCB, intM, entrezName, pvalueCutoff=5e-6 )
 	outC  <- cbind(outC , out)
 	print(i)
@@ -169,27 +173,56 @@ background <- data.frame(regionId = paste("chr",background.table$chromosome_name
 write.table(file="../data/biclusters/background.txt",x=background, quote=F, row.names=F)
 
 
-#novartis go analysis
+#analysis of novartis dataset
+#save("file=genetab.novartis.RData",genetab.novartis)
+#load("file=genetab.novartis.RData")
+load("./dataset/novartis/downloaded/GSE1133_GPL1073_GNF1M_mouse.RData")
+library(Biobase)
+library(BiocGenerics)
+intNovartis = exprs(mouse)
+#GNF1M = parse.table("./dataset/processed/gnf1m.annot2007.tsv")
+#save(file="./GNF1M_annotMapping.RData",GNF1M)
+load(file="./GNF1M_annotMapping.RData")
+intNovartis.annotated  <- intNovartis[rownames(intNovartis) %in% rownames(GNF1M),]
+intNovartis.symbol  <- intNovartis.annotated[!is.na(GNF1M[match(rownames(intNovartis.annotated), rownames(GNF1M)) , "Symbol"]),] 
+symbol = GNF1M[match(rownames(intNovartis.symbol), rownames(GNF1M)) , "Symbol"] 
+rownames(intNovartis.symbol)  <- symbol
+thresholdQuantile = sum(intM.binary ==1)/4468610
+intNovartis.sort = sort(unlist(as.list(intNovartis.symbol)), decreasing=T)
+novartisExprThereshold = intNovartis.sort[ceiling(length(intNovartis.sort)*thresholdQuantile)]
+intNovartis.binary <- as.matrix(intNovartis.symbol)
+intNovartis.binary[,] <- 0
+intNovartis.binary[intNovartis.symbol > novartisExprThereshold] = 1
+intMClust = biclust(intNovartis.binary, method=BCBimax(), minr = 10, minc=10 , number=25)
+symbol2entrezName  <- as.list(org.Mm.egSYMBOL2EG)
+out  <- goSignificantCluster(intMClust, intNovartis.symbol, entrezName=symbol2entrezName, pvalueCutoff=5e-6 )
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+pThershold  <- c(1, 1e-1, 5e-2, 1e-2, 5e-3, 1e-4, 5e-5, 1e-5, 5e-6,1e-6 )
+numClust=100
+intMClust = biclust(intNovartis.binary, method=BCBimax(), minr = 10, minc=10 , number=numClust)
+out.ish  <- goSignificantCluster(intMClust, intNovartis.symbol, entrezName=symbol2entrezName, pvalueCutoff=5e-6 )
+intMBCB <-biclust(intM.binary, method=BCBimax(), minr = 10, minc=10, number=numClust)
+out.nova  <- goSignificantCluster(intMBCB, intM, entrezName, pvalueCutoff=5e-6 )
+numSig.ish  <- NULL
+numSig.nova  <- NULL
+#novaClustNum <- intMClust@Number
+novaClustNum <- 20
+ishClustNum <- 20
+for(i in seq(1, length(pThershold))){
+numSig <- numSigCluster(out=out.ish, Number=ishClustNum, pThershold=pThershold[i])
+numSig.ish  <- c(numSig.ish, numSig)
+numSig <- numSigCluster(out=out.nova, Number=novaClustNum, pThershold=pThershold[i])
+numSig.nova  <- c(numSig.nova, numSig)
+}
+jpeg(paste("ISHvsNOVA",numClust,".jpg",sep="")) 
+counts <- rbind(numSig.ish/numClust, numSig.nova/numClust)
+colnames  <- pThershold
+barplot(counts, main=paste("% of significant bicluster for ", numClust," clusters", sep=""),
+  xlab="p-value", col=c("darkblue","red"),
+  legend = c("% of ISH significant cluster","% of Nova significant cluster"), beside=TRUE)
+dev.off()
 
 
 

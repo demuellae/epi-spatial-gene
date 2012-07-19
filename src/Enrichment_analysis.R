@@ -629,42 +629,44 @@ enrichmentCluster <- function(
 			      clusterMethod = "bimax",
 			      totalCluster = "25",
 			      novartis=FALSE){
+  if (novartis){
+    ext=".Nova"
+      second = "background.Nova"
+  }else{
+    ext=""
+      second = "background"
+  }
+  regionIdListClust = list()
+  ensemblIdListClust = list()
   for(clust in clustRange){
-    print(paste("start enrichment analysis for cluster number:",clust, clusterMethod ))
-    #regionIdList = list()
-    #ensemblIdList = list()
-    if (novartis){
-      ext=".Nova"
-    }else{
-      ext=""
-    }
+    #print(paste("start enrichment analysis for cluster number:",clust, clusterMethod ))
     #input gene set
     clustfile = paste(clusterMethod,totalCluster,"C.",clust,ext,".txt", sep="")
     filename = paste(biclusterDir,clustfile,sep="/") 
     inputTable = read.table(filename, sep="", header=T)
-    label = paste(date, "manual_enrichment", sep="")
-    regionIdList[[label]] = inputTable[,"regionId"]
-    ensemblIdList[[label]] = inputTable[,"ensemblId"]
-
+    #label = paste(date, "manual_enrichment", sep="")
+    label = paste(clusterMethod, ext, totalCluster , clust, sep="")
+    regionIdListClust[[label]] = inputTable[,"regionId"]
+    ensemblIdListClust[[label]] = inputTable[,"ensemblId"]
+  }
+  regionIdAllClust = unique(unname(unlist(regionIdListClust)))
+  for(clust in clustRange){
+    print(paste("start enrichment analysis for cluster number:",clust, clusterMethod ))
     # perform enrichment analysis
     maxDigits = 3
     #for (i in 1:length(names(regionIdList))) {
     #for (j in 1:length(names(regionIdList))) {
     #if (i >=j ) next
     #first = names(regionIdList)[i]
+    label = paste(clusterMethod, ext, totalCluster , clust, sep="")
     first = label
-    #second = names(regionIdList)[j]
-    if (novartis){
-      second = "background.Nova"
-    }else{
-      second = "background"
-    }
     curLabel = paste(first,"_vs_",second,sep="")    
     if (first %in% names(regionIdList)) {
       print(paste("Chromatin analysis for:",curLabel))
       # prepare region-based analysis
       casesRegionId = sort(unique(regionIdList[[first]]))
-      backgroundRegionId = sort(unique(union(regionIdList[[first]],regionIdList[[second]])))
+      #backgroundRegionId = sort(unique(union(regionIdList[[first]],regionIdList[[second]])))
+      backgroundClust = regionIdAllClust 
       # chromatin analysis
       temp = performChromatinAnalysis(casesRegionId,backgroundRegionId,annotatedTableChromatin,listGenes=T)      
       filename = paste(outputDir,"/EnrichedChromatin_",curLabel,clustfile,sep="")
@@ -746,10 +748,10 @@ if(exists("novartisCluster")){
     #sum( GNF1M[match(rownames(intNovartis.annotated), rownames(GNF1M)) , "Symbol"] %in% genetab.ensembl$mgi_symbol)
     #calculation of the quantile threshold based on the proportion of nonzeros in intM
     #thresholdQuantile = sum(intM.binary ==1)/4468610
-    #intNovartis.sort = sort(unlist(as.list(intNovartis)))
-    #novartisExprThereshold = intNovartis.sort[ceiling(length(intNovartis.list)*thresholdQuantile)]
-    novartisExprThereshold <- 1133.4
-    #intNovartis.binary <- as.matrix(intNovartis)
+    #intNovartis.sort = sort(unlist(as.list(intNovartis.symbol)), decreasing=T)
+    #novartisExprThereshold = intNovartis.sort[ceiling(length(intNovartis.sort)*thresholdQuantile)]
+    novartisExprThereshold <- 1283.9
+    #intNovartis.binary <- as.matrix(intNovartis.symbol)
     #intNovartis.binary[,] <- 0
     #intNovartis.binary[intNovartis > novartisExprThereshold] = 1
     #intMClust = biclust(intNovartis.binary, method=BCBimax(), minr = 10, minc=10 , number=25)
