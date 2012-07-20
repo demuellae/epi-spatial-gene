@@ -50,11 +50,11 @@ goClust <- function(i, geneMat=geneMat, cluster=cluster, entrezName=entrezName, 
       goCatSigCnt  <- goCatSigCnt + 1
 
     #print(sigBicluter)
-    sigGO  <- c(sigGO, sigCategories(hgOver))
+    #sigGO  <- c(sigGO, sigCategories(hgOver))
   }
   #if (goCatSigCnt > 0) 
   #sigBicluter <- sigBicluter + 1
-  return(sigGO)
+  return(Allcluster)
 
 }
 
