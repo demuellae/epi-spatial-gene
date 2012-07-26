@@ -595,7 +595,7 @@ performBicluster  <-  function(intM, novartis=FALSE, genetab.common = genetab.co
   intM.binary[intM > threshold] <- 1
   Mdim <- dim(intM)
   #intMClust = biclust(intM.binary, method=BCBimax(), minr = ceiling(Mdim[1]/(1.5 * numCluster)), minc=ceiling(Mdim[2]/(1.5 * numCluster)) , number=numCluster)
-  intMClust = biclust(intM.binary, method=BCBimax(), minr = 10, minc=10 , number=numCluster)
+  intMClust = biclust(intM.binary, method=BCBimax(), minr = 25, minc=5 , number=numCluster)
   #out  <- goSignificantCluster(intMBCB, intM, entrezName, pvalueCutoff=5e-6 )
 
   geneUniverse = rownames(intM)
@@ -619,25 +619,29 @@ performBicluster  <-  function(intM, novartis=FALSE, genetab.common = genetab.co
     filename  <- paste(biclusterDir,"/","bimax",numCluster,"C.",clust, ext,".txt",sep="")
     write.table(file=filename,x=bimax, quote=F, row.names=F)
   }
+  return(intMClust)
 }
 
 
 
 
-enrichmentCluster <- function(
-			      clustRange = seq(1,10),
+enrichmentCluster <- function(clustRange = seq(1,10),
 			      clusterMethod = "bimax",
 			      totalCluster = "25",
-			      novartis=FALSE){
+			      novartis=FALSE 
+			      )
+{
   if (novartis){
     ext=".Nova"
       second = "background.Nova"
   }else{
     ext=""
-      second = "background"
+    second = "background"
+    allClusterTable = data.frame()
   }
   regionIdListClust = list()
   ensemblIdListClust = list()
+  load("out.25.r25.c25.RData")
   for(clust in clustRange){
     #print(paste("start enrichment analysis for cluster number:",clust, clusterMethod ))
     #input gene set
@@ -649,35 +653,69 @@ enrichmentCluster <- function(
     regionIdListClust[[label]] = inputTable[,"regionId"]
     ensemblIdListClust[[label]] = inputTable[,"ensemblId"]
   }
+
   regionIdAllClust = unique(unname(unlist(regionIdListClust)))
   for(clust in clustRange){
     print(paste("start enrichment analysis for cluster number:",clust, clusterMethod ))
     # perform enrichment analysis
     maxDigits = 3
-    #for (i in 1:length(names(regionIdList))) {
-    #for (j in 1:length(names(regionIdList))) {
+    #for (i in 1:length(names(regionIdList))) 
+    #for (j in 1:length(names(regionIdList))) 
     #if (i >=j ) next
     #first = names(regionIdList)[i]
     label = paste(clusterMethod, ext, totalCluster , clust, sep="")
     first = label
     curLabel = paste(first,"_vs_",second,sep="")    
-    if (first %in% names(regionIdList)) {
+    if (first %in% names(regionIdListClust)) {
       print(paste("Chromatin analysis for:",curLabel))
       # prepare region-based analysis
-      casesRegionId = sort(unique(regionIdList[[first]]))
+      casesRegionId = sort(unique(regionIdListClust[[first]]))
       #backgroundRegionId = sort(unique(union(regionIdList[[first]],regionIdList[[second]])))
-      backgroundClust = regionIdAllClust 
+      backgroundRegionId = regionIdAllClust 
       # chromatin analysis
       temp = performChromatinAnalysis(casesRegionId,backgroundRegionId,annotatedTableChromatin,listGenes=T)      
       filename = paste(outputDir,"/EnrichedChromatin_",curLabel,clustfile,sep="")
-      write.table(format(temp,trim=T,digits=maxDigits),filename,sep="\t",quote=F,row.names=F)            
+      write.table(format(temp,trim=T,digits=maxDigits),filename,sep="\t",quote=F,row.names=F)    
+      if(!novartis){
+	pValCutoff=1e-2	
+	pValThreshold=1e-3
+	tissueType = colnames(intM)[eurexpressClust@NumberxCol[clust, ]] 
+	sortedtemp = temp[order(temp$qvalue,decreasing=F),]
+	sortedtemp = sortedtemp[sortedtemp$qvalue > pValThreshold,] 
+	clusterTab = geneOrderTab.ensembl[geneOrderTab.ensembl$ensembl_gene_id %in% ensemblIdListClust[[first]],]
+	clusterTab.order = geneOrderTab.ensembl[order(clusterTab$geneOrderPubmed, decreasing=T), ]
+	if(dim(clusterTab.order)[1] >20 ){ topTenGenetab =clusterTab[1:20,] }
+	else{  topTenGenetab =clusterTab[,] }
+	#sortedGene = paste(sort(casesEnsemblId) , sep=",")
+	pValList=pvalues(out.25.r25.c25[[1]][[clust]])
+	pValList=pValList[pValList <= pValCutoff]
+
+	temp1 = data.frame(clusterNumber = clust,
+			   tissueTypeEmapId = paste(tissueType, sep="",collapse=","),
+			   tissueTypeEmapTerm = paste(tissuetab$emap_term[tissuetab$emap_id%in%tissueType], sep="",collapse=","),
+			   topTenGene = paste(topTenGenetab$upperGeneSymbol,   sep="",collapse=","),
+			   topTenGenePubmedId = paste(topTenGenetab$pubmedID,   sep="",collapse=","),
+			   geneInCluster = paste(ensemblIdListClust[[first]], sep="",collapse=","),
+			   casesRegionId = paste(regionIdListClust[[first]], sep="",collapse=","),
+			   sortedEnriched = paste(sortedtemp$label , sep="",collapse=","),
+			   enrichmentQvalues = paste(sortedtemp$qvalue , sep="",collapse=","),
+			   enrichmentPvalues = paste(sortedtemp$pvalue , sep="",collapse=","),
+			   enrichmentLogOdds = paste((sortedtemp$logOdds) , sep="",collapse=","),
+			   enrichmentSupportVal = paste((sortedtemp$support) , sep="",collapse=","),
+			   enrichmentMeanRank = paste((sortedtemp$meanRank) , sep="",collapse=","),
+			   enrichmentOverlap = paste((sortedtemp$overlap) , sep="",collapse=","),
+			   goEnrichedTerm = paste(names(pValList) , sep="",collapse=","),
+			   goEnrichedpVal = paste(pValList , sep="",collapse=",")
+			   )
+	allClusterTable = rbind(allClusterTable, temp1) 
+      }
     }
     if(FALSE){
-    if (first %in% names(ensemblIdList)) {
+    if (first %in% names(ensemblIdListClust)) {
       print(paste("Gene set analysis for:",curLabel))
       # prepare gene-based analysis
-      casesEnsemblId = sort(unique(deconvoluteGeneSet(ensemblIdList[[first]])))
-      backgroundEnsemblId = sort(unique(union(deconvoluteGeneSet(ensemblIdList[[first]]),deconvoluteGeneSet(ensemblIdList[[second]]))))
+      casesEnsemblId = sort(unique(deconvoluteGeneSet(ensemblIdListClust[[first]])))
+      backgroundEnsemblId = sort(unique(union(deconvoluteGeneSet(ensemblIdListClust[[first]]),deconvoluteGeneSet(ensemblIdListClust[[second]]))))
       curLabel = paste(first,"_vs_",second,sep="")    
       print(curLabel)
       # chromatin analysis
@@ -686,9 +724,12 @@ enrichmentCluster <- function(
       write.table(format(temp,trim=T,digits=maxDigits),filename,sep="\t",quote=F,row.names=F)            
     }
     }
-    #}
-    #}
 
+  }
+  if(!novartis){
+    #write.table(format(allClusterTable,trim=T,digits=maxDigits),filename,sep="\t",quote=F,row.names=F)    
+    #write.table(allClusterTable,filename,sep="\t",quote=F,row.names=F)    
+    return(allClusterTable)
   }
 }
 
@@ -718,13 +759,22 @@ if(exists("Bicluster")){
     genetab.common = merge(x=genetab.eurexpress, y=genetab.ensembl, by.x="tmp_entrez_id", by.y="entrezgene")
     save(file="genetab.common.RData",genetab.common)
     load(file="genetab.common.RData")
+    #tissuetab = getBM(attributes = c("emap_id", "emap_term"), mart=eurexpress) 
     #reading the file matrix.csv is comma separated with 3 lines removed from  matrix_1224667147767.txt        
     intM = read.table(file="eurexpress/matrix.csv", header=TRUE, row.names=2, check.names=FALSE, sep=",")
     # removing the first column as it have assay information. intM is now numeric 
     intM = intM[,-1:0]
-    performBicluster(intM, genetab.common=genetab.common)
+    eurexpressClust = performBicluster(intM, genetab.common=genetab.common)
+    if(FALSE){
+      tissuetab = getBM(attributes = c("emap_id","emap_term"), mart=eurexpress)
+      save(file="tissuetab.RData", tissuetab)
+    }else{
+      load(file="tissuetab.RData")
+    }
+    #emapTermintM = tissue tissuetab$emap_id %in% names(intM)
   }
 }
+
 print("Finished the biclsutering process of ISH data")
 novartisCluster=TRUE
 Bicluster=TRUE
@@ -755,7 +805,7 @@ if(exists("novartisCluster")){
     #intNovartis.binary[,] <- 0
     #intNovartis.binary[intNovartis > novartisExprThereshold] = 1
     #intMClust = biclust(intNovartis.binary, method=BCBimax(), minr = 10, minc=10 , number=25)
-    performBicluster(intNovartis.symbol, novartis=TRUE, genetab.common=genetab.ensembl, threshold=novartisExprThereshold)
+    novartisClust=performBicluster(intNovartis.symbol, novartis=TRUE, genetab.common=genetab.ensembl, threshold=novartisExprThereshold)
   }
 }
 
@@ -795,9 +845,36 @@ if(findOverlap){
   load(file="annotatedTableChromatin.RData") 
 }
 
+
+geneOrderTab = read.table("dataset/pubmedGene/PubMed citations per gene.txt", sep="\t", skip=6, strip.white=T, header=F)
+geneOrderTab$V4 = NULL
+names(geneOrderTab) = c("geneSymbol", "aCltGeneSymbol", "pubmedID")
+if(FALSE){
+library(multicore)
+multicore:::detectCores()
+options(cores=32)
+#geneOrderTab = read.table("dataset/pubmedGene/PubMed citations per gene.txt", sep="\t")
+#names(geneOrderTab) = c(geneSymbol, altGeneSymbol, pubmedID)
+genegeneOrderPubmed = mclapply(geneOrderTab$pubmedID, function(x) length(unlist(strsplit(as.character(x), "\\|"))))
+save(file="dataset/pubmedGene/geneOrderPubmed.RData",genegeneOrderPubmed)
+}else{
+load("dataset/pubmedGene/geneOrderPubmed.RData")  
+}
+geneOrderTab$geneOrderPubmed = geneOrderPubmed
+genetab.ensembl$upper_mgi_symbol = toupper(genetab.ensembl$mgi_symbol)
+geneOrderTab$upperGeneSymbol = toupper(geneOrderTab$geneSymbol)
+geneOrderTab.ensembl = merge(x=geneOrderTab, y=genetab.ensembl, by.x="upperGeneSymbol", by.y="upper_mgi_symbol")
+
+
 } # false
+
+library(GOstats)
 print("starting the enrichment  analysis of ISH data.... ")
-enrichmentCluster(clustRange = seq(1,2), clusterMethod = "bimax",  totalCluster = "25", novartis=FALSE)
+allClusterTable = enrichmentCluster(clustRange = seq(1,25), clusterMethod = "bimax",  totalCluster = "25", novartis=FALSE)
+filename = paste(outputDir,"/EnrichedChromatin_allcluster_ISH.txt",sep="")
+#write.table(format(allClusterTable,trim=T,digits=maxDigits),filename,sep="\t",quote=F,row.names=F)
+#save(file="allClusterTable.RData", allClusterTable)
+write.table(format(allClusterTable, trim=T, digits=3),filename,sep="\t",quote=F,row.names=F)
 print("starting the enrichment  analysis of novartis data.... ")
-enrichmentCluster(clustRange = seq(1,2), clusterMethod = "bimax",  totalCluster = "25", novartis=TRUE)
-print("Finished enrichment analysis of novartis data")
+#enrichmentCluster(clustRange = seq(1,2), clusterMethod = "bimax",  totalCluster = "25", novartis=TRUE)
+#print("Finished enrichment analysis of novartis data")

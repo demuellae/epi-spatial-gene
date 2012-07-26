@@ -41,6 +41,7 @@ goClust <- function(i, geneMat=geneMat, cluster=cluster, entrezName=entrezName, 
   geneSample  <- entrezName[rownames(geneMat)[cluster@RowxNumber[,i]]]
   geneSample.entrez  <- 	unlist(lapply(names(geneSample), function(x) (geneSample[[x]][1])))
   goCatSigCnt <- 0
+  Allcluster <- NULL
   for(goCategory in GOcategories){
     params <- new("GOHyperGParams", geneIds = as.vector(geneSample.entrez) , universeGeneIds = as.vector(geneUniverse.entrez), annotation="org.Mm.eg.db", ontology = goCategory, pvalueCutoff = pvalueCutoff, conditional = TRUE, testDirection = "over")
     hgOver <- hyperGTest(params)
