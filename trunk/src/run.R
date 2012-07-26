@@ -225,6 +225,14 @@ barplot(counts, main=paste("% of significant bicluster for ", numClust," cluster
 dev.off()
 
 
+# multicore environment
+library(org.Mm.eg.db)
+library(GOstats); library(GO.db);  library(annotate)
+library(biclust)
+options(cores = 25)
+source("../myFunc.R")
+biClustSearchMulticore(intM, entrezName, numClusterTest=c(25,100,250) )
+
 
 #plotting beta function for the doc
 colors <- c("red", "blue", "black")
