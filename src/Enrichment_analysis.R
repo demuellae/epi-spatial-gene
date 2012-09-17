@@ -415,7 +415,7 @@ performChromatinAnalysis = function(cases,background,curAnnotation,listGenes=F,p
       temp = annotatedTable[classVal & !is.na(annotatedTable[,curCol]),"name"]
       #regionId2ensemblId_locus[["meth"]][temp]
       overlap = c(overlap,paste(temp,collapse=", "))
-    } else 
+    } else { 
       overlap = c(overlap,"")
     }    
   }
@@ -645,7 +645,13 @@ writeClusterFile  <-  function(intMClust, intM, clusterMethod, novartis=FALSE, g
   Mdim <- dim(intM)
   #intMClust = biclust(intM.binary, method=BCBimax(), minr = 25, minc=5 , number=numCluster)
   #out  <- goSignificantCluster(intMBCB, intM, entrezName, pvalueCutoff=5e-6 )
-
+  promoter <- function(x){
+    if (x$strand==1){ 
+      return(list(start=x$start_position - 1000, end=x$start_position -200 ))
+    } else {
+      return(list(start=x$end_position - 200, end=x$end_position -1000 ))
+    }
+  }
   geneUniverse = rownames(intM)
   if(novartis){
     geneIdNames = "mgi_symbol"
@@ -667,7 +673,14 @@ writeClusterFile  <-  function(intMClust, intM, clusterMethod, novartis=FALSE, g
 			   strand=rep("+", dim(background)[1]))
 
     filename  <- paste(biclusterDir,"/bed/","background", ext,".bed",sep="")
-    write.table(file=filename,x=background.bed, quote=F, row.names=F, col.names=F)
+    write.table(file=filename,x=background.bed, quote=F, row.names=F, col.names=F, sep="\t")
+    tss=apply(background.table, 1, promoter) 
+    
+    background.promoter = data.frame(chr = paste("chr",background.table$chromosome_name, sep=""), start=tss[,1],end=tss[,2], ensemblId = background.table$ensembl_gene_id, 
+				strand=background.table$strand)
+    filename  <- paste(biclusterDir,"/bed/", "promoter", "background", ext,".bed",sep="")
+    write.table(file=filename,x=background.promoter, quote=F, row.names=F, col.names=F,sep="\t")
+    allPromtoer = NULL
   for(clust in seq(1,intMClust@Number)){
     geneSample  <- rownames(intM)[intMClust@RowxNumber[,clust]]
     bimax.table =  genetab.nonduplicated[genetab.nonduplicated[,geneIdNames] %in% geneSample,]
@@ -680,8 +693,17 @@ writeClusterFile  <-  function(intMClust, intM, clusterMethod, novartis=FALSE, g
 			   strand=rep("+", dim(bimax)[1]))
 
     filename  <- paste(biclusterDir,"/bed/",clusterMethod,numCluster,"C.",clust, ext,".bed",sep="")
-    write.table(file=filename,x=bimax.bed, quote=F, row.names=F, col.names=F)
+    write.table(file=filename,x=bimax.bed, quote=F, row.names=F, col.names=F,sep="\t")
+    tss=apply(bimax.table, 1, promoter) 
+    
+    bimax.promoter = data.frame(chr = paste("chr",bimax.table$chromosome_name, sep=""), start=tss[,1],end=tss[,2], ensemblId = bimax.table$ensembl_gene_id, 
+				strand=bimax.table$strand)
+    filename  <- paste(biclusterDir,"/bed/","promoter", clusterMethod,numCluster,"C.",clust, ext,".bed",sep="")
+    write.table(file=filename,x=bimax.promoter, quote=F, row.names=F, col.names=F,sep="\t")
+    allPromtoer = rbind(allPromtoer, bimax.promoter)
   }
+    filename  <- paste(biclusterDir,"/bed/","Allpromoter", clusterMethod,numCluster,"C.",clust, ext,".bed",sep="")
+    write.table(file=filename,x=allPromtoer[!duplicated(allPromtoer$ensembl_gene_id),], quote=F, row.names=F, col.names=F,sep="\t")
   #return(intMClust)
 }
 
@@ -971,8 +993,7 @@ print("performing the goenrichment analysis.... ")
 #load("geneOrderPubmed.RData")
 intMBCB = clust
 intMClust = clust
-#date = Sys.Date()
-date = 
+date = Sys.Date()
 outputDir = "../result/" 
 if (!file.exists(outputDir)) dir.create(outputDir)
 outputDir = paste(outputDir,date,"manual_enrichment_analyses",sep="") 
@@ -980,7 +1001,7 @@ if (!file.exists(outputDir)) dir.create(outputDir)
 biclusterDir = paste(outputDir,"bicluster.nsNMF",sep="/") 
 if (!file.exists(biclusterDir)) dir.create(biclusterDir)
 clusterMethod = "nmf"
-writeClusterFile(intMClust=clust, intM=intM, clusterMethod = clusterMethod, numCluster = 50, genetab.common=genetab.common, biclusterDir=biclusterDir)
+writeClusterFile(intMClust=clust, intM=intM, clusterMethod = clusterMethod, numCluster = 50, genetab.common=genetab.common.strand, biclusterDir=biclusterDir)
 
 print("starting the enrichment  analysis of ISH data.... ")
 #debug(enrichmentCluster)
@@ -988,7 +1009,7 @@ print("starting the enrichment  analysis of ISH data.... ")
 #allClusterTable = enrichmentCluster(eurexpressClust, outputDir = outputDir, clustRange = seq(1), clusterMethod = clusterMethod,  numCluster=50, novartis=FALSE)
 #save(file="allClusterTable.RData", allClusterTable)
 #save.image(file=paste(date,"session.RData", sep="."))
-filename = paste(outputDir,"/EnrichedChromatin_allcluster_ISH.xls",sep="")
+#filename = paste(outputDir,"/EnrichedChromatin_allcluster_ISH.xls",sep="")
 #write.table(format(allClusterTable, trim=T, digits=3),filename,sep="\t",quote=F,row.names=F)
 #print("starting the enrichment  analysis of novartis data.... ")
 #enrichmentCluster(clustRange = seq(1,2), clusterMethod = "bimax",  totalCluster = "25", novartis=TRUE)
