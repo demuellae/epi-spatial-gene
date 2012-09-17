@@ -139,7 +139,20 @@ loadBedFiles = function(directory=character(0),filepaths=character(0),includeExt
       names(temp)[names(temp)=="X.chrom"] = "chrom"
     } else {
       # bed files with no header
+      temp = tryCatch(read.table(filename,header=F,sep="\t",comment.char="",quote=""),error=function(x) { return(n 
+  result = list()
+  for (filename in filenames) {
+    print(paste("Loading:",filename))
+    temp = numeric(0)
+    temp = tryCatch(read.table(filename,header=T,sep="\t",comment.char="",quote=""),error=function(x) { return(numeric(0)) })
+    if ((length(temp)!=0) & (sum(names(temp)=="X.chrom"))) {
+      # bed files starting with a header row: "#chrom  chromStart  chromEnd  name"
+      names(temp)[names(temp)=="X.chrom"] = "chrom"
+    } else {
+      # bed files with no header
       temp = tryCatch(read.table(filename,header=F,sep="\t",comment.char="",quote=""),error=function(x) { return(numeric(0)) })
+      if (length(temp)==0){
+umeric(0)) })
       if (length(temp)==0){
 	# bed files starting with a track row: "track name='E2A_GSM546517_Pre-Pro-B-Cells' description='E2A_GSM546517_Pre-Pro-B-Cells.bed' color=255,0,0"
 	temp = read.table(filename,header=F,sep="\t",comment.char="",quote="",skip=1)
@@ -402,7 +415,7 @@ performChromatinAnalysis = function(cases,background,curAnnotation,listGenes=F,p
       temp = annotatedTable[classVal & !is.na(annotatedTable[,curCol]),"name"]
       #regionId2ensemblId_locus[["meth"]][temp]
       overlap = c(overlap,paste(temp,collapse=", "))
-    } else {
+    } else 
       overlap = c(overlap,"")
     }    
   }
@@ -641,20 +654,33 @@ writeClusterFile  <-  function(intMClust, intM, clusterMethod, novartis=FALSE, g
     geneIdNames = "tmp_gene_symbol"
     ext  <- ""
   }
+  genetab.nonduplicated = genetab.common[!duplicated(genetab.common$ensembl_gene_id),]
 
-  background.table =  genetab.common[genetab.common[,geneIdNames] %in% geneUniverse,]
+  background.table =  genetab.nonduplicated[genetab.nonduplicated[,geneIdNames] %in% geneUniverse,]
   background.table = background.table[!duplicated(background.table$ensembl_gene_id),] 
   background = data.frame(regionId = paste("chr",background.table$chromosome_name,sepSymbol, background.table$start_position,sepSymbol,background.table$end_position,sep=""), 
 			  ensemblId = background.table$ensembl_gene_id)
   filename  <- paste(biclusterDir,"/","background",ext,".txt",sep="")
   write.table(file=filename,x=background, quote=F, row.names=F)
+    background.bed = data.frame(chr = paste("chr",background.table$chromosome_name, sep=""), start=background.table$start_position,
+				end=background.table$end_position, ensemblId = background.table$ensembl_gene_id, 
+			   strand=rep("+", dim(background)[1]))
+
+    filename  <- paste(biclusterDir,"/bed/","background", ext,".bed",sep="")
+    write.table(file=filename,x=background.bed, quote=F, row.names=F, col.names=F)
   for(clust in seq(1,intMClust@Number)){
     geneSample  <- rownames(intM)[intMClust@RowxNumber[,clust]]
-    bimax.table =  genetab.common[genetab.common[,geneIdNames] %in% geneSample,] 
-  bimax.table = bimax.table[!duplicated(bimax.table$ensembl_gene_id),] 
+    bimax.table =  genetab.nonduplicated[genetab.nonduplicated[,geneIdNames] %in% geneSample,]
+    #bimax.table = bimax.table[!duplicated(bimax.table$ensembl_gene_id),] 
+    #print(dim(bimax.table)) 
     bimax = data.frame(regionId = paste("chr",bimax.table$chromosome_name,sepSymbol,bimax.table$start_position,sepSymbol,bimax.table$end_position,sep=""), ensemblId = bimax.table$ensembl_gene_id)
     filename  <- paste(biclusterDir,"/",clusterMethod,numCluster,"C.",clust, ext,".txt",sep="")
     write.table(file=filename,x=bimax, quote=F, row.names=F)
+    bimax.bed = data.frame(chr = paste("chr",bimax.table$chromosome_name, sep=""), start=bimax.table$start_position,end=bimax.table$end_position, ensemblId = bimax.table$ensembl_gene_id, 
+			   strand=rep("+", dim(bimax)[1]))
+
+    filename  <- paste(biclusterDir,"/bed/",clusterMethod,numCluster,"C.",clust, ext,".bed",sep="")
+    write.table(file=filename,x=bimax.bed, quote=F, row.names=F, col.names=F)
   }
   #return(intMClust)
 }
@@ -678,9 +704,9 @@ enrichmentCluster <- function(eurexpressClust, clustRange = seq(1,10),
   }
   regionIdListClust = list()
   ensemblIdListClust = list()
-  load("out.25.r25.c25.RData")
+  #load("out.25.r25.c25.RData")
   #source("../src/myFunc.R")
-  for(clust in clustRange){
+  for(clust in 1:clust@Number){
     #print(paste("start enrichment analysis for cluster number:",clust, clusterMethod ))
     #input gene set
     clustfile = paste(clusterMethod,numCluster,"C.",clust,ext,".txt", sep="")
@@ -692,6 +718,10 @@ enrichmentCluster <- function(eurexpressClust, clustRange = seq(1,10),
   }
 
   regionIdAllClust = unique(unname(unlist(regionIdListClust)))
+  require(RColorBrewer)
+  require(wordcloud)
+  filename = paste(outputDir,"/", curLabel, ".jpg",sep="")
+  jpeg(filename, width=1024, height=960)
   for(clust in clustRange){
     print(paste("start enrichment analysis for cluster number:",clust, clusterMethod ))
     # perform enrichment analysis
@@ -701,7 +731,9 @@ enrichmentCluster <- function(eurexpressClust, clustRange = seq(1,10),
     #if (i >=j ) next
     #first = names(regionIdList)[i]
     first = paste(clusterMethod, ext, clust, sep="")
-    curLabel = paste(first,"_vs_",second,sep="")    
+    curLabel = paste(first,"_vs_",second,sep="")
+    #print(first)
+    #print(names(regionIdListClust))
     if (first %in% names(regionIdListClust)) {
       print(paste("Chromatin analysis for:",curLabel))
       # prepare region-based analysis
@@ -720,7 +752,16 @@ enrichmentCluster <- function(eurexpressClust, clustRange = seq(1,10),
 	tissueType = colnames(intM)[eurexpressClust@NumberxCol[clust, ]] 
 	sortedtemp = temp[order(temp$qvalue,decreasing=F),]
 	sortedtemp = sortedtemp[sortedtemp$qvalue <= pValThreshold,]
-       #print(sortedtemp$qvalue)	
+	sortedtemp$logq=-log(sortedtemp$qvalue+ 1e-1000)
+	print(head(sortedtemp$logq))
+	print(summary(sortedtemp$logq))
+	minq = min(sortedtemp$logq)
+	maxq = max(sortedtemp$logq)
+	pal2 <- brewer.pal(8,"Dark2")
+	if(dim(sortedtemp)[1] >0){
+	wordcloud(sortedtemp$label, freq=sortedtemp$logq, scale=c(2,.01),
+		  colors=pal2, max=50)
+	}
 	clusterTab = geneOrderTab.ensembl[geneOrderTab.ensembl$ensembl_gene_id %in% ensemblIdListClust[[first]],]
 	clusterTab.order = geneOrderTab.ensembl[order(clusterTab$geneOrderPubmed, decreasing=T), ]
 	clusterTab.order = clusterTab.order[!duplicated(clusterTab.order$upperGeneSymbol),]
@@ -774,6 +815,7 @@ enrichmentCluster <- function(eurexpressClust, clustRange = seq(1,10),
     }
 
   }
+  dev.off()
   if(!novartis){
     #write.table(format(allClusterTable,trim=T,digits=maxDigits),filename,sep="\t",quote=F,row.names=F)    
     #write.table(allClusterTable,filename,sep="\t",quote=F,row.names=F)    
@@ -914,6 +956,7 @@ geneOrderTab$upperGeneSymbol = toupper(geneOrderTab$geneSymbol)
 geneOrderTab.ensembl = merge(x=geneOrderTab, y=genetab.ensembl, by.x="upperGeneSymbol", by.y="upper_mgi_symbol")
 
 
+} # false
 
 library(GOstats)
 
@@ -928,7 +971,8 @@ print("performing the goenrichment analysis.... ")
 #load("geneOrderPubmed.RData")
 intMBCB = clust
 intMClust = clust
-date = Sys.Date()
+#date = Sys.Date()
+date = 
 outputDir = "../result/" 
 if (!file.exists(outputDir)) dir.create(outputDir)
 outputDir = paste(outputDir,date,"manual_enrichment_analyses",sep="") 
@@ -938,16 +982,14 @@ if (!file.exists(biclusterDir)) dir.create(biclusterDir)
 clusterMethod = "nmf"
 writeClusterFile(intMClust=clust, intM=intM, clusterMethod = clusterMethod, numCluster = 50, genetab.common=genetab.common, biclusterDir=biclusterDir)
 
-} # false
 print("starting the enrichment  analysis of ISH data.... ")
 #debug(enrichmentCluster)
-allClusterTable = enrichmentCluster(eurexpressClust, outputDir = outputDir, clustRange = seq(1, 50), clusterMethod = clusterMethod,  numCluster=50, novartis=FALSE)
+#allClust = enrichmentCluster(eurexpressClust, outputDir = outputDir, clustRange = seq(1,50), clusterMethod = clusterMethod,  numCluster=50, novartis=FALSE)
 #allClusterTable = enrichmentCluster(eurexpressClust, outputDir = outputDir, clustRange = seq(1), clusterMethod = clusterMethod,  numCluster=50, novartis=FALSE)
 #save(file="allClusterTable.RData", allClusterTable)
 #save.image(file=paste(date,"session.RData", sep="."))
 filename = paste(outputDir,"/EnrichedChromatin_allcluster_ISH.xls",sep="")
-#write.table(format(allClusterTable,trim=T,digits=maxDigits),filename,sep="\t",quote=F,row.names=F)
-write.table(format(allClusterTable, trim=T, digits=3),filename,sep="\t",quote=F,row.names=F)
-print("starting the enrichment  analysis of novartis data.... ")
+#write.table(format(allClusterTable, trim=T, digits=3),filename,sep="\t",quote=F,row.names=F)
+#print("starting the enrichment  analysis of novartis data.... ")
 #enrichmentCluster(clustRange = seq(1,2), clusterMethod = "bimax",  totalCluster = "25", novartis=TRUE)
 #print("Finished enrichment analysis of novartis data")
