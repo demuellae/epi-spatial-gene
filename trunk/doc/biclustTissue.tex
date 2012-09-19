@@ -12,7 +12,7 @@
 \title{
 Tissue tree specific gene biclustering
 }
-\author{Avinash Das, Fabian Muller, Peter Ebert}
+\author{Avinash Das, Fabian M\"uller, Peter Ebert}
 
 \date{\today}
 \begin{document}
@@ -25,13 +25,12 @@ Tissue tree specific gene biclustering
 \maketitle
 \section{Background}
 
-\cite{Kaski2010} gave a probabilistic generative model framework to find bicluster in the gene expression 
-matrix (Gene x condition). The biclustering method can be seen as a particular instance of hierarchical biclustering,
-where biclusters
-are arranged in tree hierarchy. The bicluster near the roots are coarse group of condition tied by subset genes
-with homogeneous expression across the group. 
+\cite{Kaski2010} gave a probabilistic generative model framework to find hierarchical organized biclusters in gene expression 
+matrices (Gene x condition). The hierarchical biclustering method can be seen as a special instance of biclustering. 
+The biclusters near the roots are coarse group of condition tied by a small subset of genes
+with homogeneous expression across the group wheres nodes deeper in the tree correspond to samller sets of conditions that exhibit homogeneous expression levels in a large subset of genes.
 
-As other generative modelling, they started by presenting a generative process to 
+As other generative modeling, they start by presenting a generative process to 
 observe a gene expression matrix. The generative process first samples the tree hierarchy 
 of conditions (i.e. the condition are partitioned into tree structure), next 
 it positions the genes into the sampled tree structure and finally it samples expression of genes
@@ -45,10 +44,10 @@ recursively partitioned till maximum tree height is reached.
 \par \textbf{Length assignment to edges}:
 Next, they used feature activation model to find active genes at each node, defined by latent variable $z_{j,u}$ for
 gene $j$ and node $u$.
-The length $l_{uv}$ of each edge $(u,v)$ is sampled with $ \sim Beta(\alpha,\beta)$. 
+The length $l_{uv}$ of each edge $(u,v)$ is sampled with $ \sim \text{Beta}(\alpha,\beta)$. 
 The $z_{j,u}$ 
 is then sampled with probability of gene to be active equal to $l_{uv}$ (i.e. $P(z_{j,u} = 1) = l_{uv}$). 
-Further, once a gene is active at a node, it will remain active in all its children.  
+Further, once a gene is activated at a node, it remains active in all its descendants.  
 
 
 \par \textbf{Generation of gene expression}
@@ -60,22 +59,28 @@ Given the gene states at each node of the tree, the gene expression $Y$ is gener
 \end{eqnarray}
 
 The generative process is shown in the fig. ~\ref{fig:Kgen}.
- 
+
+\begin{figure}[ht]
+	\begin{center}
+		\includegraphics[scale=0.5]{Kgen.jpg}
+	\end{center}
+	\caption{Illustration of the generative process for a fictitious noise-free data set with three genes (A, B, and C) and four samples (“healthy 1,” “healthy 2,” “leukemia,” and “melanoma”). The healthy samples share the same path assignment, while each of the cancer samples has its own unique path. The rounded rectangles represent nodes and indicate the current feature activation state. Gene A becomes active at both of the root's child nodes, leading to homogeneous expression for the healthy samples as well as for the cancer samples, although the between-group difference in expression is significant. Gene C exhibits homogeneous expression under both cancer samples, but not under the healthy samples. Gene B has a specific expression pattern for each of the samples (fig taken from \cite{Kaski2010}).}
+	\label{fig:Kgen}
+\end{figure}<++>
 Next, they define joint distribution over the random variables and perform inferencing using the Gibbs
 sampling.
 
-\par In this context, our biclustering problem differs from their problem in following sense:
+\par We make the following modification to the presented hierarchical biclustering method in order to adapt for the given genes $\times$ tissue expression matrix. Observations:
 \begin{itemize}
-	\item We already have tissue trees.
+	\item We already have a tissue hierarchy.
 	\item Our expression data are discrete values ( no expression, weak expression, medium expression and
 		high expression).
 	\item In our tissue tree internal nodes have observation.
-	\item We want, in addition to find gene clusters, to categorize genes based on its expression patter 
+	\item We want, in addition to find gene clusters, to categorize genes based on its expression pattern 
 		across tissue.
 \end{itemize}
 \section{Method}
-Taking cues from the generative defined \cite{Kaski2010}, we can define a generative process in context of our problem. We will start with the tissue tree $T(V,E)$. We will determine state of genes at each tree node. Finally, given the state of gene we will sample it expression level, which is 
-observed in our case. 
+Taking cues from the generative method defined in \cite{Kaski2010}, we can define a generative process in context of our problem. We will start with the tissue tree $T(V,E)$ which can be constructed by assigning to each node, all leaf-tissues that are included by the subtree induced by that node. We will determine the activation states of genes at each tree node. Finally, given the state of gene we will sample its observed expression level
 %We will define set of the genes $G$ as features at the nodes of the tissue tree. 
 \par \textbf{Latent variable $Z$}:
 We define latent state variable $Z= \{z_{ju} \in\{0,1,2\} : \forall j \in G, u \in V\}$ corresponding to each gene at each node with following definition:
@@ -87,8 +92,8 @@ We define latent state variable $Z= \{z_{ju} \in\{0,1,2\} : \forall j \in G, u \
 In addition, once a node $z_{ju}$ takes a value either 0 or 1 corresponding to states homogeneously active or in-active all its children 
 node in subtree stays in same homogeneous state. $Z$ can be then sampled from multinomial distribution with a Dirichlet prior.
 \begin{eqnarray}
-	z &\sim& mult(\phi) \nonumber \\
-	\phi &\sim&  Dir(\alpha,\beta,\gamma) \nonumber
+	z &\sim& \text{mult}(\phi) \nonumber \\
+	\phi &\sim&  \text{Dir}(\alpha,\beta,\gamma) \nonumber
 	\label{eqn:zdist}
 \end{eqnarray}
 
@@ -98,8 +103,8 @@ node in subtree stays in same homogeneous state. $Z$ can be then sampled from mu
 expressed or not expressed. Given the state of the genes at the nodes of the tissue tree,  we can generate samples of expression
 level using a binomial distribution. 
 \begin{eqnarray}
-	Y|Z = i &\sim& Bin(p_i) \nonumber \\
-	p_i &\sim&  Beta(\alpha_i,  \beta_i) \forall i \in \{1,2,3\}  
+	Y|Z = i &\sim& \text{Bin}(p_i) \nonumber \\
+	p_i &\sim&  \text{Beta}(\alpha_i,  \beta_i) \forall i \in \{1,2,3\}  
 	\label{eqn:ydist}
 \end{eqnarray}
 The beta priors can be chosen so to reflect our expected behaviour of expression level in different gene state. One example of prior that can be taken
@@ -114,7 +119,7 @@ is shown in fig. \ref{fig:betaP}.
 \end{figure}
 
 
-We can extend the method for the discrete values of expression level by using multinomial distribution instead of binomial distribution. 
+We can extend the method for the discrete values of expression level by using multinomial distribution instead of binomial distribution in order to represent the different expression stages (weak, intermediate, high and no expression). 
 \subsection{Inference}
 TBD.
 \section{Expected outcomes}
@@ -124,9 +129,9 @@ TBD.
 		gene cluster is active or inactive homogeneously at that node.
 	\item We can  quickly identify gene which are only expressed only at a node (or small subtree) and are not expressed in rest of the
 		tree. 
-	\item We can quantify distance between different node of tissue tree in term of expression level i.e we will get a distance between
-		different tissues. 
-	\item We will obtain a noise resistant model because we are modelling the output observation as distribution.   
+	\item We can quantify distance between different node of tissue tree in term of gene activity and expression level i.e we will get a distance between different tissues. 
+	\item We will obtain a noise resistant model because we are modelling the output observation as distribution.
+	\item the method will be computationally less demanding as the CRP does not have to be sampled.
 \end{itemize}
 
 \bibliographystyle{apalike}	% (uses file "plain.bst")
