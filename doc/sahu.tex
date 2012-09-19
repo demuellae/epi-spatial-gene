@@ -8,12 +8,20 @@
 \usepackage{myDefs}
 \usepackage{url}
 \usepackage{todonotes}
+% allows for temporary adjustment of side margins
+\usepackage{chngpage}
+% provides filler text
+\usepackage{lipsum}
+% just makes the table prettier (see \toprule, \bottomrule, etc. commands below)
+\usepackage{booktabs}
 %In order to be consistent use the following notation in your notes:
+\definecolor{LC}{rgb}{0.88,1,1}
 \graphicspath{{./fig/}}
+\usepackage{color, colortbl}
 \title{
 Epigenetic control of spatial gene regulation. 
 }
-\author{Avinash Das}
+\author{Avinash Das, Peter Ebert, Fabian Muller, Christoph Bock}
 
 \date{\today}
 \begin{document}
@@ -26,7 +34,9 @@ Epigenetic control of spatial gene regulation.
 \maketitle
 \section{Results}
 \subsection{Summary}
-In this studym we performed biclustering of in-situ hybridization of mouse embryo. The biclusters obtained were consistent across random initialization.
+In this study, we performed biclustering of in-situ hybridization of mouse embryo. We obtained 50 biclusters. 
+In this main paper we will give the analysis with respect to first five biclusters.
+The biclusters obtained were consistent across random initialization.
 The bicluster of tissue matches closely with the tissue tree. We performed GO enrichment analysis and motif enrichment analysis of the biclusters. The
 biclusters have clear epigenetic signatur, indicating tissue specific regulation. Finally, we performed disease association studies of tissue biclusters.
 
@@ -42,9 +52,53 @@ in number of genes. In summary, the biclusters across different runs was consist
 In summary, the result indicates that the biclusters obtained by the biclustering
 algorithm are not only statistically significant but also are biologically relevant. In the rest of the section, we will study these biological 
 interpretations of the biclusters in rest of the section. 
-\subsection{GO enrichment}
 
-\subsection{Comparison with tissue tree}
+
+\subsection{Tissue specificity}
+Table \ref{tab:tissue} the tissue tree corresponding to the first 10 biclusters. Tissue type of Cluster 1 are related to neural system, in particular
+tissue that are effected during the neurulation of embryo. Pons located in brain stem relay signal between forebrain and cerebellum. Basal, marginal, mantle and basal corresponds to motor area of spinal cord.
+Tissue types of Cluster 3 are respiratory system related.
+Tissue types of Cluster 4 mixture of primary skin and nervous system related tissues.
+Tissue types of Cluster 5 are mixture of many primary tissues.
+Tissue types of Cluster 6 are carnial nerves related part of body part and function; 
+trigeminal related to face,
+vagus is for body state, accessory are muscle related and vestibular nerve is for spatial orientation of 
+the body.
+\missingfigure{Comparison of the bicluster with tissue tree}
+Figure 2 shows the comparison of biclusters with the tissue tree of E14.5 of mouse. The biclusters are
+broadly in agreement with the tissue tree indicating that the gene expression 
+are predictive of the cellular identity.
+
+
+
+\begin{table}
+\begin{adjustwidth}{-1in}{-1in}% adjust the L and R margins by 1 inch
+	\begin{tabular}{p{1cm}p{15cm}}
+\hline
+Cluster&Tissue type Emap\\
+\hline
+\rowcolor{LC}
+1&pons, marginal layer, mantle layer, basal plate, ventricular layer, marginal layer\\
+2&embryo, arch of aorta\\
+\rowcolor{LC}
+3&lobar bronchus, respiratory tract, lower, trachea\\
+\rowcolor{LC}
+4&epidermal component, brain, rest of skin, central nervous system, nervous system\\
+\rowcolor{LC}
+5&respiratory, nasal septum, nasal cavity, olfactory, epithelium, nasal capsule, anterior epithelium, thoracic region, intrinsic, lumen, epithelium, epithelium, primary choana, genioglossus, anal region\\
+\rowcolor{LC}
+6&trigeminal V, vagus X, nerve, superior, inferior, accessory XI, vestibular component\\
+7&external ear, ear, sensory organ, nerve\\
+8&lateral wall, mantle layer, autonomic, ventricular layer, metencephalon\\
+9&associated mesenchyme, foregut-midgut junction, drainage component, collecting ducts, calyces, mesentery\\
+10&mantle layer, caudate-putamen, heart, alar plate, head, tail, mantle layer\\
+\hline
+\end{tabular}
+\end{adjustwidth}
+\caption{The tissue corresponding to biclusters}
+\label{tab:tissue}
+\end{table}
+\subsection{GO enrichment}
 
 \subsection{Epigenetic enrichment}
 
