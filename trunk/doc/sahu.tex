@@ -1,0 +1,118 @@
+\documentclass{article}
+%
+%\usepackage{pdfsync}           % Used in Mac OSX
+\usepackage[mathcal,mathbf]{euler}
+\usepackage{theorem,amsmath,enumerate,fancyhdr,amssymb,amsfonts}
+\usepackage{graphicx}           %Used in Mac OSX
+%\usepackage[pdftex]{graphics}  %Might be needed in non Mac OSX systems
+\usepackage{myDefs}
+\usepackage{url}
+\usepackage{todonotes}
+%In order to be consistent use the following notation in your notes:
+\graphicspath{{./fig/}}
+\title{
+Epigenetic control of spatial gene regulation. 
+}
+\author{Avinash Das}
+
+\date{\today}
+\begin{document}
+
+\pagestyle{fancy}
+\lhead{{\bf Avinash Das}{ }
+\\{\bf } } 
+\rhead{{\bf Date: }\today}
+
+\maketitle
+\section{Results}
+\subsection{Summary}
+In this studym we performed biclustering of in-situ hybridization of mouse embryo. The biclusters obtained were consistent across random initialization.
+The bicluster of tissue matches closely with the tissue tree. We performed GO enrichment analysis and motif enrichment analysis of the biclusters. The
+biclusters have clear epigenetic signatur, indicating tissue specific regulation. Finally, we performed disease association studies of tissue biclusters.
+
+In order to compare the quality of ISH expression matrix we performed all the analysis on Novartis dataset, in addition to ISH dataset. Novartis
+dataset composed of expression of 36,182 transcript across 61 mouse tissues. 
+
+\subsection{Consistency of biclusters}
+We used ns-NMF followed by metaclustering to obtain biclusters of the expression matrices. 
+To check the biclusters obtained were consistent we used different random initialization of NMF algorithm. Figure 1. shows the pairwise distance of 
+bicluster. Two bicluster were considered to be similar when 75\% genes in bicluster are same. The distance represent similar bicluster across differ 
+in number of genes. In summary, the biclusters across different runs was consistent. 
+\missingfigure{Add figure of mean square distance of the biclusters from each others}
+In summary, the result indicates that the biclusters obtained by the biclustering
+algorithm are not only statistically significant but also are biologically relevant. In the rest of the section, we will study these biological 
+interpretations of the biclusters in rest of the section. 
+\subsection{GO enrichment}
+
+\subsection{Comparison with tissue tree}
+
+\subsection{Epigenetic enrichment}
+
+\subsection{Motif enrichment}
+
+\subsection{Disease state}
+
+
+\section{Methods}
+\subsection{ISH annotation matrix}
+We obtained the annotation of 5,600 MGI transcripts across 811 anatomical structure (ISH matrix) of mice 
+embryo from Eurexpress consortium. The consortium had manually annotated into (strong, medium, weak and no) 
+expression levels across each anatomical structure of the transcripts using RNA ISH on frozen sagittal 
+sections of wild type mice at E14.5 \cite{Diez-Roux2011a}. 
+
+\subsection{Biclustering}
+Non-negative matrix factorization (NMF) biclustering methods involves two steps: 1) factorization of original matrix into two
+matrices that leads to dimensionality
+reduction of the original data and 2) clustering of the reduced dimension factor matrices (meta-clustering). 
+ns-NMF is the method used for matrix decomposition (and dimensionality reduction)
+of the ISH matrix followed by clustering of the factor matrices proposed by Badea et. al. \cite{badea2007stable}.
+
+\textbf{Decomposition}: ns-NMF is method that factorize a matrix $V \in R^{m\times n}$ into matrices
+$W\in R^{m\times k}$ and $H \in R^{k \times n}$ with the reduced dimensions as follows:
+\begin{equation}
+    V \approx WSH,
+\end{equation}
+
+Where $S$ is a smoothing matrix, that induces the sparseness condition on $W$ and $H$ matrix.
+NMF methods allow only additive operation during the decomposition and therefore $W$ and $H$ are non negative,
+this is a distinguishing aspect of NMF from other dimensionality reduction methods such as
+principal component analysis (PCA). We used this version of NMF on the ISH matrix
+to obtain respective $W$ and $H$ by using the algorithm defined by \cite{carmona2006biclustering}.  
+
+\textbf{Metaclustering}: The metaclustering approach of \cite{badea2007stable} was used to 
+find bicluster from $W$ and $H$.
+The approach gives a non-overlapping set of biclusters. The biclustering algorithm was ran multiple times with random
+initialization to obtain a consistent
+set of stable biclusters. To speed up the biclustering algorithm across multiple run, biclusters were run on multiple 
+cores using the doMC and Foreach package of R. 
+
+
+\subsection{GO annotation analysis}
+A standard hypergeometric GO enrichment of each bicluster was performed using the GOstat package in R for each  MF,
+BP and CC GO-terms separately. 
+Since GO terms are not independent of each other, the 
+GO graph was used to estimate the over-representation \cite{alexa2006improved}. We used two
+criteria to estimate the quality of biclustering algorithm: a) fraction of biclusters that have at-least one 
+GO term enriched and b) total number of GO terms enriched in the biclusters.
+
+
+Various parameters of the biclustering algorithm are chosen so as to obtain 
+best value of the GO enrichment metric in the biclusters. 
+
+\subsection{Epigenetic enrichment analysis of biclusters}
+The epigenetic data were collected from the various sources including 1) Cistrome (http://cistrome.org), 2) ENCODE (http://genome.ucsc.edu/ENCODE/)and 3) UW-ENCODE (http://www.uwencode.org/).  Gene set enrichment analysis using the 
+promoter ( 1 Kb upstream 100bp downstream of TSS)
+of the gene set in each bicluster was done using overlap analysis followed by Fisher's exact test in R.
+
+\subsection{Motif enrichment analysis}
+The promoters of the gene set in each bicluster were scanned 
+for binding sites of each of  981 vertebrate motifs in TRANSSFAC using \cite{hannenhalli2008eukaryotic}.
+The score
+that was 95\% percentile of that motif of the maximum score possible was considered to be true binding site. The
+enrichment analysis was performed using the binding sites in promoter of one bicluster against all promoter in 
+the biclusters using the Fisher's exact test. GC composition was controlled by sampling prior to motif enrichment 
+analysis.
+
+\bibliographystyle{apalike}	% (uses file "plain.bst")
+\bibliography{diary}		% expects file "myrefs.bib"
+\end{document}  
