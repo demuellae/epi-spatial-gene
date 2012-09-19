@@ -632,12 +632,22 @@ writeClusterFile  <-  function(intMClust, intM, clusterMethod, novartis=FALSE, g
   Mdim <- dim(intM)
   #intMClust = biclust(intM.binary, method=BCBimax(), minr = 25, minc=5 , number=numCluster)
   #out  <- goSignificantCluster(intMBCB, intM, entrezName, pvalueCutoff=5e-6 )
-  promoter <- function(x){
-    if (x$strand==1){ 
-      return(list(start=x$start_position - 1000, end=x$start_position -200 ))
-    } else {
-      return(list(start=x$end_position - 200, end=x$end_position -1000 ))
+  promoter <- function(y){
+    #print(x)
+    out = matrix(nrow=dim(y)[1], ncol=3)    
+    for (i in 1:dim(y)[1]){
+      x = y[i,]
+      if (as.numeric(x["strand"])==1){ 
+	startpos = as.numeric(x["start_position"]) 
+	temp =c(startpos - 1000,startpos +200, "+" )
+      } else {
+	startpos = as.numeric(x["end_position"]) 
+	temp = c(startpos - 200, startpos +1000 , "-")
+      }
+      out[i,] = temp
     }
+    #print(head(out))
+    return(out)
   }
   geneUniverse = rownames(intM)
   if(novartis){
@@ -661,13 +671,14 @@ writeClusterFile  <-  function(intMClust, intM, clusterMethod, novartis=FALSE, g
 
     filename  <- paste(biclusterDir,"/bed/","background", ext,".bed",sep="")
     write.table(file=filename,x=background.bed, quote=F, row.names=F, col.names=F, sep="\t")
-    tss=apply(background.table, 1, promoter) 
+    tss=promoter(background.table)
+   #print(head(tss)) 
     
     background.promoter = data.frame(chr = paste("chr",background.table$chromosome_name, sep=""), start=tss[,1],end=tss[,2], ensemblId = background.table$ensembl_gene_id, 
-				strand=background.table$strand)
+			score = 0,	strand=tss[,3])
     filename  <- paste(biclusterDir,"/bed/", "promoter", "background", ext,".bed",sep="")
     write.table(file=filename,x=background.promoter, quote=F, row.names=F, col.names=F,sep="\t")
-    allPromtoer = NULL
+    allPromoter = NULL
   for(clust in seq(1,intMClust@Number)){
     geneSample  <- rownames(intM)[intMClust@RowxNumber[,clust]]
     bimax.table =  genetab.nonduplicated[genetab.nonduplicated[,geneIdNames] %in% geneSample,]
@@ -681,16 +692,18 @@ writeClusterFile  <-  function(intMClust, intM, clusterMethod, novartis=FALSE, g
 
     filename  <- paste(biclusterDir,"/bed/",clusterMethod,numCluster,"C.",clust, ext,".bed",sep="")
     write.table(file=filename,x=bimax.bed, quote=F, row.names=F, col.names=F,sep="\t")
-    tss=apply(bimax.table, 1, promoter) 
+    tss=promoter(bimax.table)
     
     bimax.promoter = data.frame(chr = paste("chr",bimax.table$chromosome_name, sep=""), start=tss[,1],end=tss[,2], ensemblId = bimax.table$ensembl_gene_id, 
-				strand=bimax.table$strand)
+			score = 0,	strand=tss[,3])
     filename  <- paste(biclusterDir,"/bed/","promoter", clusterMethod,numCluster,"C.",clust, ext,".bed",sep="")
     write.table(file=filename,x=bimax.promoter, quote=F, row.names=F, col.names=F,sep="\t")
-    allPromtoer = rbind(allPromtoer, bimax.promoter)
+    allPromoter = rbind(allPromoter, bimax.promoter)
+    
   }
+  allPromoter = allPromoter[!duplicated(allPromoter$ensemblId),]
     filename  <- paste(biclusterDir,"/bed/","Allpromoter", clusterMethod,numCluster,"C.",clust, ext,".bed",sep="")
-    write.table(file=filename,x=allPromtoer[!duplicated(allPromtoer$ensembl_gene_id),], quote=F, row.names=F, col.names=F,sep="\t")
+    write.table(file=filename,x=allPromoter, quote=F, row.names=F, col.names=F,sep="\t")
   #return(intMClust)
 }
 
@@ -729,9 +742,9 @@ enrichmentCluster <- function(eurexpressClust, clustRange = seq(1,10),
   regionIdAllClust = unique(unname(unlist(regionIdListClust)))
   require(RColorBrewer)
   require(wordcloud)
-  filename = paste(outputDir,"/", curLabel, ".jpg",sep="")
-  jpeg(filename, width=1024, height=960)
   for(clust in clustRange){
+    filename = paste(outputDir,"/", clusterMethod,clust, ".jpg",sep="")
+    jpeg(filename, width=1024, height=960)
     print(paste("start enrichment analysis for cluster number:",clust, clusterMethod ))
     # perform enrichment analysis
     maxDigits = 3
@@ -823,8 +836,8 @@ enrichmentCluster <- function(eurexpressClust, clustRange = seq(1,10),
     }
     }
 
-  }
   dev.off()
+  }
   if(!novartis){
     #write.table(format(allClusterTable,trim=T,digits=maxDigits),filename,sep="\t",quote=F,row.names=F)    
     #write.table(allClusterTable,filename,sep="\t",quote=F,row.names=F)    
@@ -992,7 +1005,7 @@ writeClusterFile(intMClust=clust, intM=intM, clusterMethod = clusterMethod, numC
 
 print("starting the enrichment  analysis of ISH data.... ")
 #debug(enrichmentCluster)
-#allClust = enrichmentCluster(eurexpressClust, outputDir = outputDir, clustRange = seq(1,50), clusterMethod = clusterMethod,  numCluster=50, novartis=FALSE)
+allClust = enrichmentCluster(eurexpressClust, outputDir = outputDir, clustRange = seq(1,50), clusterMethod = clusterMethod,  numCluster=50, novartis=FALSE)
 #allClusterTable = enrichmentCluster(eurexpressClust, outputDir = outputDir, clustRange = seq(1), clusterMethod = clusterMethod,  numCluster=50, novartis=FALSE)
 #save(file="allClusterTable.RData", allClusterTable)
 #save.image(file=paste(date,"session.RData", sep="."))
