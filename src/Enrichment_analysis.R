@@ -743,8 +743,13 @@ enrichmentCluster <- function(eurexpressClust, clustRange = seq(1,10),
   require(RColorBrewer)
   require(wordcloud)
   for(clust in clustRange){
+<<<<<<< .mine
+    filename = paste(outputDir,"/",clusterMethod,".", clust,".", "jpg",sep="")
+    jpeg(filename, width=1024, height=960)
+=======
     filename = paste(outputDir,"/", clusterMethod,clust, ".jpg",sep="")
     jpeg(filename, width=1024, height=960)
+>>>>>>> .r34
     print(paste("start enrichment analysis for cluster number:",clust, clusterMethod ))
     # perform enrichment analysis
     maxDigits = 3
@@ -993,7 +998,7 @@ print("performing the goenrichment analysis.... ")
 #load("geneOrderPubmed.RData")
 intMBCB = clust
 intMClust = clust
-date = Sys.Date()
+#date = Sys.Date()
 outputDir = "../result/" 
 if (!file.exists(outputDir)) dir.create(outputDir)
 outputDir = paste(outputDir,date,"manual_enrichment_analyses",sep="") 
@@ -1001,7 +1006,7 @@ if (!file.exists(outputDir)) dir.create(outputDir)
 biclusterDir = paste(outputDir,"bicluster.nsNMF",sep="/") 
 if (!file.exists(biclusterDir)) dir.create(biclusterDir)
 clusterMethod = "nmf"
-writeClusterFile(intMClust=clust, intM=intM, clusterMethod = clusterMethod, numCluster = 50, genetab.common=genetab.common.strand, biclusterDir=biclusterDir)
+#writeClusterFile(intMClust=clust, intM=intM, clusterMethod = clusterMethod, numCluster = 50, genetab.common=genetab.common.strand, biclusterDir=biclusterDir)
 
 print("starting the enrichment  analysis of ISH data.... ")
 #debug(enrichmentCluster)
