@@ -261,17 +261,19 @@ v <- treeApply(x$children, function(x) cat(class(x),"\n"))
 
 motifWordcloud <- function(fileDir=".")
 {
-  numClust = 1
+  numClust = 50 
   require(RColorBrewer)
   require(wordcloud)
   for(i in seq(1,numClust)){	
-    
-  fishertab <- read.table(file=paste(fileDir, "/", "promoternmf50C.", i, ".bed.fisher", sep=""), header=FALSE, row.names=2, check.names=FALSE, sep=",")
-  fishertab = fishertab[ fishertab[,7] < 0.01, ] 
+    jpeg(paste(fileDir, "/", "promoternmf50C.", i,".jpg", sep="")) 
+    fishertab <- read.table(file=paste(fileDir, "/", "promoternmf50C.", i, ".bed.fisher", sep=""),header=FALSE, sep="\t")
 
-  fishertab$logq=-log(fishertab[,7] + 1e-1000)
-  pal2 <- brewer.pal(8,"Dark2")
-  wordcloud(fishertab[,1] , freq=fishertab$logq, scale=c(2,.01),
-		  colors=pal2, max=50)
+    fishertab = fishertab[ fishertab[,7] < 0.05, ]
+    fishertab = fishertab[!duplicated(fishertab[,1]), ] 
+    fishertab$logq=-log(fishertab[,7] + 1e-1000)
+    pal2 <- brewer.pal(8,"Dark2")
+    wordcloud(fishertab[,1] , freq=fishertab$logq, scale=c(2,.01),
+	      colors=pal2, max=50)
+    dev.off()
   }
 }
