@@ -1,0 +1,96 @@
+\documentclass{article}
+%
+%\usepackage{pdfsync}           % Used in Mac OSX
+\usepackage[mathcal,mathbf]{euler}
+\usepackage{theorem,amsmath,enumerate,fancyhdr,amssymb,amsfonts}
+\usepackage{graphicx}           %Used in Mac OSX
+%\usepackage[pdftex]{graphics}  %Might be needed in non Mac OSX systems
+\usepackage{myDefs}
+\usepackage{url}
+%In order to be consistent use the following notation in your notes:
+\graphicspath{{./fig/}}
+\title{
+Tissue tree gene biclustering
+}
+\author{Avinash Das}
+
+\date{\today}
+\begin{document}
+
+\pagestyle{fancy}
+\lhead{{\bf Tissue tree biclustering}{ }
+\\{\bf } } 
+\rhead{{\bf Date: }\today}
+
+\maketitle
+
+\section{Problem}
+Given the gene expression across multiple tissues, find gene clusters and most probable tree defining relations between tissues.  
+Tissue tree implies the relation of the different tissues in an embryo, with embryo as root. Cluster of gene implies  
+group of genes homogeneously all active or inactive in tissues of subtree. For eg. one of intended outcome would be genes those
+are homogeneously active genes in tissue subtree with heart as the root, i.e. these genes will be active in left ventricle, right ventricle
+and all tissues related to heart.
+
+
+\section{Data}
+The data is collected from http://www.eurexpress.org/, composed of expression of 5600 genes across 811 tissues. The genes are manually annotated and have discreet value as strong, medium, weak or no expression. 
+For initial analysis we can treat the data as binary i.e. expressed or not expressed. Later it can be generalized to take four discreet values. 
+
+\section{Generative process}
+
+%\subsection{Defining latent variable Z}
+\par \textbf{Latent state variable $Z$}:
+Given a tree $\pi(V,E)$ and genes $G$, we define latent state variable $Z= \{z_{ju} \in\{0,1,2\} : \forall j \in G, u \in V\}$ as:
+%corresponding to each gene at each node:
+\begin{eqnarray}
+	z_{ju} &=& 0 \implies \textit{gene $j$ is homogenously inactive in subtree with $u$ as root.} \nonumber\\ 
+	z_{ju} &=& 1 \implies \textit{gene $j$ is homogenously active with high expression in subtree with  $u$ as root.} \nonumber \\
+	z_{ju} &=& 2 \implies \textit{gene $j$ have inhomogenously activity in subtree with $u$ as root.} \nonumber 
+\end{eqnarray}
+In addition, once a node $z_{ju}$ takes a value either 0 or 1 corresponding to states homogeneously active or in-active all its children 
+node in subtree stays in same homogeneous state. 
+
+Prior over tissue tree $\pi$ can be defined by Coalescent clustering. 
+
+$Z$ can be then sampled from multinomial distribution with a Dirichlet prior.
+\begin{eqnarray}
+	\pi &\sim& \text{coalescent}()\\
+	Z|\pi,\phi &\sim& \text{mult}(\phi) \nonumber \\
+	\phi &\sim&  \text{Dir}(\alpha,\beta,\gamma) \nonumber
+	\label{eqn:zdist1}
+\end{eqnarray}
+
+\par \textbf{Generation of expression level}: 
+Given the state variable $Z$, gene expression is generated from a Bernoulli with parameter only dependent on state variable $Z$. 
+\begin{eqnarray}
+	Y|Z = i &\sim& \text{Bin}(p_i) \nonumber \\
+	p_i &\sim&  \text{Beta}(\alpha_i,  \beta_i) \forall i \in \{1,2,3\}  
+	\label{eqn:ydist}
+\end{eqnarray}
+The beta priors can be chosen so to reflect our expected behaviour of expression level in different gene state. One example of prior that can be taken
+is shown in fig. \ref{fig:betaP}.
+\begin{figure}[ht]
+	\begin{center}
+		\includegraphics[scale=0.5]{beta.jpg}
+	\end{center}
+	\caption{Beta priors for homogeneous active, homogeneous inactive and inhomogeneous gene state. The priors are consistent
+	with the interaction matrix data; e.g. $E(p_2)$ = average that any gene is expressed in interaction matrix.}
+	\label{fig:betaP}
+\end{figure}
+
+
+%The method can be extendedfor the discrete values of expression level by using multinomial distribution instead of binomial distribution in order to represent the different expression stages (weak, intermediate, high and no expression). 
+\section{Expected outcomes}
+\begin{itemize}
+	\item We will obtain a tissue tree. 
+	\item At each node of the tree we will get cluster of genes which are active or inactive in the subtree.
+	\item $\delta$ parameter in Kingman's coalescent will give the distance between the each tissue. For eg. we will get information if brain is closer to heart
+		than kidney. 
+	\item Probably clustering model will be resistant to error due manual annotation.
+\end{itemize}
+
+
+
+\bibliographystyle{apalike}	% (uses file "plain.bst")
+\bibliography{diary}		% expects file "myrefs.bib"
+\end{document}  
