@@ -69,14 +69,14 @@ Given the state variable $Z$, gene expression is generated from a Bernoulli with
 \end{eqnarray}
 The beta priors can be chosen so to reflect our expected behaviour of expression level in different gene state. One example of prior that can be taken
 is shown in fig. \ref{fig:betaP}.
-\begin{figure}[ht]
-	\begin{center}
-		\includegraphics[scale=0.5]{beta.jpg}
-	\end{center}
-	\caption{Beta priors for homogeneous active, homogeneous inactive and inhomogeneous gene state. The priors are consistent
-	with the interaction matrix data; e.g. $E(p_2)$ = average that any gene is expressed in interaction matrix.}
-	\label{fig:betaP}
-\end{figure}
+%\begin{figure}[ht]
+	%\begin{center}
+		%\includegraphics[scale=0.5]{beta.jpg}
+	%\end{center}
+	%\caption{Beta priors for homogeneous active, homogeneous inactive and inhomogeneous gene state. The priors are consistent
+	%with the interaction matrix data; e.g. $E(p_2)$ = average that any gene is expressed in interaction matrix.}
+	%\label{fig:betaP}
+%\end{figure}
 
 
 %The method can be extendedfor the discrete values of expression level by using multinomial distribution instead of binomial distribution in order to represent the different expression stages (weak, intermediate, high and no expression). 
@@ -89,6 +89,38 @@ is shown in fig. \ref{fig:betaP}.
 	\item Probably clustering model will be resistant to error due manual annotation.
 \end{itemize}
 
+
+%% for presentation
+\begin{eqnarray}
+	\pi &\sim& \text{kingsman}() \nonumber\\
+	Z|\pi,\phi &\sim& \text{mult}(\phi) \nonumber \\
+	\phi &\sim&  \text{Dir}(\alpha,\beta,\gamma) \nonumber\\
+	Y|Z = i &\sim& \text{Bin}(p_i) \nonumber \\
+	p_i &\sim&  \text{Beta}(\alpha_i,  \beta_i) \nonumber
+	\label{eqn:pptzdist1}
+\end{eqnarray}
+\begin{eqnarray}
+	q(\rho_{l_i r_i}, \delta_i) \propto exp\left( -\binom{n-i +1}{2}\delta_i \right) \tilde{Z}_{i}(X|\theta_i) \nonumber \\
+	\tilde{Z}_{i}(X|\theta_i) = \int \int p(a) k_{- \infty t_{i}} (x,y) M_{i}(y) dy da \nonumber\\ 
+	M_i(y) \propto \prod_{b=l,r} \int k_{t_i t_{bi}}(y,y_b) M_i(y_b) dy_b \nonumber
+\end{eqnarray}
+
+\begin{equation}
+	Y|Z,\pi &\sim& \text{Beta}(\alpha_i, \beta_i) \nonumber
+\end{equation}
+
+\begin{eqnarray}
+	\boldsymbol{\alpha_{i}} &=& \boldsymbol{\delta P}(x_i)  \quad \forall i \in \texit{leaf} \\ 
+	\boldsymbol{\alpha_i} &=& \boldsymbol{\alpha_l \alpha_r \Gamma P}(x_i)  \quad\forall i \not{\in} \texit{leaf} 
+\end{eqnarray}
+
+\begin{eqnarray*}
+	\textit{E step} \quad
+	\hat{v}_{jk;i}(t) &=&  Pr(C_{l} = j, C_{r} = k,  C_{t} = i | \boldsymbol{y^{T}}) \\
+	  &=&  \alpha_l(j) \alpha_r(k) \gamma_{jk;i} p_k(x_t) \beta_t(k)/L_t\\
+	  \textit{M step:} \quad \gamma_{jk;i} &=&\tilde{f}_{jk;i} \\
+	  f_{jk;i} &=& \sum \hat{v}_{jk;i}(t)
+\end{eqnarray*}
 
 
 \bibliographystyle{apalike}	% (uses file "plain.bst")
