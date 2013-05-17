@@ -249,15 +249,38 @@ dev.off()
 
 
 # xml tree parser
-library(XML)
-tissue.tree <- xmlTreeParse("../data/EMAPtree.xml", 
-			    handlers=list(anatomy=function(x,attr) {x},
-					  component=function(x,attr) {x}, 
-					  childrenId=function(x,attr) {x}, 
-					  startElement=function(x,attr){ NULL}),
-			    asTree=T)
-v <- treeApply(x$children, function(x) cat(class(x),"\n"))
+#library(XML)
+#tissue.tree <- xmlTreeParse("../data/EMAPtree.xml", 
+			    #handlers=list(anatomy=function(x,attr) {x},
+					  #component=function(x,attr) {x}, 
+					  #childrenId=function(x,attr) {x}, 
+					  #startElement=function(x,attr){ NULL}),
+			    #asTree=T)
+#v <- treeApply(x$children, function(x) cat(class(x),"\n"))
 
+library(XML)
+
+URL <- "http://www.emouseatlas.org/emap/ema/theiler_stages/StageDefinition/Stage_xml/TS23.xml"
+root <- xmlTreeParse(URL, useInternalNodes = TRUE)
+
+fn <- function(node) {
+   id <- xmlAttrs(node)["id"]
+   parent.id <- xmlAttrs(xmlParent(node))["id"]
+   setNames(head(c(id, parent.id, NA), 2), c("id", "parent"))
+}
+parents.all <- t(xpathSApply(root, "//component", n))
+
+parents = as.data.frame(parents.all[1:1411,])
+findLeaf <- function(xx) which(!(xx$id %in% xx$parent))
+temp =1:nrow(parents)
+inx = list()
+while(TRUE){
+  inxT = findLeaf(parents[temp,])
+  inx = c(inx,inxT)
+  inx = c
+
+}
+findLeaf(parents)
 
 motifWordcloud <- function(fileDir=".")
 {
@@ -277,3 +300,79 @@ motifWordcloud <- function(fileDir=".")
     dev.off()
   }
 }
+
+
+
+#this are function for dendogram analysis
+P = read.table(file="../result/2013-05-08/P", header = F, sep=",", comment.char = "", stringsAsFactors =F,  strip.white =T)
+T1 = read.table(file="../result/2013-05-08/Time", header = F, sep=",", comment.char = "", stringsAsFactors =F,  strip.white =T)
+XX = read.table(file="../result/2013-05-08/XXcomplete", header = F, sep=",", comment.char = "", stringsAsFactors =F,  strip.white =T)
+a <- list()  # initialize empty object
+# define merging pattern: 
+#    negative numbers are leaves, 
+#    positive are merged clusters (defined by row number in $merge)
+a$merge = matrix(0, 49,2)
+for(ii in 1:49){
+  temp = which(P==ii+50) - 50
+  temp[temp <1] = temp[temp <1] -1
+  a$merge[ii,] = temp
+}
+a$height = abs(T1[51:99])
+#a$merge <- matrix(c(-1, -2,
+                    #-3, -4,
+                     #1,  2), nc=2, byrow=TRUE ) 
+#a$height <- c(1, 1.5, 3)    # define merge heights
+a$order <- 50:1              # order of leaves(trivial if hand-entered)
+a$labels <- paste("a", 50:1, sep="")   # labels of leaves
+class(a) <- "hclust"        # make it an hclust object
+plot(a)                     # look at the result   
+
+#convert to a dendrogram object if needed
+ad <- as.dendrogram(a)
+
+
+#creating hmm  object
+environment(BaumWelch.dthmm.Tree) = asNamespace("HiddenMarkov")
+environment(Estep.Tree) = asNamespace("HiddenMarkov")
+environment(forwardback.Tree) = asNamespace("HiddenMarkov")
+
+low = 1e-5 
+high = 1 - low
+medium = 0.1
+object = NULL
+P = unlist(P)
+XXcur = unlist(XX[4780,])
+object$x = XXcur
+Pi = matrix(1/3,9,3) 
+numLeaf = (1+length(XXcur))/2
+delta = matrix(0, numLeaf, 3)
+delta[XXcur[1: numLeaf] ==0,1] = 1
+delta[XXcur[1: numLeaf] ==1,3] = 1
+#delta = XXcur[1: numLeaf]
+XXcur.approx = XXcur
+XXcur.approx[XXcur==1] = .95
+XXcur.approx[XXcur==0] = .05
+tree.object <- dthmm(XXcur.approx, Pi, delta, "beta", list(shape1=c(1, 2, 3), shape2=c(3,5, 1)))
+tree.object$P = P
+control = bwcontrol(tol = 1e-6, posdiff = F, converge = expression(abs(diff) < tol))
+tree.out = BaumWelch.dthmm.Tree(tree.object, control)
+curve(dbeta(x,shape1=tree.out$pm$shape1[1], shape2=tree.out$pm$shape2[1]), from=0, to=1)
+curve(dbeta(x,shape1=tree.out$pm$shape1[2], shape2=tree.out$pm$shape2[2]), from=0, to=1, add=T, col="red")
+curve(dbeta(x,shape1=tree.out$pm$shape1[3], shape2=tree.out$pm$shape2[3]), from=0, to=1, add=T, col="green")
+#toy example
+x.toy = c(1,1,0,1,0.5)
+P.toy = c(4,4,5,5,0)
+numLeaf = (1+length(x.toy))/2
+delta = matrix(0, numLeaf, 3)
+delta[x.toy[1: numLeaf] ==0,1] = 1
+delta[x.toy[1: numLeaf] ==1,3] = 1
+#delta = x.toy[1: numLeaf]
+x.toy.approx = x.toy
+x.toy.approx[x.toy==1] = .95
+x.toy.approx[x.toy==0] = .05
+tree.object <- dthmm(x.toy.approx, Pi, delta, "beta", list(shape1=c(1, 0.5, 3), shape2=c(3,0.5, 1)))
+tree.object$P = P.toy
+tree.out = BaumWelch.dthmm.Tree(tree.object)
+
+
+
