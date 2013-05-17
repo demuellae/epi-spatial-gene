@@ -10,7 +10,7 @@
 %In order to be consistent use the following notation in your notes:
 \graphicspath{{./fig/}}
 \title{
-Tissue tree gene biclustering
+Tissue tree gene biclustering and gene dynamics
 }
 \author{Avinash Das}
 
@@ -122,6 +122,148 @@ is shown in fig. \ref{fig:betaP}.
 	  f_{jk;i} &=& \sum \hat{v}_{jk;i}(t)
 \end{eqnarray*}
 
+
+\section{Introduction}
+\subsection{Classification of genes}
+\subsection{Tissue tree}
+\subsection{In-situ hybridization data}
+
+\section{Methods}
+
+\subsection{Kingman's coalescent}
+To infer tree from observed data, we used agglomerative clustering using Kingman's coalescent \cite{teh2008bayesian}.
+It defines exponential distribution as prior over trees.  It calculates posterior of the trees given the observation.
+The inference is performed by message passing algorithm, by passing message upward from leaf to trees. One of the advantage of
+method is the proposed distribution is exchangeable.
+
+Let $\pi$ be the tree defining genaology of $n$ individuals. The tree $\pi$ can be defined by $n-1$ coalescent events. 
+The $i$th coalescing event is defined by $\rho_{l_i}$ and $\rho_{r_i}$, the left and right subtree that are coalescing  
+at waiting $\delta_i$ after $i-1$th coalescing event. The prior is defined by:
+\begin{equation}
+	p(\pi) = \prod_{i}^{n-1}exp\left( -\binom{n-i +1}{2}\delta_i \right)
+	\label{ref:prior}
+\end{equation}
+
+
+\cite{teh2008bayesian} proved that joint probability of observation and tree can be given by:
+\begin{eqnarray}
+	p(x, \pi) &\propto& \prod_{i}^{n-1}exp\left( -\binom{n-i +1}{2}\delta_i \right) \tilde{Z}_{i}(X|\theta_i) \\ 
+	\textit{where, } \tilde{Z}_{i}(X|\theta_i) & =& \int \int p(a) k_{- \infty t_{i}} (x,y) M_{i}(y) dy da \\ 
+	M_i(y) &\propto& \prod_{b=l,r} \int k_{t_i t_{bi}}(y,y_b) M_i(y_b) dy_b 
+	\label{eqn:proposal}
+\end{eqnarray}
+$M_i(y)$ is message propagated upward to subtree $\theta_i$ from its both children. This can be calculated iteratively
+by propagating messages from leaf to root node. $\tilde{Z}_{i}(X|\theta_i)$ can be viewed as local likelihood. Inference
+is based on \ref{eqn:proposal}. At each step $i$, a duration is $\delta_i$ is sampled and then a pair $\rho_{l_i},\rho_{r_i}$
+is chosen.
+
+
+\subsection{Latent gene state variable $Z$}
+Given we have reasonable accurate tissue tree representing the relationship between tissues,
+the problem of gene biclustering reduces to inferring the 
+state of genes at each internal node of the inferred tree. 
+Given a tree $\pi(V,E)$ and genes $G$, we define latent state variable $Z= \{z_{ju} \in\{0,1,2\} : \forall j \in G, u \in V\}$ as:
+%corresponding to each gene at each node:
+\begin{eqnarray}
+	z_{ju} &=& 0 \implies \textit{gene $j$ is homogenously inactive in subtree with $u$ as root.} \nonumber\\ 
+	z_{ju} &=& 1 \implies \textit{gene $j$ is homogenously active with high expression in subtree with  $u$ as root.} \nonumber \\
+	z_{ju} &=& 2 \implies \textit{gene $j$ have hetrogenous activity in subtree with $u$ as root.} \nonumber 
+\end{eqnarray}
+Once a node $z_{ju}$ takes a value either 0 or 1 corresponding to states  
+homogeneously active or in-active all its children node in subtree stays in same homogeneous state.
+
+\subsection{Generative process I}
+The problem of biclustering of the genes 
+reduces to simultaneously inferring 1) tree of tissue and 2) gene state variable at each internal node of the tree.
+We define a generative process to generate gene expression data given the tree using $Z$ as the internal latent variable:
+\begin{eqnarray}
+	\pi &\sim& \text{kingsman}() \nonumber\\
+	Z|\pi,\phi &\sim& \text{mult}(\phi) \nonumber \\
+	\phi &\sim&  \text{Dir}(\alpha,\beta,\gamma) \nonumber\\
+	Y|Z = i &\sim& \text{Bin}(p_i) \nonumber \\
+	p_i &\sim&  \text{Beta}(\alpha_i,  \beta_i)
+	\label{eqn:gen1}
+\end{eqnarray}
+The basic idea of generative model is very similar to Kingman's agglomerative clustering. The main difference is instead of using 
+observed data (gene expression) to infer tree, the generative process uses the state variable $Z$ at each internal nodes. 
+Therefore, gene expression is thought to be generated at leafs given the tree and gene state variable.
+
+
+The message passing algorithm in \cite{teh2008bayesian} uses transition kernel $ k_{t_i t_{bi}}(y,y_b)$
+to define transition from one state to other. If 
+$Z$ is used to infer tree, transitions cannot be independent for both children. That is transition of left children to
+parent cannot be independent of state of right children. For instance:  once a node become homogeneous all it descendant 
+should be homogeneous. This kind of complicated dependencies demand a three dimensional transition kernel. Such kernel does not
+arrest a closed form solution of messages from equation \ref{eqn:proposal}.
+
+\subsection{Generative process II}
+To solve the problem described in previous section, we propose to split the tree inference with the inference of latent 
+gene state $Z$. We infer tree directly from the observed gene expression from agglomerative clustering \cite{teh2008bayesian}.
+At each of the internal state we also infer gene expression $Y$ at each internal nodes of tree by passing message downward and 
+combing it with upward message. 
+
+Given the tree $\pi$ and inferred gene expression at each internal node. We define a new generative process:
+
+\begin{equation}
+	Y|Z = i, \pi &\sim& \text{Beta}(\alpha_i,  \beta_i)
+	\label{eqn:gen2}
+\end{equation}
+
+The $Y$ at internal nodes are probability therefore it arrest a $Beta$ distribution. We can also assume given
+the tree structure and expression at internal nodes, gene expression becomes independent. This implies
+we can infer $Z$ independently for each genes. 
+
+\subsection{Inference}
+We used message passing algorithm to compute posterior probabilities of latent variable at internal nodes.
+Parameters from generative process defined from equation can be inferred by EM algorithm. 
+The graphical model induced by the generative process contains hidden states $Z$ and observations at
+each node. This similar to HMM just instead of Markov chain, induced graph is a tree. Therefore EM algorithm 
+is similar to Baum-Welch algorithm \cite{rabiner1986introduction}. 
+
+
+The upward message $\alpha$ at node $t$ can be calculated starting from leafs and propagating upward. 
+The observed variables influencing $Y_t$ are split into two subsets:
+a) $e_Y_t^-$ composed of observed variables emitted by descendants of node $t$ (including t)  and
+b) $e_Y_t^+$ composed of observed variable emitted by non-descendants of node $t$ (excluding t) \cite{starr2004introduction}.
+$l$ and $r$ are respectively left and right child of node $t$.
+$p$ and $s$ are respectively parent and sibling of node $t$.
+$\oplus$ is outer product of two vector.
+\begin{eqnarray}
+	 \alpha_t(i) &=& Pr(e_Y_t^- |Z_t=i) \nonumber\\
+	 &=& \sum_{i,j} \alpha_{l}(i) \alpha_{r}(j) \Gamma_{ij;k}  Pr_k(Y_t) \nonumber 
+\end{eqnarray}
+Where, $\Gamma_{ij;k}$ is transition matrix from $(Z_l = i , Z_r=j) $ to $Z_t=k$. $Pr_k(Y_t) = Pr(Y_t|Z_t =k)$
+is the emission probability.
+This can be written in following matrix form. It is important to keep these matrices information so that algorithm can be 
+implemented in higher language program like R or matlab without sacrificing much on speed.
+\begin{eqnarray}
+	\boldsymbol{\alpha_{t}} &=& \boldsymbol{\delta P}(x_i)  \quad \forall t \in \texit{leaf} \nonumber\\ 
+	\boldsymbol{\alpha_t} &=& \boldsymbol{(\alpha_l \oplus \alpha_r) \Gamma Pr}(Y_t)  \quad\forall t \not{\in} \texit{leaf}
+	\label{eqn:alpha}
+\end{eqnarray}
+
+In the similar manner, we can derive the iterative formula for downward messages. 
+\begin{eqnarray}
+	 \beta_t(i) &=& Pr(e_Y_t^+ |Z_t=i) \nonumber\\
+	 &=& \sum_{j,k} \alpha_{s}(j) \Gamma_{ij;k} \beta_{p}(k) Pr_i(Y_t) \nonumber\\ 
+	 \texit{Equivalently },  \nonumber\\
+	 \boldsymbol{\beta_t} &=&   \boldsymbol{\alpha_{s}} \Gamma_{ij;k}  \boldsymbol{\beta_{p} Pr(Y_t)} 
+\end{eqnarray}
+
+\begin{eqnarray*}
+	\textit{E step} \quad
+	\hat{v}_{jk;i}(t) &=&  Pr(C_{l} = j, C_{r} = k,  C_{t} = i | \boldsymbol{y^{T}}) \\
+	  &=&  \alpha_l(j) \alpha_r(k) \gamma_{jk;i} p_k(x_t) \beta_t(k)/L_t\\
+	  \textit{M step:} \quad \gamma_{jk;i} &=&\tilde{f}_{jk;i} \\
+	  f_{jk;i} &=& \sum \hat{v}_{jk;i}(t)
+\end{eqnarray*}
+
+\section{Results}
+\subsection{Simulation result}
+\subsection{Comparison with Non-negative matrix factorization}
+\subsection{GO annotation}
+\subsection{Epigenetic enrichment}
+\section{Implementation}
 
 \bibliographystyle{apalike}	% (uses file "plain.bst")
 \bibliography{diary}		% expects file "myrefs.bib"
