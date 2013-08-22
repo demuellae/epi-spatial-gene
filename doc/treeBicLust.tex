@@ -23,110 +23,162 @@ Tissue tree gene biclustering and gene dynamics
 \rhead{{\bf Date: }\today}
 
 \maketitle
-
-\section{Problem}
-Given the gene expression across multiple tissues, find gene clusters and most probable tree defining relations between tissues.  
-Tissue tree implies the relation of the different tissues in an embryo, with embryo as root. Cluster of gene implies  
-group of genes homogeneously all active or inactive in tissues of subtree. For eg. one of intended outcome would be genes those
-are homogeneously active genes in tissue subtree with heart as the root, i.e. these genes will be active in left ventricle, right ventricle
-and all tissues related to heart.
-
-
-\section{Data}
-The data is collected from http://www.eurexpress.org/, composed of expression of 5600 genes across 811 tissues. The genes are manually annotated and have discreet value as strong, medium, weak or no expression. 
-For initial analysis we can treat the data as binary i.e. expressed or not expressed. Later it can be generalized to take four discreet values. 
-
-\section{Generative process}
-
-%\subsection{Defining latent variable Z}
-\par \textbf{Latent state variable $Z$}:
-Given a tree $\pi(V,E)$ and genes $G$, we define latent state variable $Z= \{z_{ju} \in\{0,1,2\} : \forall j \in G, u \in V\}$ as:
-%corresponding to each gene at each node:
-\begin{eqnarray}
-	z_{ju} &=& 0 \implies \textit{gene $j$ is homogenously inactive in subtree with $u$ as root.} \nonumber\\ 
-	z_{ju} &=& 1 \implies \textit{gene $j$ is homogenously active with high expression in subtree with  $u$ as root.} \nonumber \\
-	z_{ju} &=& 2 \implies \textit{gene $j$ have inhomogenously activity in subtree with $u$ as root.} \nonumber 
-\end{eqnarray}
-In addition, once a node $z_{ju}$ takes a value either 0 or 1 corresponding to states homogeneously active or in-active all its children 
-node in subtree stays in same homogeneous state. 
-
-Prior over tissue tree $\pi$ can be defined by Coalescent clustering. 
-
-$Z$ can be then sampled from multinomial distribution with a Dirichlet prior.
-\begin{eqnarray}
-	\pi &\sim& \text{coalescent}()\\
-	Z|\pi,\phi &\sim& \text{mult}(\phi) \nonumber \\
-	\phi &\sim&  \text{Dir}(\alpha,\beta,\gamma) \nonumber
-	\label{eqn:zdist1}
-\end{eqnarray}
-
-\par \textbf{Generation of expression level}: 
-Given the state variable $Z$, gene expression is generated from a Bernoulli with parameter only dependent on state variable $Z$. 
-\begin{eqnarray}
-	Y|Z = i &\sim& \text{Bin}(p_i) \nonumber \\
-	p_i &\sim&  \text{Beta}(\alpha_i,  \beta_i) \forall i \in \{1,2,3\}  
-	\label{eqn:ydist}
-\end{eqnarray}
-The beta priors can be chosen so to reflect our expected behaviour of expression level in different gene state. One example of prior that can be taken
-is shown in fig. \ref{fig:betaP}.
-%\begin{figure}[ht]
-	%\begin{center}
-		%\includegraphics[scale=0.5]{beta.jpg}
-	%\end{center}
-	%\caption{Beta priors for homogeneous active, homogeneous inactive and inhomogeneous gene state. The priors are consistent
-	%with the interaction matrix data; e.g. $E(p_2)$ = average that any gene is expressed in interaction matrix.}
-	%\label{fig:betaP}
-%\end{figure}
+\section{Abstract}
+Problem of classification of genes is one of fundamental problem in field of genetics.
+We propose a hierarchical  
+Bayesian method to perform gene classification. We develop a message passing based 
+EM  algorithm for inference. Final we demonstrate how the model can tease apart
+gene dynamics on tissue tree. 
+%\section{Problem}
+%Given the gene expression across multiple tissues, find gene clusters and most probable tree defining relations between tissues.  
+%Tissue tree implies the relation of the different tissues in an embryo, with embryo as root. Cluster of gene implies  
+%group of genes homogeneously all active or inactive in tissues of subtree. For eg. one of intended outcome would be genes those
+%are homogeneously active genes in tissue subtree with heart as the root, i.e. these genes will be active in left ventricle, right ventricle
+%and all tissues related to heart.
 
 
-%The method can be extendedfor the discrete values of expression level by using multinomial distribution instead of binomial distribution in order to represent the different expression stages (weak, intermediate, high and no expression). 
-\section{Expected outcomes}
-\begin{itemize}
-	\item We will obtain a tissue tree. 
-	\item At each node of the tree we will get cluster of genes which are active or inactive in the subtree.
-	\item $\delta$ parameter in Kingman's coalescent will give the distance between the each tissue. For eg. we will get information if brain is closer to heart
-		than kidney. 
-	\item Probably clustering model will be resistant to error due manual annotation.
-\end{itemize}
+%\section{Data}
+%The data is collected from http://www.eurexpress.org/, composed of expression of 5600 genes across 811 tissues. The genes are manually annotated and have discreet value as strong, medium, weak or no expression. 
+%For initial analysis we can treat the data as binary i.e. expressed or not expressed. Later it can be generalized to take four discreet values. 
+
+%\section{Generative process}
+
+%%\subsection{Defining latent variable Z}
+%\par \textbf{Latent state variable $Z$}:
+%Given a tree $\pi(V,E)$ and genes $G$, we define latent state variable $Z= \{z_{ju} \in\{0,1,2\} : \forall j \in G, u \in V\}$ as:
+%%corresponding to each gene at each node:
+%\begin{eqnarray}
+	%z_{ju} &=& 0 \implies \textit{gene $j$ is homogenously inactive in subtree with $u$ as root.} \nonumber\\ 
+	%z_{ju} &=& 1 \implies \textit{gene $j$ is homogenously active with high expression in subtree with  $u$ as root.} \nonumber \\
+	%z_{ju} &=& 2 \implies \textit{gene $j$ have inhomogenously activity in subtree with $u$ as root.} \nonumber 
+%\end{eqnarray}
+%In addition, once a node $z_{ju}$ takes a value either 0 or 1 corresponding to states homogeneously active or in-active all its children 
+%node in subtree stays in same homogeneous state. 
+
+%Prior over tissue tree $\pi$ can be defined by Coalescent clustering. 
+
+%$Z$ can be then sampled from multinomial distribution with a Dirichlet prior.
+%\begin{eqnarray}
+	%\pi &\sim& \text{coalescent}()\\
+	%Z|\pi,\phi &\sim& \text{mult}(\phi) \nonumber \\
+	%\phi &\sim&  \text{Dir}(\alpha,\beta,\gamma) \nonumber
+	%\label{eqn:zdist1}
+%\end{eqnarray}
+
+%\par \textbf{Generation of expression level}: 
+%Given the state variable $Z$, gene expression is generated from a Bernoulli with parameter only dependent on state variable $Z$. 
+%\begin{eqnarray}
+	%Y|Z = i &\sim& \text{Bin}(p_i) \nonumber \\
+	%p_i &\sim&  \text{Beta}(\alpha_i,  \beta_i) \forall i \in \{1,2,3\}  
+	%\label{eqn:ydist}
+%\end{eqnarray}
+%The beta priors can be chosen so to reflect our expected behaviour of expression level in different gene state. One example of prior that can be taken
+%is shown in fig.% \ref{fig:betaP}.
+%%\begin{figure}[ht]
+	%%\begin{center}
+		%%\includegraphics[scale=0.5]{beta.jpg}
+	%%\end{center}
+	%%\caption{Beta priors for homogeneous active, homogeneous inactive and inhomogeneous gene state. The priors are consistent
+	%%with the interaction matrix data; e.g. $E(p_2)$ = average that any gene is expressed in interaction matrix.}
+	%%\label{fig:betaP}
+%%\end{figure}
 
 
-%% for presentation
-\begin{eqnarray}
-	\pi &\sim& \text{kingsman}() \nonumber\\
-	Z|\pi,\phi &\sim& \text{mult}(\phi) \nonumber \\
-	\phi &\sim&  \text{Dir}(\alpha,\beta,\gamma) \nonumber\\
-	Y|Z = i &\sim& \text{Bin}(p_i) \nonumber \\
-	p_i &\sim&  \text{Beta}(\alpha_i,  \beta_i) \nonumber
-	\label{eqn:pptzdist1}
-\end{eqnarray}
-\begin{eqnarray}
-	q(\rho_{l_i r_i}, \delta_i) \propto exp\left( -\binom{n-i +1}{2}\delta_i \right) \tilde{Z}_{i}(X|\theta_i) \nonumber \\
-	\tilde{Z}_{i}(X|\theta_i) = \int \int p(a) k_{- \infty t_{i}} (x,y) M_{i}(y) dy da \nonumber\\ 
-	M_i(y) \propto \prod_{b=l,r} \int k_{t_i t_{bi}}(y,y_b) M_i(y_b) dy_b \nonumber
-\end{eqnarray}
+%%The method can be extendedfor the discrete values of expression level by using multinomial distribution instead of binomial distribution in order to represent the different expression stages (weak, intermediate, high and no expression). 
+%\section{Expected outcomes}
+%\begin{itemize}
+	%\item We will obtain a tissue tree. 
+	%\item At each node of the tree we will get cluster of genes which are active or inactive in the subtree.
+	%\item $\delta$ parameter in Kingman's coalescent will give the distance between the each tissue. For eg. we will get information if brain is closer to heart
+		%than kidney. 
+	%\item Probably clustering model will be resistant to error due manual annotation.
+%\end{itemize}
 
-\begin{equation}
-	Y|Z,\pi &\sim& \text{Beta}(\alpha_i, \beta_i) \nonumber
-\end{equation}
 
-\begin{eqnarray}
-	\boldsymbol{\alpha_{i}} &=& \boldsymbol{\delta P}(x_i)  \quad \forall i \in \texit{leaf} \\ 
-	\boldsymbol{\alpha_i} &=& \boldsymbol{\alpha_l \alpha_r \Gamma P}(x_i)  \quad\forall i \not{\in} \texit{leaf} 
-\end{eqnarray}
+%%% for presentation
+%\begin{eqnarray}
+	%\pi &\sim& \text{kingsman}() \nonumber\\
+	%Z|\pi,\phi &\sim& \text{mult}(\phi) \nonumber \\
+	%\phi &\sim&  \text{Dir}(\alpha,\beta,\gamma) \nonumber\\
+	%Y|Z = i &\sim& \text{Bin}(p_i) \nonumber \\
+	%p_i &\sim&  \text{Beta}(\alpha_i,  \beta_i) \nonumber
+	%\label{eqn:pptzdist1}
+%\end{eqnarray}
+%\begin{eqnarray}
+	%q(\rho_{l_i r_i}, \delta_i) \propto exp\left( -\binom{n-i +1}{2}\delta_i \right) \tilde{Z}_{i}(X|\theta_i) \nonumber \\
+	%\tilde{Z}_{i}(X|\theta_i) = \int \int p(a) k_{- \infty t_{i}} (x,y) M_{i}(y) dy da \nonumber\\ 
+	%M_i(y) \propto \prod_{b=l,r} \int k_{t_i t_{bi}}(y,y_b) M_i(y_b) dy_b \nonumber
+%\end{eqnarray}
 
-\begin{eqnarray*}
-	\textit{E step} \quad
-	\hat{v}_{jk;i}(t) &=&  Pr(C_{l} = j, C_{r} = k,  C_{t} = i | \boldsymbol{y^{T}}) \\
-	  &=&  \alpha_l(j) \alpha_r(k) \gamma_{jk;i} p_k(x_t) \beta_t(k)/L_t\\
-	  \textit{M step:} \quad \gamma_{jk;i} &=&\tilde{f}_{jk;i} \\
-	  f_{jk;i} &=& \sum \hat{v}_{jk;i}(t)
-\end{eqnarray*}
+%\begin{equation}
+	%Y|Z,\pi &\sim& \text{Beta}(\alpha_i, \beta_i) \nonumber
+%\end{equation}
+
+%\begin{eqnarray}
+	%\boldsymbol{\alpha_{i}} &=& \boldsymbol{\delta P}(x_i)  \quad \forall i \in \textit{leaf} \\ 
+	%\boldsymbol{\alpha_i} &=& \boldsymbol{\alpha_l \alpha_r \Gamma P}(x_i)  \quad\forall i \not{\in} \textit{leaf} 
+%\end{eqnarray}
+
+%\begin{eqnarray*}
+	%\textit{E step} \quad
+	%\hat{v}_{jk;i}(t) &=&  Pr(C_{l} = j, C_{r} = k,  C_{t} = i | \boldsymbol{y^{T}}) \\
+	  %&=&  \alpha_l(j) \alpha_r(k) \gamma_{jk;i} p_k(x_t) \beta_t(k)/L_t\\
+	  %\textit{M step:} \quad \gamma_{jk;i} &=&\tilde{f}_{jk;i} \\
+	  %f_{jk;i} &=& \sum \hat{v}_{jk;i}(t)
+%\end{eqnarray*}
 
 
 \section{Introduction}
 \subsection{Classification of genes}
-\subsection{Tissue tree}
+One of the classical problem in the area of computational biology is to classify genes. 
+There are more than 40 thousand known genes in human genome.
+Function of many genes are 
+poorly understood. 
+%Further, function of many of these genes are not known or poorly understood.
+They function in different manner in different context.  Many 
+of the these genes control the expression of other genes and sometime regulate its own 
+expression. This add a layer of complexity to analyze and define classification
+of genes.
+
+
+The task of gene classification is also important. Many of the genome wide studies like
+genome-wide association studies or differential gene expresssion analysis find set
+of genes. With better classification, we can analyze such experiment
+Gene annotation is one example of several existing gene classification methods. It define 
+tree based annotation of genes. It also give relationship of genes with pathways. 
+
+Clustering is other popular method for gene classification. Clustering of genes tries
+to find set of genes which are co-expressed. Co-expressed are sometime defined as two or more
+genes
+are expressed together across all samples. This is limiting definition for classification.
+Genes are known to have different function in different context. Therefore, it is arguably
+more useful to define clusters as 
+set of genes which are co-expressed in subset of the samples.
+Biclustering is approach to find significant submatrices in matrix. Biclustering of genes
+therefore will fish out co-expressed genes in subset of samples.
+
+The main limitation of clustering or biclustering approach is, they are local search algorithm
+and hence may miss out important genes clusters. Another assumption that samples usually 
+have flat relation. Many times samples corresponds to tissues or disease sample or samples 
+from different individuals. All such cases trees is better representation of relationships.
+
+
+Another very useful classification of gene classification is: a) housekeeping genes: genes
+expressed in all tissues. b) tissue specific genes: genes which are expressed in few tissues.
+The later category are gene which considered as gene signature of tissue. The main limitation
+of these classification they are very simplistic. 
+
+We propose a novel method of gene classification that combines these two approaches of 
+gene classification. We try to use inherent tree relationship between sample to impute
+better cluster. Further, we define homogeneous set of gene at each internal node of inferred
+tree.
+
+
 \subsection{In-situ hybridization data}
+
+The data is collected from http://www.eurexpress.org/, composed of expression of 5600 genes across 811 tissues. The genes are manually annotated and have discreet value as strong, medium, weak or no expression. 
+For initial analysis we can treat the data as binary i.e. expressed or not expressed. Later it can be generalized to take four discreet values. 
+
 
 \section{Methods}
 
@@ -134,11 +186,11 @@ is shown in fig. \ref{fig:betaP}.
 To infer tree from observed data, we used agglomerative clustering using Kingman's coalescent \cite{teh2008bayesian}.
 It defines exponential distribution as prior over trees.  It calculates posterior of the trees given the observation.
 The inference is performed by message passing algorithm, by passing message upward from leaf to trees. One of the advantage of
-method is the proposed distribution is exchangeable.
+method is the distribution is exchangeable.
 
 Let $\pi$ be the tree defining genaology of $n$ individuals. The tree $\pi$ can be defined by $n-1$ coalescent events. 
 The $i$th coalescing event is defined by $\rho_{l_i}$ and $\rho_{r_i}$, the left and right subtree that are coalescing  
-at waiting $\delta_i$ after $i-1$th coalescing event. The prior is defined by:
+at waiting $\delta_i$ after $i-1$th coalescing event. The prior over tree was defined as:
 \begin{equation}
 	p(\pi) = \prod_{i}^{n-1}exp\left( -\binom{n-i +1}{2}\delta_i \right)
 	\label{ref:prior}
@@ -154,8 +206,8 @@ at waiting $\delta_i$ after $i-1$th coalescing event. The prior is defined by:
 \end{eqnarray}
 $M_i(y)$ is message propagated upward to subtree $\theta_i$ from its both children. This can be calculated iteratively
 by propagating messages from leaf to root node. $\tilde{Z}_{i}(X|\theta_i)$ can be viewed as local likelihood. Inference
-is based on \ref{eqn:proposal}. At each step $i$, a duration is $\delta_i$ is sampled and then a pair $\rho_{l_i},\rho_{r_i}$
-is chosen.
+is based on equation \ref{eqn:proposal}. At each step $i$, a duration is $\delta_i$ is sampled and then a pair $\rho_{l_i},\rho_{r_i}$
+is chosen from the proposal distribution.
 
 
 \subsection{Latent gene state variable $Z$}
@@ -181,7 +233,7 @@ We define a generative process to generate gene expression data given the tree u
 	Z|\pi,\phi &\sim& \text{mult}(\phi) \nonumber \\
 	\phi &\sim&  \text{Dir}(\alpha,\beta,\gamma) \nonumber\\
 	Y|Z = i &\sim& \text{Bin}(p_i) \nonumber \\
-	p_i &\sim&  \text{Beta}(\alpha_i,  \beta_i)
+	p_i &\sim&  \text{Beta}(shape1_i,  shape2_i)
 	\label{eqn:gen1}
 \end{eqnarray}
 The basic idea of generative model is very similar to Kingman's agglomerative clustering. The main difference is instead of using 
@@ -205,7 +257,7 @@ combing it with upward message.
 Given the tree $\pi$ and inferred gene expression at each internal node. We define a new generative process:
 
 \begin{equation}
-	Y|Z = i, \pi &\sim& \text{Beta}(\alpha_i,  \beta_i)
+	Y|Z = i, \pi \sim \text{Beta}(shape1_i,  shape2_i)
 	\label{eqn:gen2}
 \end{equation}
 
@@ -223,13 +275,13 @@ is similar to Baum-Welch algorithm \cite{rabiner1986introduction}.
 
 The upward message $\alpha$ at node $t$ can be calculated starting from leafs and propagating upward. 
 The observed variables influencing $Y_t$ are split into two subsets:
-a) $e_Y_t^-$ composed of observed variables emitted by descendants of node $t$ (including t)  and
-b) $e_Y_t^+$ composed of observed variable emitted by non-descendants of node $t$ (excluding t) \cite{starr2004introduction}.
+a) $e_{Y_t}^-$ composed of observed variables emitted by descendants of node $t$ (including t)  and
+b) $e_{Y_t}^+$ composed of observed variable emitted by non-descendants of node $t$ (excluding t) \cite{starr2004introduction}.
 $l$ and $r$ are respectively left and right child of node $t$.
 $p$ and $s$ are respectively parent and sibling of node $t$.
 $\oplus$ is outer product of two vector.
 \begin{eqnarray}
-	 \alpha_t(i) &=& Pr(e_Y_t^- |Z_t=i) \nonumber\\
+	\alpha_t(i) &=& Pr(e_{Y_t}^- |Z_t=i) \nonumber\\
 	 &=& \sum_{i,j} \alpha_{l}(i) \alpha_{r}(j) \Gamma_{ij;k}  Pr_k(Y_t) \nonumber 
 \end{eqnarray}
 Where, $\Gamma_{ij;k}$ is transition matrix from $(Z_l = i , Z_r=j) $ to $Z_t=k$. $Pr_k(Y_t) = Pr(Y_t|Z_t =k)$
@@ -237,33 +289,104 @@ is the emission probability.
 This can be written in following matrix form. It is important to keep these matrices information so that algorithm can be 
 implemented in higher language program like R or matlab without sacrificing much on speed.
 \begin{eqnarray}
-	\boldsymbol{\alpha_{t}} &=& \boldsymbol{\delta P}(x_i)  \quad \forall t \in \texit{leaf} \nonumber\\ 
-	\boldsymbol{\alpha_t} &=& \boldsymbol{(\alpha_l \oplus \alpha_r) \Gamma Pr}(Y_t)  \quad\forall t \not{\in} \texit{leaf}
+	\boldsymbol{\alpha_t} &=& \boldsymbol{\delta P}(x_i)  \quad \forall t \in \textit{leaf} \nonumber\\ 
+	\boldsymbol{\alpha_t} &=& \boldsymbol{(\alpha_l \oplus \alpha_r) \Gamma Pr}(Y_t)  \quad\forall t \not{\in} \textit{leaf}
 	\label{eqn:alpha}
 \end{eqnarray}
 
 In the similar manner, we can derive the iterative formula for downward messages. 
 \begin{eqnarray}
-	 \beta_t(i) &=& Pr(e_Y_t^+ |Z_t=i) \nonumber\\
+	\beta_t(i) &=& Pr(e_{Y_t}^+ |Z_t=i) \nonumber\\
 	 &=& \sum_{j,k} \alpha_{s}(j) \Gamma_{ij;k} \beta_{p}(k) Pr_i(Y_t) \nonumber\\ 
-	 \texit{Equivalently },  \nonumber\\
+	 \textit{Equivalently },  \nonumber\\
 	 \boldsymbol{\beta_t} &=&   \boldsymbol{\alpha_{s}} \Gamma_{ij;k}  \boldsymbol{\beta_{p} Pr(Y_t)} 
 \end{eqnarray}
+The complete likelihood of observed data is expressed in terms of $\alpha$ and $\beta$ as:
+$ L_T= \alpha_t \beta_t' = Pr(\boldsymbol{Y^{(T)}} )$, for each $t$.   
 
+The unknown parameters transition and emission probabilities can be inferred by EM algorithm:
 \begin{eqnarray*}
-	\textit{E step} \quad
-	\hat{v}_{jk;i}(t) &=&  Pr(C_{l} = j, C_{r} = k,  C_{t} = i | \boldsymbol{y^{T}}) \\
-	  &=&  \alpha_l(j) \alpha_r(k) \gamma_{jk;i} p_k(x_t) \beta_t(k)/L_t\\
-	  \textit{M step:} \quad \gamma_{jk;i} &=&\tilde{f}_{jk;i} \\
+	\textit{E step:} \quad
+	\hat{u}_j(t) &=&  Pr(Z_t =  j/y^{(T)}) = \alpha_t(j) \beta_t(j) /L_T  \\
+	\hat{v}_{jk;i}(t) &=&  Pr(Z_{l} = j, Z_{r} = k,  Z_{t} = i | \boldsymbol{y^{(T)}}) \\
+\end{eqnarray*}
+\begin{eqnarray*}
+	  \textit{M step:} \quad
+	  \gamma_{jk;i} &=&\tilde{f}_{jk;i} \\
 	  f_{jk;i} &=& \sum \hat{v}_{jk;i}(t)
 \end{eqnarray*}
-
+Where, $\tilde{f}$ is normalized $f$. The shape parameter of emission probability can be found using the Newton's method that 
+involves digamma and trigamma function. 
 \section{Results}
+\subsection{Convergence}
+The EM algorithm converge rapidly. Typically it takes less than 50 iteration to converge (change in likelihood $<$ 1e-6). 
+\begin{figure}[htbp]
+	\begin{center}
+		\includegraphics[scale=0.4]{../result/2013-05-08/convergence.jpg}
+	\end{center}
+	\caption{Rapid convergence of EM algorithm}
+	\label{fig:convergence}
+\end{figure}
+
+We expect once as a node in the tissue tree is homogeneous active state all its descendant must be in active state. 
+Therefore $\gamma_{11;1} \approx 1$. We expect similar behaviour for homogeneous inactive state. This seems to be the 
+case for the transition matrix.
+\begin{figure}[h]
+	\begin{center}
+		\includegraphics[scale=0.6]{../result/2013-05-08/transition.jpg}
+	\end{center}
+	\caption{Transistion matrix of 3 state HMM.}
+	\label{fig:transistion}
+\end{figure}
+
+
+The emission probability of three states are consistent with definition of latent state variable
+of gene $Z$.
+\begin{figure}[h]
+	\begin{center}
+		\includegraphics[scale=0.6]{../result/2013-05-08/emission.jpg}
+	\end{center}
+	\caption{Emission probability from the homogeneously inactive(black), heterogeneous (red) and homogeneously active (green)}
+	\label{fig:emission}
+\end{figure}
+
+
+%In particular, at the root of tree most of genes are expected to 
+%be in hetrogenous state, therefore we expect beta distribution of heterogeneous should be
+%agree with distribution of the original gene expression data. This result seems to be  hetrogenous state which is exp
 \subsection{Simulation result}
-\subsection{Comparison with Non-negative matrix factorization}
-\subsection{GO annotation}
-\subsection{Epigenetic enrichment}
-\section{Implementation}
+We generated a simulated data set with the proposed generative process. Then, by keeping uniform
+distribution as transistion matrix and random initialization parameter. We learned parameter 
+by EM algorithm. The fig shows original transition matrix and inferred transition matrix.
+\begin{figure}[h]
+	\begin{center}
+		\includegraphics[scale=0.3]{../result/2013-05-08/transition_orig.jpg}
+		\includegraphics[scale=0.3]{../result/2013-05-08/transition_sim.jpg}
+	\end{center}
+	\caption{Transistion matrix of simulated data and estimated transition transition matrix}
+	\label{fig:transistion2}
+\end{figure}
+\subsection{Gene dynamics}
+
+The proposed method can be run on Tissue tree individually based on the independence assumption.
+The state variable of gene gives its dynamics in the tissue tree. Fig. shows the dynamics
+of one gene HMISC which knwn to e cardio vascular related. The agglomerative clustering nicely 
+cluster together cluster corresponding to heart specific tissue. The swictching event is 
+orange circle represent where transition probability convert to homogenous active stat from
+hetrogenous state.
+
+\begin{figure}[h]
+	\begin{center}
+		\includegraphics[scale=0.6]{../result/2013-05-08/final_result.jpg}
+	\end{center}
+	\caption{Emission probability from the homogeneously inactive(black), heterogeneous (red) and homogeneously active (green)}
+	\label{fig:dynamics}
+\end{figure}
+
+%\subsection{Comparison with Non-negative matrix factorization}
+%\subsection{GO annotation}
+%\subsection{Epigenetic enrichment}
+%\section{Implementation}
 
 \bibliographystyle{apalike}	% (uses file "plain.bst")
 \bibliography{diary}		% expects file "myrefs.bib"

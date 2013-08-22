@@ -35,6 +35,7 @@ BaumWelch.dthmm.Tree <- function (object, control = bwcontrol(), ...){
      Bro
    }
    Bro = findBro(P)
+   LLvec = NULL
     if (distn[1]!="glm"){
         Mstep <- parse(text=paste("Mstep.", distn,
                        "(x, cond, pm, object$pn)", sep=""))
@@ -49,6 +50,7 @@ BaumWelch.dthmm.Tree <- function (object, control = bwcontrol(), ...){
 	cond  <- Estep.Tree(x, P, Bro, numLeaf, Pi, delta, distn, pm, object$pn) 
         #cond <- Estep.Tree(x, Pi, delta, distn, pm, object$pn)
         diff <- cond$LL - oldLL
+	LLvec = c(LLvec, cond$LL)
         if (control$prt) {
             cat("iter =", iter, "\n")
             cat("LL =", formatC(cond$LL, digits=log10(1/tol)+2,
@@ -76,6 +78,7 @@ BaumWelch.dthmm.Tree <- function (object, control = bwcontrol(), ...){
     object$LL <- cond$LL
     object$iter <- iter
     object$diff <- diff
+    object$LLvec <- LLvec
     return(object)
 }
 environment(Estep.Tree) = asNamespace("HiddenMarkov")
