@@ -341,7 +341,7 @@ high = 1 - low
 medium = 0.1
 object = NULL
 P = unlist(P)
-XXcur = unlist(XX[4780,])
+XXcur = unlist(XX[5510,])
 object$x = XXcur
 Pi = matrix(1/3,9,3) 
 numLeaf = (1+length(XXcur))/2
@@ -356,9 +356,40 @@ tree.object <- dthmm(XXcur.approx, Pi, delta, "beta", list(shape1=c(1, 2, 3), sh
 tree.object$P = P
 control = bwcontrol(tol = 1e-6, posdiff = F, converge = expression(abs(diff) < tol))
 tree.out = BaumWelch.dthmm.Tree(tree.object, control)
+
+jpeg("../result/2013-05-08/emission.jpg")
 curve(dbeta(x,shape1=tree.out$pm$shape1[1], shape2=tree.out$pm$shape2[1]), from=0, to=1)
 curve(dbeta(x,shape1=tree.out$pm$shape1[2], shape2=tree.out$pm$shape2[2]), from=0, to=1, add=T, col="red")
 curve(dbeta(x,shape1=tree.out$pm$shape1[3], shape2=tree.out$pm$shape2[3]), from=0, to=1, add=T, col="green")
+
+dev.off()
+require(MASS)
+require(lattice)
+jpeg("../result/2013-05-08/convergence.jpg")
+plot(tree.out$LLvec, ylab = "- log(likehood)", xlab="iteration")
+dev.off()
+Pi.out = tree.out$Pi
+labelG=expand.grid(c(-1,0,1), c(-1,0,1))
+dimnames(Pi.out) = list(paste(labelG$Var1,labelG$Var2,sep=",") ,
+			  paste( c(-1,0,1),"Z",sep=""))
+jpeg("../result/2013-05-08/transition.jpg")
+levelplot(t(Pi.out), col.regions=heat.colors(75)) 
+dev.off()
+
+#making fool
+Pi.out = NULL
+x.sim <- dthmm(NULL, tree.out$Pi[7:9,], c(1,0,0), "norm", list(mean=c(1, 6, 3), sd=c(0.5, 1, 0.5)))
+x.sim <- simulate(x.sim, nsim=2000)
+y.ini = x.sim 
+y.ini$Pi = Pi[1:3,]
+y <- BaumWelch(y.ini)
+Pi.out = rbind(Pi.out, y$Pi)
+jpeg("../result/2013-05-08/transition_sim.jpg")
+levelplot(t(Pi.out), col.regions=heat.colors(75)) 	
+dev.off()
+jpeg("../result/2013-05-08/transition_orig.jpg")
+levelplot(t(tree.out$Pi), col.regions=heat.colors(75)) 	 
+dev.off()
 #toy example
 x.toy = c(1,1,0,1,0.5)
 P.toy = c(4,4,5,5,0)
