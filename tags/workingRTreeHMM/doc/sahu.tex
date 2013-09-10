@@ -1,0 +1,225 @@
+\documentclass{article}
+%
+%\usepackage{pdfsync}           % Used in Mac OSX
+\usepackage[mathcal,mathbf]{euler}
+\usepackage{theorem,amsmath,enumerate,fancyhdr,amssymb,amsfonts}
+\usepackage{graphicx}           %Used in Mac OSX
+%\usepackage[pdftex]{graphics}  %Might be needed in non Mac OSX systems
+\usepackage{myDefs}
+\usepackage{url}
+\usepackage{todonotes}
+% allows for temporary adjustment of side margins
+\usepackage{chngpage}
+% provides filler text
+\usepackage{lipsum}
+% just makes the table prettier (see \toprule, \bottomrule, etc. commands below)
+\usepackage{booktabs}
+%In order to be co\usepackage{subfig}nsistent use the following notation in your notes:
+\usepackage{subfig}
+\definecolor{LC}{rgb}{0.88,1,1}
+\graphicspath{{./fig/}}
+\usepackage{color, colortbl}
+\title{
+Epigenetic control of spatial gene regulation. 
+}
+\author{Avinash Das, Peter Ebert, Fabian Muller, Christoph Bock}
+
+\date{\today}
+\begin{document}
+
+\pagestyle{fancy}
+\lhead{{\bf Avinash Das}{ }
+\\{\bf } } 
+\rhead{{\bf Date: }\today}
+
+\maketitle
+
+\section{Results}
+\subsection{Summary}
+In this study, we performed biclustering of in-situ hybridization of mouse embryo. We obtained 50 biclusters. 
+In this main paper we will limited to few biclusters. The analysis of set of all biclusters is given in the supplementary material. 
+The biclusters obtained were consistent across random initialization.
+The bicluster of tissue matches closely with the tissue tree. We performed GO enrichment analysis and motif enrichment analysis of the biclusters. The
+biclusters have a clear epigenetic signature, indicating tissue specific regulation. 
+%Finally, we performed disease association studies of tissue biclusters.
+
+In order to compare the quality of the ISH expression matrix we performed all the analysis on Novartis dataset, in addition to the ISH dataset. The Novartis
+dataset composed of expression of 36,182 transcript across 61 mouse tissues. 
+
+\subsection{Consistency of biclusters}
+We used ns-NMF followed by metaclustering to obtain biclusters of the expression matrices. 
+To check that the biclustering were consistent,  we used different random initializations of NMF algorithm. Figure xx. shows the pairwise distance of 
+bicluster. Two biclustering were considered to be similar when 75\% genes in biclusters are same. The distance is measure of similarity of two biclusters across different run of 
+the NMF algorithm. Most of the biclusters obtained across different runs was consistent, except few biclusters those were not consistent. 
+\missingfigure{Add figure of mean square distance of the biclusters from each others}
+In summary, the result indicates that the biclusters obtained by the biclustering
+algorithm are not only statistically significant but also are biologically relevant. In the rest of the section, we will study the biological 
+interpretations of the biclusters. 
+
+
+\subsection{Tissue specificity}
+Table \ref{tab:tissue} give the tissue types corresponding to the first 10 biclusters. Tissue types of Cluster 1 are related to the neural system, in particular
+tissues that are affected during the neurulation of the embryo. The Pons located in the brain stem relays signals between the forebrain and cerebellum. 
+Basal, marginal, mantle and basal corresponds to motor area of spinal cord.
+Tissue types of Cluster 3 are related to respiratory system.
+Tissue types of Cluster 4 are a mixture of primary skin and nervous system related tissues.
+Tissue types of Cluster 5 are a mixture of many primary tissues.
+Tissue types of Cluster 6 belongs to family of nerves called carnial nerves that stimulate different body part and function; 
+trigeminal simulate to face,
+vagus is related to body state, accessory are muscle specific and vestibular nerve is for spatial orientation of 
+the body.
+
+\missingfigure{Comparison of the bicluster with tissue tree}
+
+
+Figure x shows the comparison of biclusters with the tissue tree of E14.5 of mouse. The biclusters are
+broadly in agreement with the tissue tree indicating that the gene expression 
+are predictive of the cellular identity.
+
+
+\begin{table}
+\begin{adjustwidth}{-1in}{-1in}% adjust the L and R margins by 1 inch
+	\begin{tabular}{p{1cm}p{15cm}}
+\hline
+Cluster&Tissue type Emap\\
+\hline
+\rowcolor{LC}
+1&pons, marginal layer, mantle layer, basal plate, ventricular layer, marginal layer\\
+2&embryo, arch of aorta\\
+\rowcolor{LC}
+3&lobar bronchus, respiratory tract, lower, trachea\\
+\rowcolor{LC}
+4&epidermal component, brain, rest of skin, central nervous system, nervous system\\
+\rowcolor{LC}
+5&respiratory, nasal septum, nasal cavity, olfactory, epithelium, nasal capsule, anterior epithelium, thoracic region, intrinsic, lumen, epithelium, epithelium, primary choana, genioglossus, anal region\\
+\rowcolor{LC}
+6&trigeminal V, vagus X, nerve, superior, inferior, accessory XI, vestibular component\\
+7&external ear, ear, sensory organ, nerve\\
+8&lateral wall, mantle layer, autonomic, ventricular layer, metencephalon\\
+9&associated mesenchyme, foregut-midgut junction, drainage component, collecting ducts, calyces, mesentery\\
+10&mantle layer, caudate-putamen, heart, alar plate, head, tail, mantle layer\\
+\hline
+\end{tabular}
+\end{adjustwidth}
+\caption{The tissue corresponding to biclusters}
+\label{tab:tissue}
+\end{table}
+%\subsection{GO enrichment}
+
+\subsection{Epigenetic enrichment}
+We next analyze the enrichment of the specific epigenetic factors in the promoter and gene body of the genes in the biclusters. 
+The number of the epigenetic signal peaks
+overlapping with genes in each bicluster was determined and followed by a Fisher's exact test using number of overlaps in the background gene set. It giving a 
+p-value corresponding to each epigenetic signal (see Methods section for more detail). 
+The foreground for each
+analysis was the union of genes in all of the biclusters.
+The top 50 epigenetic factors significantly enriched (FDR $<$ 0.001) in four biclusters is shown in the word cloud \ref{fig:enrich}. The word size of epigenetic factor in
+the word cloud represent it significance level (in term of negative log of q-value) of the epigenetic factors. 
+Cluster 1 is enriched in the histone modification mark H3K27me3, which is mostly considered to be a repressive epigenetic factor. It is also enriched in enthrocyte
+regulatory regions. 
+Cluster 3 is enriched with the genomic regions that show high differential methylation pattern (DMR) during cell differentiation. It also shows a moderate
+enrichment of the H3k36me3 peaks. 
+Cluster 4 (ref supplementary table) is enriched with repressive transcription factor Tcfcp2l1. It is also enriched with a histone modification H3k79me2. In stem cells H3k79me2 activity
+level varies with cell cycle. 
+Cluster 6 (ref supplementary table) is enriched with many epigenetic factors, including many histone modification marks like H3k27me3, H3K36me3 and H3K9ac.
+
+\begin{figure}[p]
+    \begin{adjustwidth}{-1.5in}{-1in}% adjust the L and R margins by 1 inch
+	\subfloat[Cluster 1]{\includegraphics[scale=0.3]{nmf_1.jpg}}
+	\subfloat[Cluster 4]{\includegraphics[scale=0.3]{nmf_4.jpg}}
+	\caption{Word cloud of significant enriched motifs. The size of factor is proportional to negative log of p-values for eg. in Cluster 1  
+	    q-value corresponding to H3K27me3 is 1.4e-19, enthrocyte regulatory region is 2.6e-18 and H3K4me3 is .001. 
+	}
+	\label{fig:enrich}
+\end{adjustwidth}
+\end{figure}
+\subsection{Motif enrichment}
+
+To check the hypothesis that biclusters are enriched with tissue-specific motifs,we performed motif enrichment analysis in the tissue specific biclusters.
+ The promoters (1000 bp upstream and 200 bp downstream of TSS) of genes in the biclusters 
+were scanned for 981 verteberate TRANFAC motifs. We found that the biclusters are enriched with motifs in a tissue specific manner. 
+This suggests that motif activity is mostly 
+tissue-specific. 
+\begin{table}
+\begin{adjustwidth}{-1in}{-1in}% adjust the L and R margins by 1 inch
+	\begin{tabular}{p{1cm}p{15cm}}
+\hline
+Cluster&Tissue type Emap\\
+\hline
+1&NF-Y,E2F,E2F1,E2F-4:DP-1,E2F,Rb:E2F-1:DP-1,AP-2,TATA,E2F-1:DP-2,LEF1,TCF1,TEF,E2F-4:DP-2,alpha-CP1,Tal-1beta:ITF-2,NF-Y,PTF1-beta,HOXA7,Ncx,POU3F2,E2F-1:DP-1, HES1,REX1,NF-muE1,LEF1,RNF96\\
+2&CTCF,NRF-2/GABP,REX1,ERG,IRF3,Tel-2,c-Ets-1(p54),Staf,BDP1,GABP,AhR,Arnt,HIF-1,BRF-1,AhR,AP-2alphaA,AP-2,AP-2,C/EBPbeta,c-Ets-1(p54),CLOCK:BMAL,CREB,ATF,E2F-1:DP-2,E2F-1,E2F-1,E2F-4:DP-2,E2F,GABP,NF-Y,NF-Y,RXRG-dimer,SAP-1a,SOX9,Whn,Zfp206\\
+3&AREB6,Cdx-2,Elk-1,Freac-3,Gfi1b,GLI2,GLI3,GLI3,HSF2,NF-kappaB,VBP\\
+4&ATF3,CREB,E2,E2,CREB,E2,CREB,ATF,ATF2,mTERF,ATF,CREB,GATA-1,CTCF,FOXP1,HSF1,ATF1,CREM,Elk-1,isx,RNF96,Spz1,ZID\\
+5&E2F,E2F-1,EBF,E2F,AP-2alphaA,E2F-1,E2F,ERR1,HNF4alpha1,HOXA7,MEF-2,MYF,OCT-x,P50:P50,POU6F1,RREB-1,TFEB,Tst-1,Zfp281\\
+\hline
+\end{tabular}
+\end{adjustwidth}
+\caption{Enriched motif in the biclusters}
+\label{tab:motif}
+\end{table}
+
+%\subsection{Disease state}
+
+
+\section{Methods}
+\subsection{ISH annotation matrix}
+We obtained the annotation of 5,600 MGI transcripts across 811 anatomical structure (ISH matrix) of mice 
+embryo from Eurexpress consortium. The consortium had manually annotated into (strong, medium, weak and no) 
+expression levels across each anatomical structure of the transcripts using RNA ISH on frozen sagittal 
+sections of wild type mice at E14.5 \cite{Diez-Roux2011a}. 
+
+\subsection{Biclustering}
+Non-negative matrix factorization (NMF) biclustering methods involves two steps: 1) factorization of original matrix into two
+matrices that leads to dimensionality
+reduction of the original data and 2) clustering of the reduced dimension factor matrices (meta-clustering). 
+ns-NMF is the method used for matrix decomposition (and dimensionality reduction)
+of the ISH matrix followed by clustering of the factor matrices proposed by Badea et. al. \cite{badea2007stable}.
+
+\textbf{Decomposition}: ns-NMF is method that factorize a matrix $V \in R^{m\times n}$ into matrices
+$W\in R^{m\times k}$ and $H \in R^{k \times n}$ with the reduced dimensions as follows:
+\begin{equation}
+    V \approx WSH,
+\end{equation}
+
+Where $S$ is a smoothing matrix, that induces the sparseness condition on $W$ and $H$ matrix.
+NMF methods allow only additive operation during the decomposition and therefore $W$ and $H$ are non negative,
+this is a distinguishing aspect of NMF from other dimensionality reduction methods such as
+principal component analysis (PCA). We used this version of NMF on the ISH matrix
+to obtain respective $W$ and $H$ by using the algorithm defined by \cite{carmona2006biclustering}.  
+
+\textbf{Metaclustering}: The metaclustering approach of \cite{badea2007stable} was used to 
+find bicluster from $W$ and $H$.
+The approach gives a non-overlapping set of biclusters. The biclustering algorithm was ran multiple times with random
+initialization to obtain a consistent
+set of stable biclusters. To speed up the biclustering algorithm across multiple run, biclusters were run on multiple 
+cores using the doMC and Foreach package of R. 
+
+
+\subsection{GO annotation analysis}
+A standard hypergeometric GO enrichment of each bicluster was performed using the GOstat package in R for each  MF,
+BP and CC GO-terms separately. 
+Since GO terms are not independent of each other, the 
+GO graph was used to estimate the over-representation \cite{alexa2006improved}. We used two
+criteria to estimate the quality of biclustering algorithm: a) fraction of biclusters that have at-least one 
+GO term enriched and b) total number of GO terms enriched in the biclusters.
+
+
+Various parameters of the biclustering algorithm are chosen so as to obtain 
+best value of the GO enrichment metric in the biclusters. 
+
+\subsection{Epigenetic enrichment analysis of biclusters}
+The epigenetic data were collected from the various sources including 1) Cistrome (http://cistrome.org), 2) ENCODE (http://genome.ucsc.edu/ENCODE/)and 3) UW-ENCODE (http://www.uwencode.org/).  Gene set enrichment analysis using the 
+promoter ( 1 Kb upstream 100bp downstream of TSS)
+of the gene set in each bicluster was done using overlap analysis followed by Fisher's exact test in R.
+
+\subsection{Motif enrichment analysis}
+The promoters of the gene set in each bicluster were scanned 
+for binding sites of each of  981 vertebrate motifs in TRANSSFAC using \cite{hannenhalli2008eukaryotic}.
+The score
+that was 95\% percentile of that motif of the maximum score possible was considered to be true binding site. The
+enrichment analysis was performed using the binding sites in promoter of one bicluster against all promoter in 
+the biclusters using the Fisher's exact test. GC composition was controlled by sampling prior to motif enrichment 
+analysis. 
+\bibliographystyle{apalike}	% (uses file "plain.bst")
+\bibliography{diary}		% expects file "myrefs.bib"
+\end{document}  

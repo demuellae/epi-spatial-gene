@@ -1,0 +1,182 @@
+\documentclass{article}
+%
+%\usepackage{pdfsync}           % Used in Mac OSX
+\usepackage[mathcal,mathbf]{euler}
+\usepackage{theorem,amsmath,enumerate,fancyhdr,amssymb,amsfonts}
+\usepackage{graphicx}           %Used in Mac OSX
+%\usepackage[pdftex]{graphics}  %Might be needed in non Mac OSX systems
+\usepackage{myDefs}
+\usepackage{url}
+%In order to be consistent use the following notation in your notes:
+\graphicspath{{./fig/}}
+\title{
+ISH data interaction matrix analysis
+}
+\author{Avinash Das}
+
+\date{\today}
+\begin{document}
+
+\pagestyle{fancy}
+\lhead{{\bf Avinash Diary}{ }
+\\{\bf } } 
+\rhead{{\bf Date: }\today}
+
+\maketitle
+
+\section{Initial Analysis}
+\subsection{Sample matrix}
+%I performed some initial analysis on the sample interaction data present at \url{http://www.eurexpress.org/ee/tools/EurExpressCluster_01.zip}.
+At first, I tested whether there are certain classes of genes those are expressed in different anatomy ( those are significantly more than expected, like the housekeeping genes analysis similar to \cite{eisenberg2003human}). Figures ~\ref{fig:strongHist} , \ref{fig:mildlyHist} and \ref{fig:weaklyHist} respectively shows the histogram of strongly expressed, mildly expressed ( genes those are highly or mildly expressed) and weakly expressed genes ( highly, mildly or weakly expressed).  
+I have also overlay corresponding null distribution for each of the cases. I assumed binomial distribution with mean equal to observed mean as the null distribution. 
+As seen from the figure the class genes are significantly compared to null distribution, particular in (1) classes where a gene is expressed in fewer number of anatomies (Probably this is not very interesting). (2) classes where a gene is expressed many tissues. 
+
+\begin{figure}
+	\begin{center}
+		\includegraphics[scale=0.5]{strongExpressed.jpg}
+	\end{center}
+	\caption{Strongly expressed  gene histogram }
+	\label{fig:strongHist}
+\end{figure}
+
+\begin{figure}	
+	\begin{center}
+		\includegraphics[scale=0.5]{midlyExpressed.jpg}
+	\end{center}
+	\caption{mildly expressed gene histogram}
+	\label{fig:mildlyHist}
+\end{figure}
+
+\begin{figure}
+	\begin{center}
+		\includegraphics[scale=0.5]{weaklyExpressed.jpg}
+	\end{center}
+	\caption{weakly expressed gene histogram}
+	\label{fig:weaklyHist}
+\end{figure}
+
+Next, I performed some annotation analysis whether these over represented genes are enriched in any particular annotation. I further divided the genes which are strongly expressed in many anatomies (and occur more than expected by null distribution P-value $<$ E-8) into following groups:
+\begin{itemize}
+	\item Strong40: The genes which are strongly expressed in more than 40 anatomy are enriched in membrane
+		related annotation. The annotation have two prominent clusters: one with membrane and trans-membrane function; other with bi-sulfide  related functions.
+	\item  Stong20: The genes which are strongly expressed in more than 20 anatomy are enriched in homestatis, adhesion and DNA repair functions,
+		in addition to membrane and bi-sulfide functions.
+	\item  Strong8: The genes which are strongly expressed in more than 8 anatomy are enriched in growth factor activity, glycoprotien and muscle 
+		development
+		in addition to functionalities of strong40 and strong20.
+\end{itemize}
+
+
+It seems the genes, which are strongly expressed across many anatomies, are enriched in house-keeping functions (note I have reported only those annotation clusters which
+are significantly compared to all mouse genes as background). 
+
+
+\subsection{Interaction matrix 5510x811}
+
+I performed analysis similar to performed on the sample matrix. At first, I compared the distributions of number of tissue types in which gene
+expressed with its null distribution. The null distribution assumed to be binomial distribution ( with $n = 811$ and $p = \frac{  \textit{non-zero entries in interaction matrix}}{\textit{total size of interaction matrix}}$). I performed 3 separate analysis 1.  Strong expression only (figure \ref{fig:strongEx}), 2. Medium or strong expression (figure \ref{fig:mediumEx})and 3. Weak, medium or strong expression (figure \ref{fig:weakEx}).
+
+\begin{figure}[ht]
+	\begin{center}
+		\includegraphics[width=0.5\textwidth]{stronglyExpressed.pdf}
+	\end{center}
+	\caption{ Distribution of number of tissues that have strong gene expression and corresponding null distribution.}
+	\label{fig:strongEx}
+\end{figure}
+
+\begin{figure}[ht]
+	\begin{center}
+		\includegraphics[width=0.5\textwidth]{mediumExpressed.pdf}
+	\end{center}
+	\caption{ Distribution of number of tissue in which gene have strong or medium expression and null distribution.}
+	\label{fig:mediumEx}
+\end{figure}
+
+\begin{figure}[ht]
+	\begin{center}
+		\includegraphics[width=0.5\textwidth]{weakExpressed.pdf}
+	\end{center}
+	\caption{ Distribution of number of tissue in which gene have expression and null distribution.}
+	\label{fig:weakEx}
+\end{figure}
+
+
+\subsection{Unsupervised clustering and visualization}
+
+The complete matrix is shown in 
+figure ~/ref{fig:intM}. Since the matrix is sparse, any structure is not discernible. 
+In order to find any prominent structure in the interaction matrix. I performed unsupervised clustering by two method: 1. Principal component
+analysis (figure ~\ref{fig:intMPCG}, ~\ref{fig:intMPCA}) 2. Hierarchical clustering (figure ~/ref{fig:intMHierarchical}).
+
+\begin{figure}[ht]
+	\begin{center}
+		\includegraphics[scale=0.5]{interactionMatrix.pdf}
+	\end{center}
+	\caption{Interaction matrix}
+	\label{fig:intM}
+\end{figure}
+
+\begin{figure}[ht]
+	\begin{center}
+		\includegraphics[scale=0.5]{interactionMatrixGenePC.pdf}
+	\end{center}
+	\caption{Principal component analysis with row arranged according to the first PC across gene.}
+	\label{fig:intMPCG}
+\end{figure}
+
+
+\begin{figure}[ht]
+	\begin{center}
+		\includegraphics[scale=0.5]{interactionMatrixTissueGenePC.pdf}
+	\end{center}
+	\caption{Principal component analysis across tissue and genes row  and column arranged according to the first PC.}
+	\label{fig:intMPCA}
+\end{figure}
+
+
+
+\begin{figure}[ht]
+	\begin{center}
+		\includegraphics[scale=0.5]{interactionMatrixHirarchichal.pdf}
+	\end{center}
+	\caption{Hierarchical clustering with of interaction matrix.}
+	\label{fig:intMH}
+\end{figure}
+
+
+
+\section{GO annotation analysis}
+Many approaches have used GO enrichment analysis on gene set to quantify the bi-clusters of gene expression data. \cite{tanay2002discovering} used prediction accuracy of annotation of gene inside bicluster as quantifying criteria. They used 
+fourth level of GO annotation as classification of genes, choose biclusters with low p-value ($P \le 10^{-4}$) and 
+60\% of annotated members have same class. \cite{prelic2006systematic} used percentage of biclusters those one or more 
+significantly enriched GO annotation as quantifying criteria.  The other method widely employed in the literature is find the 
+number of GO annotation enriched in the 
+
+To use the GO annotation enrichment as cross-validation quantifying criteria for regression over parameter space of
+a clustering technique ( or space of different clusterings technique), we should use either both or a score combining both as our
+quantifying criteria.
+
+
+Using the P-value directly for quantification of clustering algorithm is bit risky. There are 2 main problem in this aspect be cause of dependence,
+1) gene expression are not independent 2) GO terms have are directed acyclic graph, child being subset of parents, 
+
+\subsection{Regression over parameter space}
+To find the best cluster, we performed regression over 1) clustering method 2) parameters of each clustering method and 3) number of clusters.
+
+\begin{itemize}
+	\item Number of cluster : While performing the analysis over number of cluster, the significance level of P-value is needed to be
+		changed. This is because if each cluster contains only one gene than the GO enrichment P-value will be very high in 
+		such case. Therefore, while comparing p-values between number of clusters it is important to normalized the p-values.
+		The bonforoni correction is not appropiate as it is too conservative.
+		
+		\par I have to perform FDR analysis. Another technique
+		that can be employed is z-score. It is a measure of mutual information of clusters, when compared to a random cluster. 
+\end{itemize}
+We performed he
+
+
+
+
+\bibliographystyle{apalike}	% (uses file "plain.bst")
+\bibliography{diary}		% expects file "myrefs.bib"
+\end{document}  
