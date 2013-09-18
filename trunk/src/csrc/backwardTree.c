@@ -37,7 +37,7 @@ void ForwardWithScale(HMMT *phmm, int T, int *O, int numLeaf, double **alpha, do
 		if (t < numLeaf) {
 			for (i = 1; i <= phmm->N*phmm->N; i++) {
 				phiT[i] = phmm->pi[t][i];
-				phiT[i] *= phmm->B[t][i];
+				phiT[i] *= phmm->B[i][O[t+1]];
 			}
 		} else {
 			/* Matrix multiplication of transition prob and row t of phi2
