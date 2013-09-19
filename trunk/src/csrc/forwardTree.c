@@ -15,17 +15,14 @@ static char rcsid[] = "$Id: forward.c,v 1.2 1998/02/19 12:42:31 kanungo Exp kanu
 
 
 
-void ForwardWithScale(HMMT *phmm, int T, int *O, int numLeaf, double **alpha, double **alpha2, int *P,
-		double *scale1, double *scale2, double **phi, double **phi2)
+void ForwardWithScale(HMMT *phmm, int T, int *O, int numLeaf, double **alpha, double **alpha2, double *LL,
+		      Config *conf)
 {
 	int	i, j, k; 	/* state indices */
 	int	t;	/* time index */
 
-	double LL;
 	double sum;	/* partial sum */
 	double sumPhi;
-	double *phiT = malloc(sizeof(double)*phmm->N);
-	double *phi2Temp = malloc(sizeof(double)*phmm->N);
 
 
 
@@ -36,8 +33,8 @@ void ForwardWithScale(HMMT *phmm, int T, int *O, int numLeaf, double **alpha, do
 		/* Initialization */
 		if (t < numLeaf) {
 			for (i = 1; i <= phmm->N*phmm->N; i++) {
-				phiT[i] = phmm->pi[t][i];
-				phiT[i] *= phmm->B[t][i];
+				conf->phiT[i] = phmm->pi[t][i];
+				conf->phiT[i] *= phmm->B[t][i];
 			}
 		} else {
 			/* Matrix multiplication of transition prob and row t of phi2
@@ -45,56 +42,55 @@ void ForwardWithScale(HMMT *phmm, int T, int *O, int numLeaf, double **alpha, do
 			for (j = 1; j <= phmm->N; j++) {
 				sum = 0.0;
 				for (i = 1; i <= phmm->N*phmm->N; i++)
-					sum += phi2[t][i]* (phmm->AF[i][j]);
+					sum += conf->phi2[t][i]* (phmm->AF[i][j]);
 
-				phiT[j] = sum*(phmm->B[t][j]);
+				conf->phiT[j] = sum*(phmm->B[t][j]);
 			}
 		}
 
 		sumPhi = 0.0;
 		/* sum(Phi(t)) */
 		for (i = 1; i <= phmm->N; i++) {
-			sumPhi += phiT[i];
+			sumPhi += conf->phiT[i];
 		}
 		/* set row t of phi to phiT/sumPhi */
 		for (i = 1; i <= phmm->N; i++) {
-			phi[t][i] = phiT[i]/sumPhi;
+			conf->phi[t][i] = conf->phiT[i]/sumPhi;
 		}
-		scale1[t] = scale2[t] + log(sumPhi);
+		conf->scale1[t] = conf->scale2[t] + log(sumPhi);
 
 		for (i = 1; i < phmm->N; i++) {
-			alpha[t][i] = phi[t][i] + scale1[i];
+			alpha[t][i] = conf->phi[t][i] + conf->scale1[i];
 		}
 
 		if (t < T) {
 			/* If t is one, set phi2 at row t from 1 to N to phi at row t from 1 to n */
 			if (t == 1) {
 				for (i = 1; i < phmm->N; i++) {
-					phi2[t][i] = phi[t][i];
+					conf->phi2[t][i] = conf->phi[t][i];
 				}
 			} else {
 
 				for (i = 1; i < phmm->N; i++) {
-					phi2Temp[i] = phi2[t][i];
+					conf->phi2Temp[i] = phi2[t][i];
 				}
 				/* outer product of row t of phi2 and row t of phi */
 				/* store as a vector instead of a matrix */
 				k = 1;
 				for (i = 1; i < phmm->N; i++) {
 					for (j = 1; j < phmm->N; j++) {
-						phi2[t][k] = phi2Temp[i] * phi[t][j];
+						conf->phi2[t][k] = conf->phi2Temp[i] * conf->phi[t][j];
 						k++;
 					}
 				}
 			}
-			free(phi2Temp);
-			scale2[P[i]] = scale1[i] + scale2[P[i]];
+			conf->scale2[P[i]] = conf->scale1[i] + conf->scale2[P[i]];
 			for (i = 1; i < phmm->N*phmm->N; i++) {
-				alpha2[P[t]][i] = log(phi2[P[t]][i]) + scale1[P[i]];
+				alpha2[P[t]][i] = log(conf->phi2[P[t]][i]) + scale1[P[i]];
 			}
 		}
 	}
-	LL = scale1[T];
+	LL = conf->scale1[T];
 
 
 	/* 3. Termination */

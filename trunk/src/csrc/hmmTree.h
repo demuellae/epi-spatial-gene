@@ -33,6 +33,7 @@ typedef struct {
 typedef struct {
   double **phi;
   double *phiT;
+  double **phi2;
   double *phi2Temp;
   double *scale1;
   double *scale2;
