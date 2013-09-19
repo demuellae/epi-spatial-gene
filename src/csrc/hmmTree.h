@@ -29,6 +29,16 @@ typedef struct {
 	double	**pi;	/* pi[1..N] pi[i] is the initial state distribution.
 	 */
 } HMMT;
+
+typedef struct {
+  double **phi;
+  double *phiT;
+  double *phi2Temp;
+  double *scale1;
+  double *scale2;
+  int *P;
+} Config;
+
 void ReadHMM(FILE *fp, HMMT *phmm);
 void PrintHMM(FILE *fp, HMMT *phmm);
 void InitHMM(HMMT *phmm, int N, int M, int seed);
