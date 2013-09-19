@@ -15,22 +15,17 @@ static char rcsid[] = "$Id: forward.c,v 1.2 1998/02/19 12:42:31 kanungo Exp kanu
 
 
 
-void ForwardWithScale(HMMT *phmm, int T, int *O, int numLeaf, double **alpha, double **alpha2, int *P,
-		double *scale1, double *scale2, double **phi, double **phi2)
+void BackwardWithScale(HMMT *phmm, int T, int *O, int numLeaf, double **beta, double **theta, int *P,
+		      double *scale, double *thetaT)
 {
-	int	i, j, k; 	/* state indices */
+        int	i, j; 	/* state indices */
 	int	t;	/* time index */
 
-	double LL;
 	double sum;	/* partial sum */
-	double sumPhi;
-	double *phiT = malloc(sizeof(double)*phmm->N);
-	double *phi2Temp = malloc(sizeof(double)*phmm->N);
 
 
 
-	/* Forward Section */
-	for (t = 1; t <= T - 1; t++) {
+	for (t = T-1; t >= 1; t--) {
 
 		scale1[t+1] = 0.0;
 		/* Initialization */
