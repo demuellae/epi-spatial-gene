@@ -79,7 +79,7 @@ void ForwardWithScale(HMMT *phmm, int T, int *O, int numLeaf, double **alpha, do
 				k = 1;
 				for (i = 1; i < phmm->N; i++) {
 					for (j = 1; j < phmm->N; j++) {
-						conf->phi2[t][k] = conf->phi2Temp[i] * conf->phi[t][j];
+						conf->phi2[t][k] = conf->phi2Temp[j] * conf->phi[t][i];
 						k++;
 					}
 				}
