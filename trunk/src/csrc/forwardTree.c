@@ -9,7 +9,7 @@
  **      $Id: forward.c,v 1.2 1998/02/19 12:42:31 kanungo Exp kanungo $
  */
 #include <stdio.h>
-#include "hmm.h"
+#include "hmmTree.h"
 #include <math.h>
 static char rcsid[] = "$Id: forward.c,v 1.2 1998/02/19 12:42:31 kanungo Exp kanungo $";
 
@@ -24,12 +24,10 @@ void ForwardWithScale(HMMT *phmm, int T, int *O, int numLeaf, double **alpha, do
 	double sum;	/* partial sum */
 	double sumPhi;
 
-
-
 	/* Forward Section */
 	for (t = 1; t <= T - 1; t++) {
 
-		scale1[t+1] = 0.0;
+		conf->scale1[t+1] = 0.0;
 		/* Initialization */
 		if (t < numLeaf) {
 			for (i = 1; i <= phmm->N*phmm->N; i++) {
@@ -72,7 +70,7 @@ void ForwardWithScale(HMMT *phmm, int T, int *O, int numLeaf, double **alpha, do
 			} else {
 
 				for (i = 1; i < phmm->N; i++) {
-					conf->phi2Temp[i] = phi2[t][i];
+					conf->phi2Temp[i] = conf->phi2[t][i];
 				}
 				/* outer product of row t of phi2 and row t of phi */
 				/* store as a vector instead of a matrix */
@@ -84,9 +82,9 @@ void ForwardWithScale(HMMT *phmm, int T, int *O, int numLeaf, double **alpha, do
 					}
 				}
 			}
-			conf->scale2[P[i]] = conf->scale1[i] + conf->scale2[P[i]];
+			conf->scale2[phmm->P[i]] = conf->scale1[i] + conf->scale2[phmm->P[i]];
 			for (i = 1; i < phmm->N*phmm->N; i++) {
-				alpha2[P[t]][i] = log(conf->phi2[P[t]][i]) + scale1[P[i]];
+				alpha2[phmm->P[t]][i] = log(conf->phi2[phmm->P[t]][i]) + conf->scale1[phmm->P[i]];
 			}
 		}
 	}
