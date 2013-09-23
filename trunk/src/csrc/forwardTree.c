@@ -15,16 +15,24 @@ static char rcsid[] = "$Id: forward.c,v 1.2 1998/02/19 12:42:31 kanungo Exp kanu
 
 
 
-void ForwardWithScale(HMMT *phmm, int T, int *O, int numLeaf, double **alpha, double **alpha2, double *LL,
-		      Config *conf)
+void Forward(HMMT *phmm, int T, int *O, int numLeaf, double **alpha, double **alpha2, double *LL,
+		ForwardConfig *conf)
 {
 	int	i, j, k; 	/* state indices */
 	int	t;	/* time index */
+	int outerProdFlag;
 
 	double sum;	/* partial sum */
 	double sumPhi;
 
-	/* Forward Section */
+	/* Initialize phi2 to -1.0 */
+	for (i = 1; i < T; i++) {
+		for (j = 1; j < phmm->N * phmm->N; j++) {
+			conf->phi2[i][j] = -1.0;
+		}
+	}
+
+	/* Loop over sequence */
 	for (t = 1; t <= T - 1; t++) {
 
 		conf->scale1[t+1] = 0.0;
@@ -63,15 +71,23 @@ void ForwardWithScale(HMMT *phmm, int T, int *O, int numLeaf, double **alpha, do
 
 		if (t < T) {
 			/* If t is one, set phi2 at row t from 1 to N to phi at row t from 1 to n */
-			if (t == 1) {
+
+			/*Create a 1-D copy of phi2[T] for the outer product in case we need it
+			 * also check if phi2 contains negative values in range 1:N
+			 */
+			for (i = 1; i < phmm->N; i++) {
+				conf->phi2Temp[i] = conf->phi2[t][i];
+				if (conf->phi2[t][i] == -1.0) {
+					outerProdFlag = 1;
+				}
+			}
+
+			/* Don't compute outer product if phi2[t] from 1:N hasn't been initialized */
+			if (outerProdFlag) {
 				for (i = 1; i < phmm->N; i++) {
 					conf->phi2[t][i] = conf->phi[t][i];
 				}
 			} else {
-
-				for (i = 1; i < phmm->N; i++) {
-					conf->phi2Temp[i] = conf->phi2[t][i];
-				}
 				/* outer product of row t of phi2 and row t of phi */
 				/* store as a vector instead of a matrix */
 				k = 1;
@@ -81,10 +97,11 @@ void ForwardWithScale(HMMT *phmm, int T, int *O, int numLeaf, double **alpha, do
 						k++;
 					}
 				}
+
 			}
-			conf->scale2[phmm->P[i]] = conf->scale1[i] + conf->scale2[phmm->P[i]];
+			conf->scale2[conf->P[i]] = conf->scale1[i] + conf->scale2[conf->P[i]];
 			for (i = 1; i < phmm->N*phmm->N; i++) {
-				alpha2[phmm->P[t]][i] = log(conf->phi2[phmm->P[t]][i]) + conf->scale1[phmm->P[i]];
+				alpha2[conf->P[t]][i] = log(conf->phi2[conf->P[t]][i]) + conf->scale1[conf->P[i]];
 			}
 		}
 	}
@@ -93,6 +110,6 @@ void ForwardWithScale(HMMT *phmm, int T, int *O, int numLeaf, double **alpha, do
 
 	/* 3. Termination */
 
-
 }
+
 
