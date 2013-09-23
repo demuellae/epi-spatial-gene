@@ -19,7 +19,6 @@
 typedef struct {
 	int N;		/* number of states;  Q={1,2,...,N} */
 	int M; 		/* number of observation symbols; V={1,2,...,M}*/
-        int *P;         /* array keeping track of node parents */
 	double	**AF;	/* A[1..N][1..N]. a[i][j] is the transition prob
 			   of going from state i at time t to state j at time t+1 */
 	double **AB;
@@ -38,7 +37,13 @@ typedef struct {
   double *scale1;
   double *scale2;
   int *P;
-} Config;
+} ForwardConfig;
+
+typedef struct {
+  double **theta;
+  double *thetaT;
+  double *scale;
+} BackwardConfig;
 
 void ReadHMM(FILE *fp, HMMT *phmm);
 void PrintHMM(FILE *fp, HMMT *phmm);
@@ -54,9 +59,8 @@ int GenNextState(HMMT *phmm, int q_t);
 int GenSymbol(HMMT *phmm, int q_t);
 
 
-void Forward(HMMT *phmm, int T, int *O, double **alpha, double *pprob);
-void ForwardWithScale(HMMT *phmm, int T, int *O, double **alpha,
-        double *scale, double *pprob);
+void Forward(HMMT *phmm, int T, int *O, int numLeaf, double **alpha, double **alpha2, double *LL,
+	      ForwardConfig *conf);
 void Backward(HMMT *phmm, int T, int *O, double **beta, double *pprob);
 void BackwardWithScale(HMMT *phmm, int T, int *O, double **beta,
         double *scale, double *pprob);
