@@ -75,9 +75,10 @@ void Forward(HMMT *phmm, int T, int *O, int numLeaf, double **alpha, double **al
 			/*Create a 1-D copy of phi2[T] for the outer product in case we need it
 			 * also check if phi2 contains negative values in range 1:N
 			 */
+			outerProdFlag = 0;
 			for (i = 1; i < phmm->N; i++) {
 				conf->phi2Temp[i] = conf->phi2[t][i];
-				if (conf->phi2[t][i] == -1.0) {
+				if (conf->phi2[t][i] < 0.0) {
 					outerProdFlag = 1;
 				}
 			}

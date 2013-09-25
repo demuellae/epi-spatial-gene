@@ -41,8 +41,11 @@ typedef struct {
 
 typedef struct {
   double **theta;
-  double *thetaT;
+  double **thetaT;
+  double *thetaTRow;
+  double *bro;
   double *scale;
+  int *P;
 } BackwardConfig;
 
 void ReadHMM(FILE *fp, HMMT *phmm);
