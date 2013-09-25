@@ -9,87 +9,64 @@
  **      $Id: forward.c,v 1.2 1998/02/19 12:42:31 kanungo Exp kanungo $
  */
 #include <stdio.h>
-#include "hmm.h"
+#include "hmmTree.h"
 #include <math.h>
 static char rcsid[] = "$Id: forward.c,v 1.2 1998/02/19 12:42:31 kanungo Exp kanungo $";
 
 
 
-void BackwardWithScale(HMMT *phmm, int T, int *O, int numLeaf, double **beta, double **theta, int *P,
-		      double *scale, double *thetaT)
+void BackwardWithScale(HMMT *phmm, int T, int *O, int numLeaf, double **beta, double **phi, BackwardConfig **conf)
 {
-        int	i, j; 	/* state indices */
+	int	i, j, k; 	/* state indices */
 	int	t;	/* time index */
 
 	double sum;	/* partial sum */
+	double sumTheta;
 
+	/* Initialize theta */
+	for (i = 1; i < phmm->N; i++) {
+		conf->theta[phmm->N][i] = 1.0/phmm->N;
+	}
 
+	/* Initialize scale */
+	for (i = 1; i <= T-1; i++) {
+		conf->scale[i] = 0.0;
+	}
+	conf->scale[T] = log(phmm->N);
 
-	for (t = T-1; t >= 1; t--) {
+	for (t = T; t >= 1; t--) {
 
-		scale1[t+1] = 0.0;
-		/* Initialization */
-		if (t < numLeaf) {
-			for (i = 1; i <= phmm->N*phmm->N; i++) {
-				phiT[i] = phmm->pi[t][i];
-				phiT[i] *= phmm->B[i][O[t+1]];
-			}
-		} else {
-			/* Matrix multiplication of transition prob and row t of phi2
-			 * Only occurs if O[t] is a leaf */
+		k = 0;
+		for (i = 1; i <= phmm->N*phmm->N; i++) {
+			sum = 0.0;
 			for (j = 1; j <= phmm->N; j++) {
-				sum = 0.0;
-				for (i = 1; i <= phmm->N*phmm->N; i++)
-					sum += phi2[t][i]* (phmm->AF[i][j]);
-
-				phiT[j] = sum*(phmm->B[t][j]);
+				sum += conf->thetaT[t][j] * phmm->B[conf->P[t]][j] * (phmm->AF[j][i]);
 			}
+			/* Result of matrix multiplication should be in N * N matrix rather than 1 * N^2 */
+			conf->thetaT[k%phmm->N][i] = sum;
+			k++;
 		}
 
-		sumPhi = 0.0;
-		/* sum(Phi(t)) */
+		/* phi X thetaT (1 * N times N * N) */
 		for (i = 1; i <= phmm->N; i++) {
-			sumPhi += phiT[i];
+			sum = 0.0;
+			for (j = 1; j <= phmm->N; j++) {
+				sum += phi[t][j] * conf->thetaT[j][i];
+			}
+			conf->thetaTRow[i] = sum;
 		}
-		/* set row t of phi to phiT/sumPhi */
+
+		sumTheta = 0;
 		for (i = 1; i <= phmm->N; i++) {
-			phi[t][i] = phiT[i]/sumPhi;
+				sumTheta += conf->thetaTRow[i];
+				conf->theta[t][i] = conf->thetaTRow[i]/sumTheta;
 		}
-		scale1[t] = scale2[t] + log(sumPhi);
 
 		for (i = 1; i < phmm->N; i++) {
-			alpha[t][i] = phi[t][i] + scale1[i];
+			theta[t][i] = theta[]
 		}
 
-		if (t < T) {
-			/* If t is one, set phi2 at row t from 1 to N to phi at row t from 1 to n */
-			if (t == 1) {
-				for (i = 1; i < phmm->N; i++) {
-					phi2[t][i] = phi[t][i];
-				}
-			} else {
-
-				for (i = 1; i < phmm->N; i++) {
-					phi2Temp[i] = phi2[t][i];
-				}
-				/* outer product of row t of phi2 and row t of phi */
-				/* store as a vector instead of a matrix */
-				k = 1;
-				for (i = 1; i < phmm->N; i++) {
-					for (j = 1; j < phmm->N; j++) {
-						phi2[t][k] = phi2Temp[i] * phi[t][j];
-						k++;
-					}
-				}
-			}
-			free(phi2Temp);
-			scale2[P[i]] = scale1[i] + scale2[P[i]];
-			for (i = 1; i < phmm->N*phmm->N; i++) {
-				alpha2[P[t]][i] = log(phi2[P[t]][i]) + scale1[P[i]];
-			}
-		}
 	}
-	LL = scale1[T];
 
 
 	/* 3. Termination */
