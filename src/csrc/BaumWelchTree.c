@@ -28,8 +28,8 @@ static char rcsid[] = "$Id: baumwelch.c,v 1.6 1999/04/24 15:58:43 kanungo Exp ka
 
 
 
-void BaumWelch(HMMT *phmm, int T, int *O, double **alpha, double **alpha2, double **beta,
-	double **gamma, int *pniter, ForwardConfig *fConf, BackwardConfig *bConf, numLeaf,
+void BaumWelch(HMMT *phmm, int T, int *O, int *P, double **alpha, double **alpha2, double **beta,
+	double **gamma, int *pniter, ForwardConfig *fConf, BackwardConfig *bConf, int numLeaf,
 	double *plogprobinit, double *plogprobfinal)
 {
 	int	i, j, k;
@@ -44,15 +44,16 @@ void BaumWelch(HMMT *phmm, int T, int *O, double **alpha, double **alpha2, doubl
 
 	deltaprev = 10e-70;
 
+	FindSiblings(bConf->bro, P, numLeaf, T);
 	xi = AllocXi(T, phmm->N);
 	scale = dvector(1, T);
 
-	ForwardTree(phmm, T, O, numLeaf, alpha, alpha2, fConf);
+	ForwardTree(phmm, T, O, numLeaf, alpha, alpha2, &logprobf, fConf);
 	*plogprobinit = logprobf; /* log P(O |intial model) */
 	BackwardTree(phmm, T, O, numLeaf, beta, fConf->phi, bConf);
 	ComputeGamma(phmm, T, alpha, beta, gamma);
 	ComputeXi(phmm, T, O, alpha, beta, xi);
-	logprobprev = logprobf;
+	logprobprev = *logprobf;
 
 	do  {
 
