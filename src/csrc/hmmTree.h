@@ -66,9 +66,9 @@ int GenSymbol(HMMT *phmm, int q_t);
 
 
 void FindSiblings(int *B, int *P, int numLeaf);
-void ForwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **alpha, double **alpha2, double *LL,
+void ForwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **logalpha, double **logalpha2, double *LL,
 	      ForwardConfig *conf);
-void BackwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **beta, double **phi, BackwardConfig **conf);
+void BackwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **logbeta, double **phi, BackwardConfig **conf);
 void Backward(HMMT *phmm, int T, int *O, double **beta, double *pprob);
 void BackwardWithScale(HMMT *phmm, int T, int *O, double **beta,
         double *scale, double *pprob);
