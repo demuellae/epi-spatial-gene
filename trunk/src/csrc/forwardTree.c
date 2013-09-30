@@ -15,7 +15,7 @@ static char rcsid[] = "$Id: forward.c,v 1.2 1998/02/19 12:42:31 kanungo Exp kanu
 
 
 
-void ForwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **alpha, double **alpha2, double *LL,
+void ForwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **logalpha, double **logalpha2, double *LL,
 		ForwardConfig *conf)
 {
 	int	i, j, k; 	/* state indices */
@@ -66,7 +66,7 @@ void ForwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **alpha, double 
 		conf->scale1[t] = conf->scale2[t] + log(sumPhi);
 
 		for (i = 1; i < phmm->N; i++) {
-			alpha[t][i] = conf->phi[t][i] + conf->scale1[i];
+			logalpha[t][i] = conf->phi[t][i] + conf->scale1[i];
 		}
 
 		if (t < T) {
@@ -102,7 +102,7 @@ void ForwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **alpha, double 
 			}
 			conf->scale2[conf->P[i]] = conf->scale1[i] + conf->scale2[conf->P[i]];
 			for (i = 1; i < phmm->N*phmm->N; i++) {
-				alpha2[conf->P[t]][i] = log(conf->phi2[conf->P[t]][i]) + conf->scale1[conf->P[i]];
+				logalpha2[conf->P[t]][i] = log(conf->phi2[conf->P[t]][i]) + conf->scale1[conf->P[i]];
 			}
 		}
 	}

@@ -28,7 +28,7 @@ static char rcsid[] = "$Id: baumwelch.c,v 1.6 1999/04/24 15:58:43 kanungo Exp ka
 
 
 
-void BaumWelch(HMMT *phmm, int T, int *O, int *P, double **alpha, double **alpha2, double **beta,
+void BaumWelch(HMMT *phmm, int T, int *O, int *P, double **logalpha, double **logalpha2, double **logbeta,
 	double **gamma, int *pniter, ForwardConfig *fConf, BackwardConfig *bConf, int numLeaf,
 	double *plogprobinit, double *plogprobfinal)
 {
@@ -40,20 +40,27 @@ void BaumWelch(HMMT *phmm, int T, int *O, int *P, double **alpha, double **alpha
 	double	numeratorB, denominatorB;
 
 	double ***xi, *scale;
+	double **beta, **alpha2;
 	double delta, deltaprev, logprobprev;
 
 	deltaprev = 10e-70;
+
+
 
 	FindSiblings(bConf->bro, P, numLeaf, T);
 	xi = AllocXi(T, phmm->N);
 	scale = dvector(1, T);
 
-	ForwardTree(phmm, T, O, numLeaf, alpha, alpha2, &logprobf, fConf);
-	*plogprobinit = logprobf; /* log P(O |intial model) */
+	ForwardTree(phmm, T, O, numLeaf, logalpha, logalpha2, &logprobf, fConf);
+	*plogprobinit = logprobf; /* log P(O |initial model) */
 	BackwardTree(phmm, T, O, numLeaf, beta, fConf->phi, bConf);
-	ComputeGamma(phmm, T, alpha, beta, gamma);
-	ComputeXi(phmm, T, O, alpha, beta, xi);
-	logprobprev = *logprobf;
+
+	alpha2 = ExpMatrix(logalpha2, T, phmm->N * phmm->N);
+	beta = ExpMatrix(logbeta, T, phmm->N);
+
+	ComputeGamma(phmm, T, logalpha, logbeta, gamma);
+	ComputeXi(phmm, T, O, alpha2, beta, xi);
+	logprobprev = logprobf;
 
 	do  {
 
@@ -89,10 +96,10 @@ void BaumWelch(HMMT *phmm, int T, int *O, int *P, double **alpha, double **alpha
 			}
 		}
 
-		ForwardWithScale(phmm, T, O, alpha, scale, &logprobf);
-		BackwardWithScale(phmm, T, O, beta, scale, &logprobb);
-		ComputeGamma(phmm, T, alpha, beta, gamma);
-		ComputeXi(phmm, T, O, alpha, beta, xi);
+		ForwardTree(phmm, T, O, numLeaf, logalpha, logalpha2, &logprobf, fConf);
+		BackwardTree(phmm, T, O, numLeaf, beta, fConf->phi, bConf);
+		ComputeGamma(phmm, T, logalpha, logbeta, gamma);
+		ComputeXi(phmm, T, O, alpha2, beta, xi);
 
 		/* compute difference between log probability of
 		   two iterations */
@@ -130,7 +137,7 @@ void ComputeGamma(HMM *phmm, int T, double **alpha, double **beta,
 	}
 }
 
-void ComputeXi(HMM* phmm, int T, int *O, double **alpha, double **beta,
+void ComputeXi(HMMT* phmm, int T, int *O, double **alpha, double **beta,
 	double ***xi)
 {
 	int i, j;
@@ -142,7 +149,7 @@ void ComputeXi(HMM* phmm, int T, int *O, double **alpha, double **beta,
 		for (i = 1; i <= phmm->N; i++)
 			for (j = 1; j <= phmm->N; j++) {
 				xi[t][i][j] = alpha[t][i]*beta[t+1][j]
-					*(phmm->A[i][j])
+					*(phmm->AF[i][j])
 					*(phmm->B[j][O[t+1]]);
 				sum += xi[t][i][j];
 			}
@@ -194,5 +201,15 @@ void FindSiblings(int *sib, int *P, int numleaf, int T) {
 				sib[s] = j;
 			}
 		}
+		flag = 1;
 	}
+}
+
+double ** ExpMatrix(double **mat1, int row, int col) {
+	int i, j;
+	double **newMat = malloc(row * sizeof(double *));
+	for (i = 1; i < row; i++) {
+		newMat[i] = malloc(col * sizeof(double));
+	}
+	return newMat;
 }
