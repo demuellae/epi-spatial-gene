@@ -48,6 +48,9 @@ typedef struct {
   int *P;
 } BackwardConfig;
 
+void InitConfForward(ForwardConfig *f);
+void InitConfBackward(BackwardConfig *b);
+
 void ReadHMM(FILE *fp, HMMT *phmm);
 void PrintHMM(FILE *fp, HMMT *phmm);
 void InitHMM(HMMT *phmm, int N, int M, int seed);
@@ -62,8 +65,10 @@ int GenNextState(HMMT *phmm, int q_t);
 int GenSymbol(HMMT *phmm, int q_t);
 
 
-void Forward(HMMT *phmm, int T, int *O, int numLeaf, double **alpha, double **alpha2, double *LL,
+void FindSiblings(int *B, int *P, int numLeaf);
+void ForwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **alpha, double **alpha2, double *LL,
 	      ForwardConfig *conf);
+void BackwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **beta, double **phi, BackwardConfig **conf);
 void Backward(HMMT *phmm, int T, int *O, double **beta, double *pprob);
 void BackwardWithScale(HMMT *phmm, int T, int *O, double **beta,
         double *scale, double *pprob);

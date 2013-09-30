@@ -15,7 +15,7 @@ static char rcsid[] = "$Id: forward.c,v 1.2 1998/02/19 12:42:31 kanungo Exp kanu
 
 
 
-void Forward(HMMT *phmm, int T, int *O, int numLeaf, double **alpha, double **alpha2, double *LL,
+void ForwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **alpha, double **alpha2, double *LL,
 		ForwardConfig *conf)
 {
 	int	i, j, k; 	/* state indices */
@@ -106,7 +106,9 @@ void Forward(HMMT *phmm, int T, int *O, int numLeaf, double **alpha, double **al
 			}
 		}
 	}
-	LL = conf->scale1[T];
+
+	for (i = 1; i < phmm->N; i++)
+		LL[i] = conf->scale1[T][i];
 
 
 	/* 3. Termination */
