@@ -108,7 +108,7 @@ void ForwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **alpha, double 
 	}
 
 	for (i = 1; i < phmm->N; i++)
-		LL[i] = conf->scale1[T][i];
+		LL = conf->scale1[T];
 
 
 	/* 3. Termination */
