@@ -58,8 +58,10 @@ void BaumWelch(HMMT *phmm, int T, int *O, int *P, double **logalpha, double **lo
 	alpha2 = ExpMatrix(logalpha2, T, phmm->N * phmm->N);
 	beta = ExpMatrix(logbeta, T, phmm->N);
 
-	ComputeGamma(phmm, T, logalpha, logbeta, gamma);
+	ComputeGamma(phmm, T, alpha2, logbeta, gamma);
 	ComputeXi(phmm, T, O, alpha2, beta, xi);
+	FreeMatrix(alpha2);
+	FreeMatrix(beta);
 	logprobprev = logprobf;
 
 	do  {
@@ -95,11 +97,13 @@ void BaumWelch(HMMT *phmm, int T, int *O, int *P, double **logalpha, double **lo
 						.999*numeratorB/denominatorB;
 			}
 		}
+		MakeSymmetric(phmm->AF, phmm->N * phmm->N, phmm->N);
 
 		ForwardTree(phmm, T, O, numLeaf, logalpha, logalpha2, &logprobf, fConf);
 		BackwardTree(phmm, T, O, numLeaf, beta, fConf->phi, bConf);
 		ComputeGamma(phmm, T, logalpha, logbeta, gamma);
 		ComputeXi(phmm, T, O, alpha2, beta, xi);
+
 
 		/* compute difference between log probability of
 		   two iterations */
@@ -137,20 +141,23 @@ void ComputeGamma(HMM *phmm, int T, double **alpha, double **beta,
 	}
 }
 
-void ComputeXi(HMMT* phmm, int T, int *O, double **alpha, double **beta,
+/* Xi dimensions: (T-numLeaf) X N^2 X N */
+void ComputeXi(HMMT* phmm, int T, int *O, int numLeaf, double **alpha2, double **beta,
 	double ***xi)
 {
 	int i, j;
 	int t;
 	double sum;
 
-	for (t = 1; t <= T - 1; t++) {
+
+
+	for (t = 1; t <= T - numLeaf; t++) {
 		sum = 0.0;
-		for (i = 1; i <= phmm->N; i++)
+		for (i = 1; i <= phmm->N*phmm->N; i++)
 			for (j = 1; j <= phmm->N; j++) {
-				xi[t][i][j] = alpha[t][i]*beta[t+1][j]
+				xi[t][i][j] = alpha2[t+numLeaf][i]*beta[t+numLeaf+1][j] //Fix this for N^2 Cols
 					*(phmm->AF[i][j])
-					*(phmm->B[j][O[t+1]]);
+					*(phmm->B[j][O[t+numLeaf+1]]);
 				sum += xi[t][i][j];
 			}
 
@@ -170,7 +177,7 @@ double *** AllocXi(int T, int N)
 	xi --;
 
 	for (t = 1; t <= T; t++)
-		xi[t] = dmatrix(1, N, 1, N);
+		xi[t] = dmatrix(1, N, 1, N); //Change this to N^2 Cols
 	return xi;
 }
 
@@ -205,11 +212,28 @@ void FindSiblings(int *sib, int *P, int numleaf, int T) {
 	}
 }
 
-double ** ExpMatrix(double **mat1, int row, int col) {
+double ** ExpMatrix(double **mat, int row, int col) {
 	int i, j;
 	double **newMat = malloc(row * sizeof(double *));
-	for (i = 1; i < row; i++) {
+	for (i = 1; i <= row; i++) {
 		newMat[i] = malloc(col * sizeof(double));
 	}
+
+	for (i = 1; i <= row; i++)
+		for (j = 1;  j <= col; j++)
+			newMat[i][j] = exp(mat[i][j]);
+
 	return newMat;
+}
+
+void FreeMatrix(double **mat, int row, int col) {
+	int i;
+	for (i = 1; i <= row; i++) {
+		free(mat[i]);
+	}
+	free(mat);
+}
+
+void MakeSymmetric(double **mat, int row, int col) {
+
 }
