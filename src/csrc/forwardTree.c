@@ -40,7 +40,7 @@ void ForwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **logalpha, doub
 		if (t < numLeaf) {
 			for (i = 1; i <= phmm->N*phmm->N; i++) {
 				conf->phiT[i] = phmm->pi[t][i];
-				conf->phiT[i] *= phmm->B[t][i];
+				conf->phiT[i] *= phmm->B[O[t]][i];
 			}
 		} else {
 			/* Matrix multiplication of transition prob and row t of phi2

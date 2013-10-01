@@ -64,7 +64,6 @@ int GenInitalState(HMMT *phmm);
 int GenNextState(HMMT *phmm, int q_t);
 int GenSymbol(HMMT *phmm, int q_t);
 
-
 void FindSiblings(int *B, int *P, int numLeaf);
 void ForwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **logalpha, double **logalpha2, double *LL,
 	      ForwardConfig *conf);
