@@ -43,6 +43,8 @@ void BaumWelch(HMMT *phmm, int T, int *O, int *P, double **logalpha, double **lo
 	double **beta, **alpha2;
 	double delta, deltaprev, logprobprev;
 
+	double sum;
+
 	deltaprev = 10e-70;
 
 
@@ -69,6 +71,27 @@ void BaumWelch(HMMT *phmm, int T, int *O, int *P, double **logalpha, double **lo
 		/* reestimate frequency of state i in time t=1 */
 		for (i = 1; i <= phmm->N; i++)
 			phmm->pi[i] = .001 + .999*gamma[1][i];
+
+
+		/* R Code Translated MStep*/
+		for (i = 1; i < phmm->N*phmm->N; i++) {
+			denominatorA = 0.0;
+			for (t = 1; t <= T - numLeaf - 1; t++) {
+				for (j = 1; j <= phmm->N; j++) {
+					denominatorA += xi[t][i][j];
+				}
+			}
+
+			for (j = 1; j <= phmm->N; j++) {
+				sum = 0.0;
+				for (t = 1; t <= T; t++) {
+					sum += xi[t][i][j];
+				}
+				phmm->AF[i][j] = sum/denominatorA;
+			}
+		}
+
+
 
 		/* reestimate transition matrix  and symbol prob in
 		   each state */
@@ -97,7 +120,7 @@ void BaumWelch(HMMT *phmm, int T, int *O, int *P, double **logalpha, double **lo
 						.999*numeratorB/denominatorB;
 			}
 		}
-		MakeSymmetric(phmm->AF, phmm->N * phmm->N, phmm->N);
+		MakeSymmetric(phmm->AF, phmm->AB, phmm->N, phmm->N);
 
 		ForwardTree(phmm, T, O, numLeaf, logalpha, logalpha2, &logprobf, fConf);
 		BackwardTree(phmm, T, O, numLeaf, beta, fConf->phi, bConf);
@@ -121,7 +144,7 @@ void BaumWelch(HMMT *phmm, int T, int *O, int *P, double **logalpha, double **lo
 	free_dvector(scale, 1, T);
 }
 
-void ComputeGamma(HMM *phmm, int T, double **alpha, double **beta,
+void ComputeGamma(HMM *phmm, int T, double **alpha, double **beta, int numLeaf,
 	double **gamma)
 {
 
@@ -129,7 +152,7 @@ void ComputeGamma(HMM *phmm, int T, double **alpha, double **beta,
 	int	t;
 	double	denominator;
 
-	for (t = 1; t <= T; t++) {
+	for (t = 1; t <= T - numLeaf; t++) {
 		denominator = 0.0;
 		for (j = 1; j <= phmm->N; j++) {
 			gamma[t][j] = alpha[t][j]*beta[t][j];
@@ -151,7 +174,7 @@ void ComputeXi(HMMT* phmm, int T, int *O, int numLeaf, double **alpha2, double *
 
 
 
-	for (t = 1; t <= T - numLeaf; t++) {
+	for (t = 1; t <= T - numLeaf-1; t++) {
 		sum = 0.0;
 		for (i = 1; i <= phmm->N*phmm->N; i++)
 			for (j = 1; j <= phmm->N; j++) {
@@ -202,8 +225,7 @@ void FindSiblings(int *sib, int *P, int numleaf, int T) {
 			if (P[j] == i && flag) {
 				s = j;
 				flag = 0;
-			}
-			if (j == s) {
+			} else if (j == s) {
 				sib[j] = s;
 				sib[s] = j;
 			}
@@ -234,6 +256,21 @@ void FreeMatrix(double **mat, int row, int col) {
 	free(mat);
 }
 
-void MakeSymmetric(double **mat, int row, int col) {
+void MakeSymmetric(double **asym, double **sym, )
 
+void ThreeToTwo(double **threeD, double **twoD, int row, int col) {
+	int i,j,k,l;
+	for (i = 1; i <= row; i++) {
+		for (j = 1; j <= col; j++) {
+			k = 1;
+			l = 1 + (col*(j-1));
+			while (k <= col*col) {
+				twoD[i][j] += threeD[k][j];
+				twoD[i][j] += threeD[l][j];
+				k += col;
+				l += 1;
+			}
+			twoD[i][j] /= 6;
+		}
+	}
 }
