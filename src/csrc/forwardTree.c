@@ -35,7 +35,6 @@ void ForwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **logalpha, doub
 	/* Loop over sequence */
 	for (t = 1; t <= T - 1; t++) {
 
-		conf->scale1[t+1] = 0.0;
 		/* Initialization */
 		if (t < numLeaf) {
 			for (i = 1; i <= phmm->N*phmm->N; i++) {
@@ -90,7 +89,7 @@ void ForwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **logalpha, doub
 				}
 			} else {
 				/* outer product of row t of phi2 and row t of phi */
-				/* store as a vector instead of a matrix */
+				/* store result as a row vector in phi2 instead of a matrix */
 				k = 1;
 				for (i = 1; i < phmm->N; i++) {
 					for (j = 1; j < phmm->N; j++) {
