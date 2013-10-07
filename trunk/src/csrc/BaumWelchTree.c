@@ -1,19 +1,19 @@
 /*
-**      Author: Tapas Kanungo, kanungo@cfar.umd.edu
-**      Date:   15 December 1997
-**      File:   baumwelch.c
-**      Purpose: Baum-Welch algorithm for estimating the parameters
-**              of a HMM model, given an observation sequence.
-**      Organization: University of Maryland
-**
-**	Update:
-**	Author: Tapas Kanungo
-**	Date:	19 April 1999
-**	Purpose: Changed the convergence criterion from ratio
-**		to absolute value.
-**
-**      $Id: baumwelch.c,v 1.6 1999/04/24 15:58:43 kanungo Exp kanungo $
-*/
+ **      Author: Tapas Kanungo, kanungo@cfar.umd.edu
+ **      Date:   15 December 1997
+ **      File:   baumwelch.c
+ **      Purpose: Baum-Welch algorithm for estimating the parameters
+ **              of a HMM model, given an observation sequence.
+ **      Organization: University of Maryland
+ **
+ **	Update:
+ **	Author: Tapas Kanungo
+ **	Date:	19 April 1999
+ **	Purpose: Changed the convergence criterion from ratio
+ **		to absolute value.
+ **
+ **      $Id: baumwelch.c,v 1.6 1999/04/24 15:58:43 kanungo Exp kanungo $
+ */
 
 
 #include "hmmTree.h"
@@ -29,8 +29,8 @@ static char rcsid[] = "$Id: baumwelch.c,v 1.6 1999/04/24 15:58:43 kanungo Exp ka
 
 
 void BaumWelch(HMMT *phmm, int T, int *O, int *P, double **logalpha, double **logalpha2, double **logbeta,
-	double **gamma, int *pniter, ForwardConfig *fConf, BackwardConfig *bConf, int numLeaf,
-	double *plogprobinit, double *plogprobfinal)
+		double **gamma, int *pniter, ForwardConfig *fConf, BackwardConfig *bConf, int numLeaf,
+		double *plogprobinit, double *plogprobfinal, **F)
 {
 	int	i, j, k;
 	int	t, l = 0;
@@ -70,31 +70,29 @@ void BaumWelch(HMMT *phmm, int T, int *O, int *P, double **logalpha, double **lo
 
 		/* reestimate frequency of state i in time t=1 */
 		for (i = 1; i <= phmm->N; i++)
-			phmm->pi[i] = .001 + .999*gamma[1][i];
+			for (j = 1; j <= numLeaf; j++)
+				phmm->pi[i] = gamma[j][i];
 
 
 		/* R Code Translated MStep*/
 		for (i = 1; i < phmm->N*phmm->N; i++) {
-			denominatorA = 0.0;
-			for (t = 1; t <= T - numLeaf - 1; t++) {
-				for (j = 1; j <= phmm->N; j++) {
-					denominatorA += xi[t][i][j];
+			sum = 0.0;
+			for (j = 1; j <= phmm->N; j++) {
+				for (t = 1; t <= T - numLeaf - 1; t++) {
+					F[i][j] += xi[t][i][j];
 				}
+				sum += F[i][j];
 			}
 
 			for (j = 1; j <= phmm->N; j++) {
-				sum = 0.0;
-				for (t = 1; t <= T; t++) {
-					sum += xi[t][i][j];
-				}
-				phmm->AF[i][j] = sum/denominatorA;
+				phmm->AF[i][j] = F[i][j] / sum;
 			}
 		}
 
 
 
 		/* reestimate transition matrix  and symbol prob in
-		   each state */
+		   each state
 		for (i = 1; i <= phmm->N; i++) {
 			denominatorA = 0.0;
 			for (t = 1; t <= T - 1; t++)
@@ -120,6 +118,9 @@ void BaumWelch(HMMT *phmm, int T, int *O, int *P, double **logalpha, double **lo
 						.999*numeratorB/denominatorB;
 			}
 		}
+
+		 */
+
 		MakeSymmetric(phmm->AF, phmm->AB, phmm->N, phmm->N);
 
 		ForwardTree(phmm, T, O, numLeaf, logalpha, logalpha2, &logprobf, fConf);
@@ -144,8 +145,18 @@ void BaumWelch(HMMT *phmm, int T, int *O, int *P, double **logalpha, double **lo
 	free_dvector(scale, 1, T);
 }
 
+void ComputeGamma(HMMT *phmm, int T, double **logalpha, double **logbeta, int numLeaf, double **gamma, double LL) {
+	int i,t;
+	for (i = 1; i <= phmm->N; i++) {
+		for (t = 1; t <= T; t++) {
+			exp(gamma[t][i] = logalpha[t][i] + logbeta[t][i] - LL);
+		}
+	}
+}
+
+/*
 void ComputeGamma(HMM *phmm, int T, double **alpha, double **beta, int numLeaf,
-	double **gamma)
+		double **gamma)
 {
 
 	int 	i, j;
@@ -163,24 +174,23 @@ void ComputeGamma(HMM *phmm, int T, double **alpha, double **beta, int numLeaf,
 			gamma[t][i] = gamma[t][i]/denominator;
 	}
 }
+*/
 
 /* Xi dimensions: (T-numLeaf) X N^2 X N */
 void ComputeXi(HMMT* phmm, int T, int *O, int numLeaf, double **alpha2, double **beta,
-	double ***xi)
+		double ***xi)
 {
 	int i, j;
 	int t;
 	double sum;
-
-
 
 	for (t = 1; t <= T - numLeaf-1; t++) {
 		sum = 0.0;
 		for (i = 1; i <= phmm->N*phmm->N; i++)
 			for (j = 1; j <= phmm->N; j++) {
 				xi[t][i][j] = alpha2[t+numLeaf][i]*beta[t+numLeaf+1][j] //Fix this for N^2 Cols
-					*(phmm->AF[i][j])
-					*(phmm->B[j][O[t+numLeaf+1]]);
+				                                                     *(phmm->AF[i][j])
+				                                                     *(phmm->B[j][O[t+numLeaf+1]]);
 				sum += xi[t][i][j];
 			}
 
@@ -200,8 +210,9 @@ double *** AllocXi(int T, int N)
 	xi --;
 
 	for (t = 1; t <= T; t++)
-		xi[t] = dmatrix(1, N, 1, N); //Change this to N^2 Cols
+		xi[t] = dmatrix(1, N*N, 1, N*N); //Change this to N^2 Cols
 	return xi;
+
 }
 
 void FreeXi(double *** xi, int T, int N)
@@ -256,7 +267,30 @@ void FreeMatrix(double **mat, int row, int col) {
 	free(mat);
 }
 
-void MakeSymmetric(double **asym, double **sym, )
+/* This function is probably way inefficient */
+void MakeSymmetric(double **asym, double **sym, int row, int col) {
+	int i, j, l;
+	int x1, y1, x2, y2;
+	for (j = 1; j <= row; j++) {
+		y1 = 0;
+		for (i = 1; i <= col; i++) {
+			if (j % col == 1)
+				y1++;
+			x1 = (j-1) % row;
+			y2 = 0;
+			if (x1 != y1)
+				for (l = 1; l <= col; l++) {
+					if (l % row == 1)
+						y2++;
+					x2 = (l-1) % row;
+					if (x1 == y2 && x2 == y1) {
+						sym[i][j] = (asym[i][j] + asym[i][l])/2;
+						sym[i][l] = (asym[i][j] + asym[i][l])/2;
+					}
+			}
+		}
+	}
+}
 
 void ThreeToTwo(double **threeD, double **twoD, int row, int col) {
 	int i,j,k,l;

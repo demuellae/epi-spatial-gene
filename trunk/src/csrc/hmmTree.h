@@ -43,13 +43,11 @@ typedef struct {
   double **theta;
   double **thetaT;
   double *thetaTRow;
-  double *bro;
+  int *bro;
   double *scale;
   int *P;
 } BackwardConfig;
 
-void InitConfForward(ForwardConfig *f);
-void InitConfBackward(BackwardConfig *b);
 
 void ReadHMM(FILE *fp, HMMT *phmm);
 void PrintHMM(FILE *fp, HMMT *phmm);
@@ -85,6 +83,8 @@ void Viterbi(HMMT *phmm, int T, int *O, double **delta, int **psi,
         int *q, double *pprob);
 void ViterbiLog(HMMT *phmm, int T, int *O, double **delta, int **psi,
         int *q, double *pprob);
+void AllocateHMM(HMMT *phmm);
+void AllocateConfigs(ForwardConfig *fConf, BackwardConfig *bConf);
 
 /* random number generator related functions*/
 
