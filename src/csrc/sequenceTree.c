@@ -123,10 +123,6 @@ void PrintSequence(FILE *fp, int T, int *O)
 
 }
 
- * sequenceTree.c
- *
- *  Created on: Sep 25, 2013
- *      Author: Dan
- */
+
 
 

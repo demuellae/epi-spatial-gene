@@ -1,4 +1,5 @@
 #include "hmmTree.h"
+#include "nrutil.h"
 
 int main() {
 	int T = 10;
