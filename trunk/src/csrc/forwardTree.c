@@ -25,6 +25,8 @@ void ForwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **logalpha, doub
 	double sum;	/* partial sum */
 	double sumPhi;
 
+	CalcObsProb(phmm, O, phmm->pmshape1, phmm->pmshape2, phmm->pn);
+
 	/* Initialize phi2 to -1.0 */
 	for (i = 1; i < T; i++) {
 		for (j = 1; j < phmm->N * phmm->N; j++) {
@@ -107,11 +109,22 @@ void ForwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **logalpha, doub
 	}
 
 	for (i = 1; i < phmm->N; i++)
-		LL = conf->scale1[T];
+		*LL = conf->scale1[T];
 
 
 	/* 3. Termination */
 
+}
+
+void CalcObsProb(HMMT *phmm, int *O, double *pmshape1, double *pmshape2, double *pn) {
+	int i, j;
+	/* iterate through all states */
+	for (i = 1; i <= phmm->N; i++) {
+		/* iterate through all possible observations */
+		for (j = 1; j <= phmm->M; j++) {
+
+		}
+	}
 }
 
 
