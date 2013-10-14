@@ -19,11 +19,13 @@ int main() {
 	//ForwardWithScale(hmm, T, O, numLeaf, alpha,**alpha2, fConf);
 }
 
-void AllocateHMM(HMMT *phmm, int T, int N, int M) {
+void AllocateHMM(HMMT *phmm, int T, int N, int M, double *pmshape1, double *pmshape2) {
 	phmm->AF = dmatrix(1,N,1,N);
 	phmm->B = dmatrix(1,N,1,M);
 	phmm->M = M;
 	phmm->N = N;
+	phmm->pmshape1 = malloc(sizeof(double) * N);
+
 
 }
 

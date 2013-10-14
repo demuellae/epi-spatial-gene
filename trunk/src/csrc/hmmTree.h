@@ -79,7 +79,7 @@ int GenInitalState(HMMT *phmm);
 int GenNextState(HMMT *phmm, int q_t);
 int GenSymbol(HMMT *phmm, int q_t);
 
-void FindSiblings(int *B, int *P, int numLeaf);
+void FindSiblings(int *B, int *P, int numLeaf, int T);
 void ForwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **logalpha, double **logalpha2, double *LL,
 		ForwardConfig *conf);
 void BackwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **logbeta, double **phi, BackwardConfig **conf);
@@ -99,8 +99,8 @@ void Viterbi(HMMT *phmm, int T, int *O, double **delta, int **psi,
 		int *q, double *pprob);
 void ViterbiLog(HMMT *phmm, int T, int *O, double **delta, int **psi,
 		int *q, double *pprob);
-void AllocateHMM(HMMT *phmm);
-void AllocateConfigs(ForwardConfig *fConf, BackwardConfig *bConf);
+void AllocateHMM(HMMT *phmm, int T, int N, int M, double *pmshape1, double *pmshape2);
+void AllocateConfigs(ForwardConfig *forwardConf, BackwardConfig *backConf, BaumConfig *baumConf);
 
 /* random number generator related functions*/
 
