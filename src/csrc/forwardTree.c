@@ -116,13 +116,13 @@ void ForwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **logalpha, doub
 
 }
 
-void CalcObsProb(HMMT *phmm, int *O, double *pmshape1, double *pmshape2, double *pn) {
+void CalcObsProb(HMMT *phmm, int *O, double *pmshape1, double *pmshape2, double *pn, int T) {
 	int i, j;
 	/* iterate through all states */
-	for (i = 1; i <= phmm->N; i++) {
+	for (i = 1; i <= T; i++) {
 		/* iterate through all possible observations */
-		for (j = 1; j <= phmm->M; j++) {
-
+		for (j = 1; j <= phmm->N; j++) {
+			phmm->B[i][j] = beta(O[i], pmshape1[j], pmshape2[j]);
 		}
 	}
 }

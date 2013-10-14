@@ -21,8 +21,8 @@
 #include "nrutil.h"
 #include <math.h>
 
-#include <"specialfunctions/digamma_function.c">
-#include <"specialfunctions/asa121.c">
+#include "specialfunctions/digamma_function.c"
+#include "specialfunctions/asa121.c"
 
 static char rcsid[] = "$Id: baumwelch.c,v 1.6 1999/04/24 15:58:43 kanungo Exp kanungo $";
 
