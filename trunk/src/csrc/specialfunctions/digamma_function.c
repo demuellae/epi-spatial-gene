@@ -13,32 +13,17 @@
 #include <math.h>                  // required for powl(), sinl(), and cosl().
 #include <float.h>                 // required for DBL_MAX and LDBL_MAX.
 #include <limits.h>     // required for LONG_MAX
+#include "specfunc.h"
 
 
 //                         Internally Defined Routines                        //
 
-double DiGamma_Function( double x );
-long double xDiGamma_Function( long double x );
 
-static long double xDiGamma(long double x);
-static long double xDiGamma_Asymptotic_Expansion( long double x );
 
 
 //                         Internally Defined Constants                       //
 
 static double cutoff = 171.0;
-static long double const pi = 3.14159265358979323846264338L;
-static long double const g =  9.6565781537733158945718737389L;
-static long double const a[] = { +1.144005294538510956673085217e+4L,
-                                 -3.239880201523183350535979104e+4L,
-                                 +3.505145235055716665660834611e+4L,
-                                 -1.816413095412607026106469185e+4L,
-                                 +4.632329905366668184091382704e+3L,
-                                 -5.369767777033567805557478696e+2L,
-                                 +2.287544733951810076451548089e+1L,
-                                 -2.179257487388651155600822204e-1L,
-                                 +1.083148362725893688606893534e-4L
-                              };
 
 ////////////////////////////////////////////////////////////////////////////////
 // double DiGamma_Function( double x )                                        //
@@ -164,10 +149,10 @@ static long double xDiGamma(long double x) {
    long double term;
    long double numerator = 0.0L;
    long double denominator = 0.0L;
-   int const n = sizeof(a) / sizeof(long double);
+   int const k = sizeof(a) / sizeof(long double);
    int i;
 
-   for (i = n-1; i >= 0; i--) {
+   for (i = k-1; i >= 0; i--) {
       temp = x + (long double) i;
       term = a[i] / temp;
       denominator += term;
@@ -206,19 +191,7 @@ static long double xDiGamma(long double x) {
 // Bernoulli numbers B(2j) / 2j: B(2)/2,B(4)/4,B(6)/6,...,B(20)/20.  Only     //
 //  B(2)/2,..., B(6)/6 are currently used.                                    //
 
-static const long double B[] = {   1.0L / (long double)(6 * 2 ),
-                                  -1.0L / (long double)(30 * 4 ),
-                                   1.0L / (long double)(42 * 6 ),
-                                  -1.0L / (long double)(30 * 8 ),
-                                   5.0L / (long double)(66 * 10 ),
-                                -691.0L / (long double)(2730 * 12 ),
-                                   7.0L / (long double)(6 * 14 ),
-                               -3617.0L / (long double)(510 * 16 ),
-                               43867.0L / (long double)(796 * 18 ),
-                             -174611.0L / (long double)(330 * 20 )
-                           };
 
-static const int n = sizeof(B) / sizeof(long double);
 
 static long double xDiGamma_Asymptotic_Expansion(long double x ) {
    const int  m = 3;

@@ -82,12 +82,12 @@ int GenSymbol(HMMT *phmm, int q_t);
 void FindSiblings(int *B, int *P, int numLeaf, int T);
 void ForwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **logalpha, double **logalpha2, double *LL,
 		ForwardConfig *conf);
-void BackwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **logbeta, double **phi, BackwardConfig **conf);
+void BackwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **logbeta, double **phi, BackwardConfig *conf);
 void Backward(HMMT *phmm, int T, int *O, double **beta, double *pprob);
 void BackwardWithScale(HMMT *phmm, int T, int *O, double **beta,
 		double *scale, double *pprob);
-void BaumWelchTree(HMMT *phmm, int T, int *O, int *P, double **logalpha, double **logbeta,
-		double **gamma, int *niter, BaumConfig *baumConf);
+void BaumWelchTree(HMMT *phmm, int T, int *O, int *P, double **logalpha, double **logalpha2, double **logbeta,
+		double **gamma, int *niter, BaumConfig *baumConf, int maxiter);
 
 double *** AllocXi(int T, int N);
 void FreeXi(double *** xi, int T, int N);
@@ -101,6 +101,9 @@ void ViterbiLog(HMMT *phmm, int T, int *O, double **delta, int **psi,
 		int *q, double *pprob);
 void AllocateHMM(HMMT *phmm, int T, int N, int M, double *pmshape1, double *pmshape2);
 void AllocateConfigs(ForwardConfig *forwardConf, BackwardConfig *backConf, BaumConfig *baumConf);
+void MakeSymmetric(double **three, double **two, int row, int col);
+void MstepBeta(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, int *O, int maxiter);
+
 
 /* random number generator related functions*/
 

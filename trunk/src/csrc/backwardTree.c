@@ -15,7 +15,7 @@ static char rcsid[] = "$Id: forward.c,v 1.2 1998/02/19 12:42:31 kanungo Exp kanu
 
 
 
-void BackwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **beta, double **phi, BackwardConfig conf)
+void BackwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **beta, double **phi, BackwardConfig *conf)
 {
 	int	i, j, k; 	/* state indices */
 	int	t;	/* time index */

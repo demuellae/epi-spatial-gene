@@ -13,6 +13,10 @@
 #include <math.h>
 static char rcsid[] = "$Id: forward.c,v 1.2 1998/02/19 12:42:31 kanungo Exp kanungo $";
 
+#include "specialfunctions/specfunc.h"
+#include "specialfunctions/beta_density.c"
+#include "specialfunctions/gamma_function.c"
+#include "specialfunctions/beta_function.c"
 
 
 void ForwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **logalpha, double **logalpha2, double *LL,
@@ -25,7 +29,7 @@ void ForwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **logalpha, doub
 	double sum;	/* partial sum */
 	double sumPhi;
 
-	CalcObsProb(phmm, O, phmm->pmshape1, phmm->pmshape2, phmm->pn);
+	CalcObsProb(phmm, O, phmm->pmshape1, phmm->pmshape2, phmm->pn, T);
 
 	/* Initialize phi2 to -1.0 */
 	for (i = 1; i < T; i++) {
@@ -118,11 +122,10 @@ void ForwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **logalpha, doub
 
 void CalcObsProb(HMMT *phmm, int *O, double *pmshape1, double *pmshape2, double *pn, int T) {
 	int i, j;
-	/* iterate through all states */
+	/* iterate through all observations */
 	for (i = 1; i <= T; i++) {
-		/* iterate through all possible observations */
 		for (j = 1; j <= phmm->N; j++) {
-			phmm->B[i][j] = beta(O[i], pmshape1[j], pmshape2[j]);
+			phmm->B[i][j] = Beta_Density(O[i], pmshape1[j], pmshape2[j]);
 		}
 	}
 }
