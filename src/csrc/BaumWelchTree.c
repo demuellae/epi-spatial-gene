@@ -32,7 +32,7 @@ static char rcsid[] = "$Id: baumwelch.c,v 1.6 1999/04/24 15:58:43 kanungo Exp ka
 
 
 void BaumWelchTree(HMMT *phmm, int T, int *O, int *P, double **logalpha, double **logalpha2, double **logbeta,
-		double **gamma, int *pniter, BaumConfig baumConf, int maxiter)
+		double **gamma, int *pniter, BaumConfig *baumConf, int maxiter)
 {
 	int	i, j, k;
 	int	t, l = 0;
@@ -40,8 +40,8 @@ void BaumWelchTree(HMMT *phmm, int T, int *O, int *P, double **logalpha, double 
 
 
 	double	logprobf, logprobb,  threshold;
-	double	numeratorA, denominatorA;
-	double	numeratorB, denominatorB;
+	double	 denominatorA;
+	double	 denominatorB;
 
 	double ***xi, *scale;
 	double **beta, **alpha2;
@@ -56,17 +56,15 @@ void BaumWelchTree(HMMT *phmm, int T, int *O, int *P, double **logalpha, double 
 	xi = AllocXi(T, phmm->N);
 	scale = dvector(1, T);
 
+	beta = ExpMatrix(logalpha, T, phmm->N);
+	alpha2 = ExpMatrix(logbeta, T, phmm->N * phmm->N);
 	ForwardTree(phmm, T, O, baumConf->numLeaf, logalpha, logalpha2, &logprobf, baumConf->forwardConf);
 	*baumConf->plogprobinit = logprobf; /* log P(O |initial model) */
 	BackwardTree(phmm, T, O, baumConf->numLeaf, beta, baumConf->forwardConf->phi, baumConf->backConf);
 
-	alpha2 = ExpMatrix(logalpha2, T, phmm->N * phmm->N);
-	beta = ExpMatrix(logbeta, T, phmm->N);
-
 	ComputeGamma(phmm, T, alpha2, logbeta, gamma);
-	ComputeXi(phmm, T, O, alpha2, beta, xi);
-	FreeMatrix(alpha2);
-	FreeMatrix(beta);
+	ComputeXi(phmm, T, O, baumConf->numLeaf, alpha2, beta, xi);
+
 	logprobprev = logprobf;
 
 	do  {
@@ -92,12 +90,15 @@ void BaumWelchTree(HMMT *phmm, int T, int *O, int *P, double **logalpha, double 
 			}
 		}
 
+		/* Beta Maximization Step */
+		MstepBeta(phmm, T, baumConf, gamma, O, 200);
+
 		MakeSymmetric(phmm->AF, phmm->AB, phmm->N, phmm->N);
 		ForwardTree(phmm, T, O, baumConf->numLeaf, logalpha, logalpha2, &logprobf, baumConf->forwardConf);
 		BackwardTree(phmm, T, O, baumConf->numLeaf, beta, baumConf->forwardConf->phi, baumConf->backConf);
 		ComputeGamma(phmm, T, logalpha, logbeta, gamma);
-		ComputeXi(phmm, T, O, alpha2, beta, xi);
-
+		Exp_Matrices(alpha2, beta, phmm->N, T);
+		ComputeXi(phmm, T, O, baumConf->numLeaf, alpha2, beta, xi);
 
 		/* compute difference between log probability of
 		   two iterations */
@@ -108,18 +109,22 @@ void BaumWelchTree(HMMT *phmm, int T, int *O, int *P, double **logalpha, double 
 	}
 	while (delta > DELTA); /* if log probability does not
                                   change much, exit */
+	FreeMatrix(alpha2);
+	FreeMatrix(beta);
 	*pniter = l;
 	*baumConf->plogprobfinal = logprobf; /* log P(O|estimated model) */
 	FreeXi(xi, T, phmm->N);
 	free_dvector(scale, 1, T);
 }
 
-void MstepBeta(HMMT *phmm, int T, BaumConfig baumConf, double **gamma, double *pmshape1, double *pmshape2, int *O, maxiter) {
+void MstepBeta(HMMT *phmm, int T, BaumConfig baumConf, double **gamma, int *O, maxiter) {
 	int i, j, t, iter;
 	double sum1, sum2;
 	double shape1J, shape2J;
 	int i_fault;
-	int dLL;
+	double dLL;
+	double a, b, c, d, determinant; /* top left, top right, bottom left, and bottom right entries */
+	double incr1, incr2;
 
 	for (i = 1; i <= phmm->N; i++) {
 		for (t = 1; t <= T; t++) {
@@ -142,8 +147,37 @@ void MstepBeta(HMMT *phmm, int T, BaumConfig baumConf, double **gamma, double *p
 	for (j = 1; j <= phmm->N; j++) {
 
 		for (iter = 1; iter <= maxiter; i++) {
-			shape1J = phmm->pmshape1[j] + phmm->pmshape1[j] - DiGamma_Function(phmm->pmshape1[j]) + baumConf->betaY1[j]; //digamma is a placeholder
-			shape2J = phmm->pmshape2[j] + phmm->pmshape2[j] - DiGamma_Function(phmm->pmshape2[j]) + baumConf->betaY2[j];
+			sum1 = 0.0;
+			shape1J = phmm->pmshape1[j] + phmm->pmshape2[j] - DiGamma_Function(phmm->pmshape1[j]) + baumConf->betaY1[j]; //digamma is a placeholder
+			shape2J = phmm->pmshape1[j] + phmm->pmshape2[j] - DiGamma_Function(phmm->pmshape2[j]) + baumConf->betaY2[j];
+			sum1 = trigamma(phmm->pmshape1[j], &i_fault) + trigamma(phmm->pmshape2[j], &i_fault);
+			/* general inverse of 2x2 matrix with pmshape1J and pmshape2J as diagonals */
+			a = -trigamma(phmm->pmshape1[j], &i_fault) + sum1;
+			b = sum1;
+			c = sum1;
+			d = -trigamma(phmm->pmshape2[j], &i_fault) + sum1;
+			determinant = 1/((a * d)-(b * c));
+			a = d/determinant;
+			b = -b/determinant;
+			c = -c/determinant;
+			d = a/determinant;
+			incr1 = a * shape1J + b * shape2J;
+			incr2 = c * shape1J + d * shape2J;
+			if (phmm->pmshape1[j] - incr1 <= 0) { /* new estimates of shape1 are negative */
+				phmm->pmshape1[j] = .01;
+			} else {
+				phmm->pmshape1[j] -= incr1;
+			}
+			if (phmm->pmshape2[j] - incr2 <= 0) {
+				phmm->pmshape2[j] = .01;
+			} else {
+				phmm->pmshape2[j] -= incr2;
+			}
+			if (phmm->pmshape1[j] <= 0 || phmm->pmshape2[j] <= 0) {
+				/* invalid parameters */
+			}
+			if (abs(incr1) < .00001 || abs(incr2) < .00001)
+				break;
 
 		}
 	}
@@ -236,6 +270,16 @@ double ** ExpMatrix(double **mat, int row, int col) {
 			newMat[i][j] = exp(mat[i][j]);
 
 	return newMat;
+}
+
+void ExpMatrices(double **mat1, double **mat2, int row, int col) {
+	int i,j;
+	for (i = 1; i <= row; i++) {
+		for (j = 1; j <= col; j++) {
+			mat1[i][j] = exp(mat1[i][j]);
+			mat2[i][j] = exp(mat2[i][j]);
+		}
+	}
 }
 
 void FreeMatrix(double **mat, int row, int col) {
