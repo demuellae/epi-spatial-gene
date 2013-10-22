@@ -9,17 +9,13 @@
  **      $Id: forward.c,v 1.2 1998/02/19 12:42:31 kanungo Exp kanungo $
  */
 #include <stdio.h>
-#include "hmmTree.h"
 #include <math.h>
-static char rcsid[] = "$Id: forward.c,v 1.2 1998/02/19 12:42:31 kanungo Exp kanungo $";
-
-#include "specialfunctions/specfunc.h"
-#include "specialfunctions/beta_density.c"
-#include "specialfunctions/gamma_function.c"
-#include "specialfunctions/beta_function.c"
+#include "hmmTree.h" /* All HMM declarations */
+#include "specfunc.h" /* All distribution calculations and special function declarations */
+//static char rcsid[] = "$Id: forward.c,v 1.2 1998/02/19 12:42:31 kanungo Exp kanungo $";
 
 
-void ForwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **logalpha, double **logalpha2, double *LL,
+void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, double **logalpha2, double *LL,
 		ForwardConfig *conf)
 {
 	int	i, j, k; 	/* state indices */
@@ -29,11 +25,11 @@ void ForwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **logalpha, doub
 	double sum;	/* partial sum */
 	double sumPhi;
 
-	CalcObsProb(phmm, O, phmm->pmshape1, phmm->pmshape2, phmm->pn, T);
+	CalcObsProb(phmm, O, phmm->pmshape1, phmm->pmshape2, T);
 
 	/* Initialize phi2 to -1.0 */
-	for (i = 1; i < T; i++) {
-		for (j = 1; j < phmm->N * phmm->N; j++) {
+	for (i = 1; i <= T; i++) {
+		for (j = 1; j <= phmm->N * phmm->N; j++) {
 			conf->phi2[i][j] = -1.0;
 		}
 	}
@@ -42,10 +38,10 @@ void ForwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **logalpha, doub
 	for (t = 1; t <= T - 1; t++) {
 
 		/* Initialization */
-		if (t < numLeaf) {
+		if (t <= numLeaf) {
 			for (i = 1; i <= phmm->N*phmm->N; i++) {
 				conf->phiT[i] = phmm->pi[t][i];
-				conf->phiT[i] *= phmm->B[O[t]][i];
+				conf->phiT[i] *= phmm->B[t][i];
 			}
 		} else {
 			/* Matrix multiplication of transition prob and row t of phi2
@@ -80,25 +76,21 @@ void ForwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **logalpha, doub
 			/*Create a 1-D copy of phi2[T] for the outer product in case we need it
 			 * also check if phi2 contains negative values in range 1:N
 			 */
-			outerProdFlag = 0;
-			for (i = 1; i < phmm->N; i++) {
+			for (i = 1; i <= phmm->N; i++) {
 				conf->phi2Temp[i] = conf->phi2[t][i];
-				if (conf->phi2[t][i] < 0.0) {
-					outerProdFlag = 1;
-				}
 			}
 
-			/* Don't compute outer product if phi2[t] from 1:N hasn't been initialized */
-			if (outerProdFlag) {
-				for (i = 1; i < phmm->N; i++) {
+			/* Don't compute outer product if phi2[t] from 1:N has negative values */
+			if (conf->phi2[t][1] < 0) {
+				for (i = 1; i <= phmm->N; i++) {
 					conf->phi2[t][i] = conf->phi[t][i];
 				}
 			} else {
 				/* outer product of row t of phi2 and row t of phi */
 				/* store result as a row vector in phi2 instead of a matrix */
 				k = 1;
-				for (i = 1; i < phmm->N; i++) {
-					for (j = 1; j < phmm->N; j++) {
+				for (i = 1; i <= phmm->N; i++) {
+					for (j = 1; j <= phmm->N; j++) {
 						conf->phi2[t][k] = conf->phi2Temp[j] * conf->phi[t][i];
 						k++;
 					}
@@ -106,13 +98,13 @@ void ForwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **logalpha, doub
 
 			}
 			conf->scale2[conf->P[i]] = conf->scale1[i] + conf->scale2[conf->P[i]];
-			for (i = 1; i < phmm->N*phmm->N; i++) {
+			for (i = 1; i <= phmm->N*phmm->N; i++) {
 				logalpha2[conf->P[t]][i] = log(conf->phi2[conf->P[t]][i]) + conf->scale1[conf->P[i]];
 			}
 		}
 	}
 
-	for (i = 1; i < phmm->N; i++)
+	for (i = 1; i <= phmm->N; i++)
 		*LL = conf->scale1[T];
 
 
@@ -120,7 +112,7 @@ void ForwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **logalpha, doub
 
 }
 
-void CalcObsProb(HMMT *phmm, int *O, double *pmshape1, double *pmshape2, double *pn, int T) {
+void CalcObsProb(HMMT *phmm, double *O, double *pmshape1, double *pmshape2, int T) {
 	int i, j;
 	/* iterate through all observations */
 	for (i = 1; i <= T; i++) {

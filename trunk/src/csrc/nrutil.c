@@ -12,6 +12,7 @@
 
 #include <malloc.h>
 #include <stdio.h>
+#include "nrutil.h"
 static char rcsid[] = "$Id: nrutil.c,v 1.2 1998/02/19 16:31:35 kanungo Exp kanungo $";
 
 
@@ -57,8 +58,6 @@ int nl,nh;
 	if (!v) nrerror("allocation failure in dvector()");
 	return v-nl;
 }
-
-
 
 float **matrix(nrl,nrh,ncl,nch)
 int nrl,nrh,ncl,nch;
