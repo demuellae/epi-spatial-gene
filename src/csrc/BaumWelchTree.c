@@ -20,9 +20,8 @@
 #include <stdio.h>
 #include "nrutil.h"
 #include <math.h>
+#include "specfunc.h"
 
-#include "specialfunctions/digamma_function.c"
-#include "specialfunctions/asa121.c"
 
 static char rcsid[] = "$Id: baumwelch.c,v 1.6 1999/04/24 15:58:43 kanungo Exp kanungo $";
 
@@ -31,13 +30,11 @@ static char rcsid[] = "$Id: baumwelch.c,v 1.6 1999/04/24 15:58:43 kanungo Exp ka
 
 
 
-void BaumWelchTree(HMMT *phmm, int T, int *O, int *P, double **logalpha, double **logalpha2, double **logbeta,
+void BaumWelchTree(HMMT *phmm, int T, double *O, int *P, double **logalpha, double **logalpha2, double **logbeta,
 		double **gamma, int *pniter, BaumConfig *baumConf, int maxiter)
 {
 	int	i, j, k;
-	int	t, l = 0;
-
-
+	int	t, l = 0; /* l is number of iterations */
 
 	double	logprobf, logprobb,  threshold;
 	double	 denominatorA;
@@ -56,13 +53,16 @@ void BaumWelchTree(HMMT *phmm, int T, int *O, int *P, double **logalpha, double 
 	xi = AllocXi(T, phmm->N);
 	scale = dvector(1, T);
 
-	beta = ExpMatrix(logalpha, T, phmm->N);
-	alpha2 = ExpMatrix(logbeta, T, phmm->N * phmm->N);
+	/* Get exponentiated versions of beta and alpha2 */
+	beta = (double **) ExpMatrix(logalpha, T, phmm->N);
+	alpha2 = (double **) ExpMatrix(logbeta, T, phmm->N * phmm->N);
+
+	/* Intial forward backward call */
 	ForwardTree(phmm, T, O, baumConf->numLeaf, logalpha, logalpha2, &logprobf, baumConf->forwardConf);
 	*baumConf->plogprobinit = logprobf; /* log P(O |initial model) */
 	BackwardTree(phmm, T, O, baumConf->numLeaf, beta, baumConf->forwardConf->phi, baumConf->backConf);
 
-	ComputeGamma(phmm, T, alpha2, logbeta, gamma);
+	ComputeGamma(phmm, T, alpha2, logbeta, baumConf->numLeaf, gamma, logprobf);
 	ComputeXi(phmm, T, O, baumConf->numLeaf, alpha2, beta, xi);
 
 	logprobprev = logprobf;
@@ -72,10 +72,10 @@ void BaumWelchTree(HMMT *phmm, int T, int *O, int *P, double **logalpha, double 
 		/* reestimate frequency of state i in time t=1 */
 		for (i = 1; i <= phmm->N; i++)
 			for (j = 1; j <= baumConf->numLeaf; j++)
-				phmm->pi[i] = gamma[j][i];
+				phmm->pi[j][i] = gamma[j][i];
 
 
-		/* R Code Translated MStep*/
+		/* R Code Translated EStep*/
 		for (i = 1; i < phmm->N*phmm->N; i++) {
 			sum = 0.0;
 			for (j = 1; j <= phmm->N; j++) {
@@ -96,8 +96,8 @@ void BaumWelchTree(HMMT *phmm, int T, int *O, int *P, double **logalpha, double 
 		MakeSymmetric(phmm->AF, phmm->AB, phmm->N, phmm->N);
 		ForwardTree(phmm, T, O, baumConf->numLeaf, logalpha, logalpha2, &logprobf, baumConf->forwardConf);
 		BackwardTree(phmm, T, O, baumConf->numLeaf, beta, baumConf->forwardConf->phi, baumConf->backConf);
-		ComputeGamma(phmm, T, logalpha, logbeta, gamma);
-		Exp_Matrices(alpha2, beta, phmm->N, T);
+		ComputeGamma(phmm, T, logalpha, logbeta, baumConf->numLeaf, gamma, logprobf);
+		Exp_Matrices(alpha2, beta, logalpha2, logbeta, phmm->N, T);
 		ComputeXi(phmm, T, O, baumConf->numLeaf, alpha2, beta, xi);
 
 		/* compute difference between log probability of
@@ -109,15 +109,16 @@ void BaumWelchTree(HMMT *phmm, int T, int *O, int *P, double **logalpha, double 
 	}
 	while (delta > DELTA); /* if log probability does not
                                   change much, exit */
-	FreeMatrix(alpha2);
-	FreeMatrix(beta);
+	free_dmatrix(alpha2, 1, T, 1, phmm->N * phmm->N);
+	free_dmatrix(beta, 1, T, 1, phmm->N);
 	*pniter = l;
 	*baumConf->plogprobfinal = logprobf; /* log P(O|estimated model) */
 	FreeXi(xi, T, phmm->N);
 	free_dvector(scale, 1, T);
 }
 
-void MstepBeta(HMMT *phmm, int T, BaumConfig baumConf, double **gamma, int *O, maxiter) {
+/* Compute Maximization step for emission probabilities */
+void MstepBeta(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double *O, int maxiter) {
 	int i, j, t, iter;
 	double sum1, sum2;
 	double shape1J, shape2J;
@@ -152,17 +153,18 @@ void MstepBeta(HMMT *phmm, int T, BaumConfig baumConf, double **gamma, int *O, m
 			shape2J = phmm->pmshape1[j] + phmm->pmshape2[j] - DiGamma_Function(phmm->pmshape2[j]) + baumConf->betaY2[j];
 			sum1 = trigamma(phmm->pmshape1[j], &i_fault) + trigamma(phmm->pmshape2[j], &i_fault);
 			/* general inverse of 2x2 matrix with pmshape1J and pmshape2J as diagonals */
-			a = -trigamma(phmm->pmshape1[j], &i_fault) + sum1;
-			b = sum1;
+			a = -trigamma(phmm->pmshape1[j], &i_fault) + sum1; // [ a  b ]
+			b = sum1;										   // [ c  d ]
 			c = sum1;
 			d = -trigamma(phmm->pmshape2[j], &i_fault) + sum1;
-			determinant = 1/((a * d)-(b * c));
-			a = d/determinant;
+			determinant = 1/((a * d)-(b * c));					// 1/det [ d  -b ]
+			a = d/determinant;									//       [-c   a ]
 			b = -b/determinant;
 			c = -c/determinant;
 			d = a/determinant;
-			incr1 = a * shape1J + b * shape2J;
-			incr2 = c * shape1J + d * shape2J;
+			/* solution to system of 2 equations */
+			incr1 = a * shape1J + b * shape2J;             // new matrix: [ a  b ][ shape1J ]
+			incr2 = c * shape1J + d * shape2J;			   //             [ c  d ][ shape2J ]
 			if (phmm->pmshape1[j] - incr1 <= 0) { /* new estimates of shape1 are negative */
 				phmm->pmshape1[j] = .01;
 			} else {
@@ -195,20 +197,21 @@ void ComputeGamma(HMMT *phmm, int T, double **logalpha, double **logbeta, int nu
 
 
 /* Xi dimensions: (T-numLeaf) X N^2 X N */
-void ComputeXi(HMMT* phmm, int T, int *O, int numLeaf, double **alpha2, double **beta,
+void ComputeXi(HMMT* phmm, int T, double *O, int numLeaf, double **alpha2, double **beta,
 		double ***xi)
 {
 	int i, j;
 	int t;
 	double sum;
 
+	/* Note: Xi is indexed from 1 to T-numLeaf-1 but represents values of N from numleaf to T-1 */
 	for (t = 1; t <= T - numLeaf-1; t++) {
 		sum = 0.0;
 		for (i = 1; i <= phmm->N*phmm->N; i++)
 			for (j = 1; j <= phmm->N; j++) {
 				xi[t][i][j] = alpha2[t+numLeaf][i]*beta[t+numLeaf+1][j] //Fix this for N^2 Cols
 				             *(phmm->AF[i][j])
-				             *(phmm->B[j][O[t+numLeaf+1]]);
+				             *(phmm->B[j][t+numLeaf+1]);
 				sum += xi[t][i][j];
 			}
 
@@ -228,7 +231,7 @@ double *** AllocXi(int T, int N)
 	xi --;
 
 	for (t = 1; t <= T; t++)
-		xi[t] = dmatrix(1, N*N, 1, N*N); //Change this to N^2 Cols
+		xi[t] = dmatrix(1, N*N, 1, N*N);
 	return xi;
 
 }
@@ -238,7 +241,7 @@ void FreeXi(double *** xi, int T, int N)
 	int t;
 
 	for (t = 1; t <= T; t++)
-		free_dmatrix(xi[t], 1, N, 1, N);
+		free_dmatrix(xi[t], 1, N*N, 1, N*N);
 
 	xi ++;
 	free(xi);
@@ -261,9 +264,10 @@ void FindSiblings(int *sib, int *P, int numleaf, int T) {
 	}
 }
 
+/* allocated and return an exponentiated version of matrix */
 double ** ExpMatrix(double **mat, int row, int col) {
 	int i, j;
-	double **newMat = dmatrix(1,row,1,col);
+	double **newMat = (double **) dmatrix(1,row,1,col);
 
 	for (i = 1; i <= row; i++)
 		for (j = 1;  j <= col; j++)
@@ -272,25 +276,19 @@ double ** ExpMatrix(double **mat, int row, int col) {
 	return newMat;
 }
 
-void ExpMatrices(double **mat1, double **mat2, int row, int col) {
+/* sets values of res1 and res2 to exponentiated versions of mat1 and mat2 */
+void ExpMatrices(double ** res1, double **res2, double **mat1, double **mat2, int row, int col) {
 	int i,j;
 	for (i = 1; i <= row; i++) {
 		for (j = 1; j <= col; j++) {
-			mat1[i][j] = exp(mat1[i][j]);
-			mat2[i][j] = exp(mat2[i][j]);
+			res1[i][j] = exp(mat1[i][j]);
+			res2[i][j] = exp(mat2[i][j]);
 		}
 	}
 }
 
-void FreeMatrix(double **mat, int row, int col) {
-	int i;
-	for (i = 1; i <= row; i++) {
-		free(mat[i]);
-	}
-	free(mat);
-}
-
 /* This function is probably way inefficient */
+/* Couldn't think of a better way to implement this */
 void MakeSymmetric(double **asym, double **sym, int row, int col) {
 	int i, j, l;
 	int x1, y1, x2, y2;

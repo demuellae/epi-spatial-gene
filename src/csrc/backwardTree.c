@@ -15,7 +15,7 @@ static char rcsid[] = "$Id: forward.c,v 1.2 1998/02/19 12:42:31 kanungo Exp kanu
 
 
 
-void BackwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **beta, double **phi, BackwardConfig *conf)
+void BackwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **beta, double **phi, BackwardConfig *conf)
 {
 	int	i, j, k; 	/* state indices */
 	int	t;	/* time index */
@@ -40,7 +40,7 @@ void BackwardTree(HMMT *phmm, int T, int *O, int numLeaf, double **beta, double 
 		for (i = 1; i <= phmm->N*phmm->N; i++) {
 			sum = 0.0;
 			for (j = 1; j <= phmm->N; j++) {
-				sum += conf->thetaT[t][j] * phmm->B[O[conf->P[t]]][j] * (phmm->AF[j][i]);
+				sum += conf->thetaT[t][j] * phmm->B[conf->P[t]][j] * (phmm->AF[j][i]);
 			}
 			/* Result of matrix multiplication should be in N * N matrix rather than 1 * N^2 */
 			conf->thetaT[k%phmm->N][i] = sum;

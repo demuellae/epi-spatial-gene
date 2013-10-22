@@ -23,11 +23,11 @@ static float minarg1,minarg2;
 #define FMIN(a,b) (minarg1=(a),minarg2=(b),(minarg1) < (minarg2) ?\
         (minarg1) : (minarg2))
 
-static long lmaxarg1,lmaxarg2;
+static int lmaxarg1,lmaxarg2;
 #define LMAX(a,b) (lmaxarg1=(a),lmaxarg2=(b),(lmaxarg1) > (lmaxarg2) ?\
         (lmaxarg1) : (lmaxarg2))
 
-static long lminarg1,lminarg2;
+static int lminarg1,lminarg2;
 #define LMIN(a,b) (lminarg1=(a),lminarg2=(b),(lminarg1) < (lminarg2) ?\
         (lminarg1) : (lminarg2))
 
@@ -44,30 +44,30 @@ static int iminarg1,iminarg2;
 #if defined(__STDC__) || defined(ANSI) || defined(NRANSI) /* ANSI */
 
 void nrerror(char error_text[]);
-float *vector(long nl, long nh);
-int *ivector(long nl, long nh);
-unsigned char *cvector(long nl, long nh);
-unsigned long *lvector(long nl, long nh);
-double *dvector(long nl, long nh);
-float **matrix(long nrl, long nrh, long ncl, long nch);
-double **dmatrix(long nrl, long nrh, long ncl, long nch);
-int **imatrix(long nrl, long nrh, long ncl, long nch);
-float **submatrix(float **a, long oldrl, long oldrh, long oldcl, long oldch,
-	long newrl, long newcl);
-float **convert_matrix(float *a, long nrl, long nrh, long ncl, long nch);
-float ***f3tensor(long nrl, long nrh, long ncl, long nch, long ndl, long ndh);
-void free_vector(float *v, long nl, long nh);
-void free_ivector(int *v, long nl, long nh);
-void free_cvector(unsigned char *v, long nl, long nh);
-void free_lvector(unsigned long *v, long nl, long nh);
-void free_dvector(double *v, long nl, long nh);
-void free_matrix(float **m, long nrl, long nrh, long ncl, long nch);
-void free_dmatrix(double **m, long nrl, long nrh, long ncl, long nch);
-void free_imatrix(int **m, long nrl, long nrh, long ncl, long nch);
-void free_submatrix(float **b, long nrl, long nrh, long ncl, long nch);
-void free_convert_matrix(float **b, long nrl, long nrh, long ncl, long nch);
-void free_f3tensor(float ***t, long nrl, long nrh, long ncl, long nch,
-	long ndl, long ndh);
+float *vector(int nl, int nh);
+int *ivector(int nl, int nh);
+unsigned char *cvector(int nl, int nh);
+unsigned long *lvector(int nl, int nh);
+double *dvector(int nl, int nh);
+float **matrix(int nrl, int nrh, int ncl, int nch);
+double **dmatrix(int nrl, int nrh, int ncl, int nch);
+int **imatrix(int nrl, int nrh, int ncl, int nch);
+float **submatrix(float **a, int oldrl, int oldrh, int oldcl, int oldch,
+	int newrl, int newcl);
+float **convert_matrix(float *a, int nrl, int nrh, int ncl, int nch);
+float ***f3tensor(int nrl, int nrh, int ncl, int nch, int ndl, int ndh);
+void free_vector(float *v, int nl, int nh);
+void free_ivector(int *v, int nl, int nh);
+void free_cvector(unsigned char *v, int nl, int nh);
+void free_lvector(unsigned int *v, int nl, int nh);
+void free_dvector(double *v, int nl, int nh);
+void free_matrix(float **m, int nrl, int nrh, int ncl, int nch);
+void free_dmatrix(double **m, int nrl, int nrh, int ncl, int nch);
+void free_imatrix(int **m, int nrl, int nrh, int ncl, int nch);
+void free_submatrix(float **b, int nrl, int nrh, int ncl, int nch);
+void free_convert_matrix(float **b, int nrl, int nrh, int ncl, int nch);
+void free_f3tensor(float ***t, int nrl, int nrh, int ncl, int nch,
+	int ndl, int ndh);
 
 #else /* ANSI */
 /* traditional - K&R */
