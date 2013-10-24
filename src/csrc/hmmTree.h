@@ -101,7 +101,7 @@ void AllocateHMM(HMMT *phmm, int T, int N, int M, double *pmshape1, double *pmsh
 void AllocateConfigs(BaumConfig *baumConf, int T, int N, int numLeaf);
 void MakeSymmetric(double **three, double **two, int row, int col);
 void MstepBeta(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double *O, int maxiter);
-void CalcObsProb(HMMT *phmm, double *O, double *shape1, double *shape2, int T);
+void CalcObsProb(HMMT *phmm, double *O, int T);
 double ** ExpMatrix(double **mat, int row, int col);
 void ExpMatrices(double ** res1, double **res2, double **mat1, double **mat2, int row, int col);
 
