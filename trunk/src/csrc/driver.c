@@ -65,7 +65,6 @@ void AllocateHMM(HMMT *phmm, int T, int N, int numLeaf, double *pmshape1, double
 	phmm->pmshape1 = pmshape1;
 	phmm->pmshape2 = pmshape2;
 
-
 }
 
 void AllocateConfigs(BaumConfig *baumConf, int T, int N, int numLeaf) {
