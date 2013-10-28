@@ -37,7 +37,7 @@ int main() {
 		hmm.pi[i][1] = 1;
 	}
 
-	for (i = 1; i <= N-1; i++) {
+	for (i = 1; i <= T-1; i++) {
 		baumConf->forwardConf->P[i] = i+1;
 	}
 
@@ -51,6 +51,7 @@ int main() {
 	double LL;
 
 	ForwardTree(&hmm, T, O, numLeaf, logalpha, logalpha2, &LL, baumConf->forwardConf);
+	printf("Log Likelihood: %f", LL);
 
 	return 0;
 }
