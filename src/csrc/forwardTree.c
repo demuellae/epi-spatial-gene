@@ -28,9 +28,7 @@ void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, d
 
 	/* Initialize phi2 to -1.0 */
 	for (i = 1; i <= T; i++) {
-		for (j = 1; j <= phmm->N * phmm->N; j++) {
-			conf->phi2[i][j] = -1.0;
-		}
+		conf->phi2[i][1] = -1.0;
 	}
 
 	/* Loop over sequence */
@@ -39,12 +37,11 @@ void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, d
 		/* Initialization */
 		if (t <= numLeaf) {
 			for (i = 1; i <= phmm->N*phmm->N; i++) {
-				conf->phiT[i] = phmm->pi[t][i];
-				conf->phiT[i] *= phmm->B[t][i];
+				conf->phiT[i] = phmm->pi[t][i] * phmm->B[t][i];
 			}
 		} else {
 			/* Matrix multiplication of transition prob and row t of phi2
-			 * Only occurs if O[t] is a leaf */
+			 * Only occurs if O[t] is not a leaf */
 			for (j = 1; j <= phmm->N; j++) {
 				sum = 0.0;
 				for (i = 1; i <= phmm->N*phmm->N; i++)
@@ -70,55 +67,51 @@ void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, d
 		}
 
 		if (t < T) {
-			/* If t is one, set phi2 at row t from 1 to N to phi at row t from 1 to n */
 
 			/*Create a 1-D copy of phi2[T] for the outer product in case we need it
 			 * also check if phi2 contains negative values in range 1:N
 			 */
-			for (i = 1; i <= phmm->N; i++) {
-				conf->phi2Temp[i] = conf->phi2[t][i];
 
-				/* Don't compute outer product if phi2[t] from 1:N has negative values */
-				if (conf->phi2[t][1] < 0) {
-					for (i = 1; i <= phmm->N; i++) {
-						conf->phi2[t][i] = conf->phi[t][i];
-					}
-				} else {
-					/* outer product of row t of phi2 and row t of phi */
-					/* store result as a row vector in phi2 instead of a matrix */
-					k = 1;
-					for (i = 1; i <= phmm->N; i++) {
-						for (j = 1; j <= phmm->N; j++) {
-							conf->phi2[t][k] = conf->phi2Temp[j] * conf->phi[t][i];
-							k++;
-						}
-					}
 
+			/* Don't compute outer product if phi2[t] from 1:N has negative values */
+			if (conf->phi2[t][1] < 0.0) {
+				for (i = 1; i <= phmm->N; i++) {
+					conf->phi2[t][i] = conf->phi[t][i];
 				}
-				conf->scale2[conf->P[i]] = conf->scale1[i] + conf->scale2[conf->P[i]];
-				for (i = 1; i <= phmm->N*phmm->N; i++) {
-					logalpha2[conf->P[t]][i] = log(conf->phi2[conf->P[t]][i]) + conf->scale1[conf->P[i]];
+			} else {
+				/* Store a temporary copy of phi2T[i] for the computation of the outerproduct */
+				for (i = 1; i <= phmm->N; i++) {
+					conf->phi2Temp[i] = conf->phi2[t][i];
 				}
+				/* outer product of row t of phi2 and row t of phi */
+				/* store result as a row vector in phi2 instead of a matrix */
+				k = 1;
+				for (i = 1; i <= phmm->N; i++) {
+					for (j = 1; j <= phmm->N; j++) {
+						conf->phi2[t][k] = conf->phi2Temp[j] * conf->phi[t][i];
+						k++;
+					}
+				}
+
+			}
+			conf->scale2[conf->P[i]] = conf->scale1[i] + conf->scale2[conf->P[i]];
+			for (i = 1; i <= phmm->N*phmm->N; i++) {
+				logalpha2[conf->P[t]][i] = log(conf->phi2[conf->P[t]][i]) + conf->scale1[conf->P[i]];
 			}
 		}
-
-		for (i = 1; i <= phmm->N; i++)
-			*LL = conf->scale1[T];
-
-
-		/* 3. Termination */
-
 	}
+	*LL = conf->scale1[T];
 }
+
 
 void CalcObsProb(HMMT *phmm, double *O, int T) {
 	int i, j;
 	/* iterate through all observations */
 	for (i = 1; i <= T; i++) {
+		/* Beta distribution pdf */
 		for (j = 1; j <= phmm->N; j++) {
-			/* Beta distribution pdf */
 			phmm->B[i][j] = pow(O[i], phmm->pmshape1[j] - 1.0) * pow(1.0 - O[i], phmm->pmshape2[j] - 1.0)
-					/ Beta_Function(phmm->pmshape1[j],phmm->pmshape2[j]);
+									/ Beta_Function(phmm->pmshape1[j],phmm->pmshape2[j]);
 		}
 	}
 }
