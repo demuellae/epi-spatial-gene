@@ -32,6 +32,7 @@ void BackwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **beta, doub
 	for (i = 1; i <= T-1; i++) {
 		conf->scale[i] = 0.0;
 	}
+
 	conf->scale[T] = log(phmm->N);
 
 	for (t = T; t >= 1; t--) {
@@ -40,7 +41,7 @@ void BackwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **beta, doub
 		for (i = 1; i <= phmm->N*phmm->N; i++) {
 			sum = 0.0;
 			for (j = 1; j <= phmm->N; j++) {
-				sum += conf->thetaT[t][j] * phmm->B[conf->P[t]][j] * (phmm->AF[j][i]);
+				sum += conf->theta[t][j] * phmm->B[conf->P[t]][j] * (phmm->AF[j][i]);
 			}
 			/* Result of matrix multiplication should be in N * N matrix rather than 1 * N^2 */
 			conf->thetaT[k%phmm->N][i] = sum;

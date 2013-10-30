@@ -7,10 +7,11 @@
 
 int main() {
 	int i,j;
-	int T = 10;
+	int T = 5;
 	int N = 3;
+	int NbyN = N*N;
 	int M = 3;
-	int numLeaf = (T+1/2);
+	int numLeaf = ((T+1)/2);
 
 	HMMT hmm;
 	BaumConfig *baumConf = (BaumConfig *) malloc(sizeof(BaumConfig));
@@ -18,10 +19,17 @@ int main() {
 	double *pmshape2 = (double *) dvector(1, N);
 	double *O = (double *) dvector(1, T);
 
+	pmshape1[1] = 1;
+	pmshape1[2] = .5;
+	pmshape1[3] = 3;
+	pmshape2[1] = 3;
+	pmshape2[2] = .5;
+	pmshape2[3] = 1;
+	/*
 	for (i = 1; i <= N; i++) {
 			pmshape1[i] = .5;
 			pmshape2[i] = .5;
-	}
+	} */
 
 	/* Need to create a function to generate O and pmshape1/pmshape2 */
 
@@ -29,24 +37,41 @@ int main() {
 	AllocateConfigs(baumConf, T, N, numLeaf);
 	AllocateHMM(&hmm, T, N, numLeaf, pmshape1, pmshape2);
 
-	for (i = 1; i <= N; i++)
-		for (j = 1; j <= N*N; j++)
+	for (i = 1; i <= NbyN; i++)
+		for (j = 1; j <= N; j++)
 			hmm.AF[i][j] = 1.0/3.0;
 
-	for (i = 1; i <= numLeaf; i++) {
+	/*for (i = 1; i <= numLeaf; i++) {
 		hmm.pi[i][1] = 1;
-	}
+	}*/
+	hmm.pi[1][3] = 1;
+	hmm.pi[2][3] = 1;
+	hmm.pi[3][1] = 1;
 
+	/*
 	for (i = 1; i <= T-1; i++) {
 		baumConf->forwardConf->P[i] = i+1;
 	}
+	*/
+	baumConf->forwardConf->P[1] = 4;
+	baumConf->forwardConf->P[2] = 4;
+	baumConf->forwardConf->P[3] = 5;
+	baumConf->forwardConf->P[4] = 5;
+	baumConf->forwardConf->P[5] = 0;
 
-	for (i = 1; i <= T; i++) {
+
+	/*for (i = 1; i <= T; i++) {
 		O[i] = .5;
-	}
+	} */
+
+	O[1] = .95;
+	O[2] = .95;
+	O[3] = .05;
+	O[4] = .95;
+	O[5] = .5;
 
 	double ** logalpha = (double **) dmatrix(1,T,1,N);
-	double ** logalpha2 = (double **) dmatrix(1,T,1,N*N);
+	double ** logalpha2 = (double **) dmatrix(1,T,1,NbyN);
 	double ** logbeta = (double **) dmatrix(1,T,1,N);
 	double LL;
 
@@ -58,7 +83,7 @@ int main() {
 
 void AllocateHMM(HMMT *phmm, int T, int N, int numLeaf, double *pmshape1, double *pmshape2) {
 	int i,j;
-	phmm->AF = (double **) dmatrix(1,N,1,N*N);
+	phmm->AF = (double **) dmatrix(1,N*N,1,N);
 	phmm->B = (double **) dmatrix(1,T,1,N);
 	phmm->pi = (double **) dmatrix(1,numLeaf,1,N);
 	phmm->N = N;
@@ -76,7 +101,7 @@ void AllocateConfigs(BaumConfig *baumConf, int T, int N, int numLeaf) {
 	baumConf->forwardConf->phi2 = (double **) dmatrix(1,T,1,N*N);
 	baumConf->forwardConf->phiT = (double *) dvector(1,N);
 	baumConf->forwardConf->phi2Temp = (double *) dvector(1,N*N);
-	baumConf->forwardConf->P = (int *) ivector(1,T-1);
+	baumConf->forwardConf->P = (int *) ivector(1,T);
 	baumConf->forwardConf->scale1 = (double *) dvector(1, T-1);
 	baumConf->forwardConf->scale2 = (double *) dvector(1, T-1);
 

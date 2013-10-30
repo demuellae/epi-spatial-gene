@@ -22,5 +22,5 @@ driver : $(OBJ)
 
 
 clean:
-	rm *.o a.out 
+	rm *.o driver
 

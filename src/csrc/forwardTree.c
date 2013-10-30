@@ -9,6 +9,7 @@
  **      $Id: forward.c,v 1.2 1998/02/19 12:42:31 kanungo Exp kanungo $
  */
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 #include "hmmTree.h" /* All HMM declarations */
 #include "specfunc.h" /* All distribution calculations and special function declarations */
@@ -32,11 +33,11 @@ void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, d
 	}
 
 	/* Loop over sequence */
-	for (t = 1; t <= T - 1; t++) {
+	for (t = 1; t <= T; t++) {
 
 		/* Initialization */
 		if (t <= numLeaf) {
-			for (i = 1; i <= phmm->N*phmm->N; i++) {
+			for (i = 1; i <= phmm->N; i++) {
 				conf->phiT[i] = phmm->pi[t][i] * phmm->B[t][i];
 			}
 		} else {
@@ -45,7 +46,7 @@ void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, d
 			for (j = 1; j <= phmm->N; j++) {
 				sum = 0.0;
 				for (i = 1; i <= phmm->N*phmm->N; i++)
-					sum += conf->phi2[t][i]* (phmm->AF[i][j]);
+					sum += conf->phi2[t][i] * (phmm->AF[i][j]);
 
 				conf->phiT[j] = sum*(phmm->B[t][j]);
 			}
@@ -62,8 +63,8 @@ void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, d
 		}
 		conf->scale1[t] = conf->scale2[t] + log(sumPhi);
 
-		for (i = 1; i < phmm->N; i++) {
-			logalpha[t][i] = conf->phi[t][i] + conf->scale1[i];
+		for (i = 1; i <= phmm->N; i++) {
+			logalpha[t][i] = log(conf->phi[t][i]) + conf->scale1[t];
 		}
 
 		if (t < T) {
@@ -71,32 +72,29 @@ void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, d
 			/*Create a 1-D copy of phi2[T] for the outer product in case we need it
 			 * also check if phi2 contains negative values in range 1:N
 			 */
-
-
 			/* Don't compute outer product if phi2[t] from 1:N has negative values */
-			if (conf->phi2[t][1] < 0.0) {
+			if (conf->phi2[conf->P[t]][1] < 0.0) {
 				for (i = 1; i <= phmm->N; i++) {
-					conf->phi2[t][i] = conf->phi[t][i];
+					conf->phi2[conf->P[t]][i] = conf->phi[t][i];
 				}
 			} else {
 				/* Store a temporary copy of phi2T[i] for the computation of the outerproduct */
 				for (i = 1; i <= phmm->N; i++) {
-					conf->phi2Temp[i] = conf->phi2[t][i];
+					conf->phi2Temp[i] = conf->phi2[conf->P[t]][i];
 				}
 				/* outer product of row t of phi2 and row t of phi */
 				/* store result as a row vector in phi2 instead of a matrix */
 				k = 1;
 				for (i = 1; i <= phmm->N; i++) {
 					for (j = 1; j <= phmm->N; j++) {
-						conf->phi2[t][k] = conf->phi2Temp[j] * conf->phi[t][i];
+						conf->phi2[conf->P[t]][k] = conf->phi2Temp[j] * conf->phi[t][i];
 						k++;
 					}
 				}
-
 			}
-			conf->scale2[conf->P[i]] = conf->scale1[i] + conf->scale2[conf->P[i]];
+			conf->scale2[conf->P[t]] = conf->scale1[t] + conf->scale2[conf->P[t]];
 			for (i = 1; i <= phmm->N*phmm->N; i++) {
-				logalpha2[conf->P[t]][i] = log(conf->phi2[conf->P[t]][i]) + conf->scale1[conf->P[i]];
+				logalpha2[conf->P[t]][i] = log(conf->phi2[conf->P[t]][i]) + conf->scale2[conf->P[t]];
 			}
 		}
 	}
@@ -110,7 +108,10 @@ void CalcObsProb(HMMT *phmm, double *O, int T) {
 	for (i = 1; i <= T; i++) {
 		/* Beta distribution pdf */
 		for (j = 1; j <= phmm->N; j++) {
-			phmm->B[i][j] = pow(O[i], phmm->pmshape1[j] - 1.0) * pow(1.0 - O[i], phmm->pmshape2[j] - 1.0)
+			if (O[i] <= 0 || O[i] >= 1)
+				phmm->B[i][j] = 0.0;
+			else
+				phmm->B[i][j] = (powl(O[i], phmm->pmshape1[j] - 1.0) * powl(1.0 - O[i], phmm->pmshape2[j] - 1.0))
 									/ Beta_Function(phmm->pmshape1[j],phmm->pmshape2[j]);
 		}
 	}
