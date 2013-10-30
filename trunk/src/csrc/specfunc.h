@@ -1,9 +1,4 @@
-/*
- * specfunc.h
- *
- *  Created on: Oct 15, 2013
- *      Author: Dan
- */
+#include <math.h>
 
 #ifndef SPECFUNC_H_
 #define SPECFUNC_H_
