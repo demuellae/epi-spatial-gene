@@ -10,7 +10,7 @@ int main() {
 	int T = 5;
 	int N = 3;
 	int NbyN = N*N;
-	int M = 3;
+	int iter;
 	int numLeaf = ((T+1)/2);
 
 	HMMT hmm;
@@ -70,13 +70,30 @@ int main() {
 	O[4] = .95;
 	O[5] = .5;
 
+	baumConf->backConf->bro[1] = 2;
+	baumConf->backConf->bro[2] = 1;
+	baumConf->backConf->bro[3] = 4;
+	baumConf->backConf->bro[4] = 3;
+	baumConf->backConf->bro[5] = 0;
+
+	baumConf->backConf->P = baumConf->forwardConf->P;
+
+
 	double ** logalpha = (double **) dmatrix(1,T,1,N);
 	double ** logalpha2 = (double **) dmatrix(1,T,1,NbyN);
 	double ** logbeta = (double **) dmatrix(1,T,1,N);
+	double ** gamma = (double **) dmatrix(1,T,1,N);
 	double LL;
 
-	ForwardTree(&hmm, T, O, numLeaf, logalpha, logalpha2, &LL, baumConf->forwardConf);
-	printf("Log Likelihood: %f", LL);
+	//ForwardTree(&hmm, T, O, numLeaf, logalpha, logalpha2, &LL, baumConf->forwardConf);
+	//printf("Log Likelihood: %f\n", LL);
+	//printf("%f %f %f\n%f %f %f\n %f %f %f\n", logalpha[1][1], logalpha[1][2], logalpha[1][3], logalpha[2][1], logalpha[2][2], logalpha[2][3],
+	//		logalpha[3][1], logalpha[3][2], logalpha[3][3]);
+	//BackwardTree(&hmm, T, O, numLeaf, logbeta, baumConf->forwardConf->phi, baumConf->forwardConf->scale1, baumConf->backConf);
+	//printf("logbeta[1][1]: %f\n", logbeta[1][1]);
+
+	BaumWelchTree(&hmm, T, O, baumConf->forwardConf->P, logalpha, logalpha2, logbeta, gamma, &iter, baumConf, 200);
+
 
 	return 0;
 }
@@ -105,11 +122,12 @@ void AllocateConfigs(BaumConfig *baumConf, int T, int N, int numLeaf) {
 	baumConf->forwardConf->scale1 = (double *) dvector(1, T-1);
 	baumConf->forwardConf->scale2 = (double *) dvector(1, T-1);
 
-	baumConf->backConf->P = (int *) ivector(1,T-1);
-	baumConf->backConf->bro = (int *) ivector(1,T-1);
-	baumConf->backConf->scale = (double *) dvector(1, T-1);
+	baumConf->backConf->P = (int *) ivector(1,T);
+	baumConf->backConf->bro = (int *) ivector(1,T);
+	baumConf->backConf->scaleB = (double *) dvector(1, T);
 	baumConf->backConf->thetaT = (double **) dmatrix(1,T,1,N);
 	baumConf->backConf->theta = (double **) dmatrix(1,T,1,N*N);
+	baumConf->backConf->thetaTRow = (double *) dvector(1, N);
 
 	baumConf->F = (double **) dmatrix(1, N*N, 1, N);
 	baumConf->numLeaf = numLeaf;

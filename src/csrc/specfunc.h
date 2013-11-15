@@ -1,4 +1,5 @@
 #include <math.h>
+#include <time.h>
 
 #ifndef SPECFUNC_H_
 #define SPECFUNC_H_
@@ -6,6 +7,10 @@
 /* Beta_Function.c */
 double Beta_Function(double a, double b);
 long double xBeta_Function(long double a, long double b);
+
+void timestamp ( void );
+double trigamma ( double x, int *ifault );
+void trigamma_values ( int *n_data, double *x, double *fx );
 
 /* beta_distribution.c */
 double Beta_Distribution(double x, double a, double b);
