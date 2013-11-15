@@ -49,6 +49,7 @@ typedef struct {
 	double *thetaTRow;
 	int *bro;
 	double *scale;
+	double *scaleB;
 	int *P;
 } BackwardConfig;
 
@@ -81,7 +82,7 @@ int GenSymbol(HMMT *phmm, int q_t);
 void FindSiblings(int *B, int *P, int numLeaf, int T);
 void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, double **logalpha2, double *LL,
 		ForwardConfig *conf);
-void BackwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logbeta, double **phi, BackwardConfig *conf);
+void BackwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logbeta, double **phi, double *scale, BackwardConfig *conf);
 void BackwardWithScale(HMMT *phmm, int T, double *O, double **beta,
 		double *scale, double *pprob);
 void BaumWelchTree(HMMT *phmm, int T, double *O, int *P, double **logalpha, double **logalpha2, double **logbeta,
@@ -91,7 +92,7 @@ double *** AllocXi(int T, int N);
 void FreeXi(double *** xi, int T, int N);
 void ComputeGamma(HMMT *phmm, int T, double **alpha, double **beta, int numLeaf,
 		double **gamma, double LL);
-void ComputeXi(HMMT* phmm, int T, double *O, int numLeaf, double **alpha2, double **beta,
+void ComputeXi(HMMT* phmm, int T, double *O, int numLeaf, double **alpha2, double **beta, double LL,
 		double ***xi);
 void Viterbi(HMMT *phmm, int T, double *O, double **delta, int **psi,
 		int *q, double *pprob);
@@ -99,7 +100,7 @@ void ViterbiLog(HMMT *phmm, int T, double *O, double **delta, int **psi,
 		int *q, double *pprob);
 void AllocateHMM(HMMT *phmm, int T, int N, int M, double *pmshape1, double *pmshape2);
 void AllocateConfigs(BaumConfig *baumConf, int T, int N, int numLeaf);
-void MakeSymmetric(double **three, double **two, int row, int col);
+void MakeSymmetric(double **three, double ** temp, int row, int col);
 void MstepBeta(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double *O, int maxiter);
 void CalcObsProb(HMMT *phmm, double *O, int T);
 double ** ExpMatrix(double **mat, int row, int col);

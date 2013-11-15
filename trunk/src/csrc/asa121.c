@@ -9,10 +9,9 @@
 # include <stdlib.h>
 # include <stdio.h>
 # include <time.h>
+# include "specfunc.h"
 
-void timestamp ( void );
-double trigamma ( double x, int *ifault );
-void trigamma_values ( int *n_data, double *x, double *fx );
+
 
 /******************************************************************************/
 

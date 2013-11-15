@@ -30,6 +30,12 @@ void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, d
 	/* Initialize phi2 to -1.0 */
 	for (i = 1; i <= T; i++) {
 		conf->phi2[i][1] = -1.0;
+		conf->scale1[i] = 0.0;
+		conf->scale2[i] = 0.0;
+		conf->phiT[i] = 0.0;
+		for (j = 2; j <= T; j++) {
+			conf->phi2[i][j] = 0.0;
+		}
 	}
 
 	/* Loop over sequence */
@@ -73,7 +79,7 @@ void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, d
 			 * also check if phi2 contains negative values in range 1:N
 			 */
 			/* Don't compute outer product if phi2[t] from 1:N has negative values */
-			if (conf->phi2[conf->P[t]][1] < 0.0) {
+			if (conf->phi2[conf->P[t]][1] < -.1) {
 				for (i = 1; i <= phmm->N; i++) {
 					conf->phi2[conf->P[t]][i] = conf->phi[t][i];
 				}
