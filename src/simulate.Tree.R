@@ -37,6 +37,11 @@ for(node in seq(n)){
   Y[node]  <- rbeta(1,shape1=shape[z[node]+2,1], shape2= shape[z[node]+2,2])
 }
 
+write.table(file="P",x = c(P, 0) , row.names = F, col.names =F,  sep=",", quote=F )
+write.table(file="z",x = z, row.names = F, col.names =F,  sep=",", quote=F )
+write.table(file="Y",x = Y, row.names = F, col.names =F,  sep=",", quote=F )
+
+
 # tissue-tree infomation
 library(XML)
 
