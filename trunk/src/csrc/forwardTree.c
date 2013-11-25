@@ -65,7 +65,10 @@ void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, d
 		}
 		/* set row t of phi to phiT/sumPhi */
 		for (i = 1; i <= phmm->N; i++) {
-			conf->phi[t][i] = conf->phiT[i]/sumPhi;
+			if (sumPhi != 0)
+				conf->phi[t][i] = conf->phiT[i]/sumPhi;
+			else
+				conf->phi[t][i] = 0.0;
 		}
 		conf->scale1[t] = conf->scale2[t] + log(sumPhi);
 
