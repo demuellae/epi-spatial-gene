@@ -18,14 +18,12 @@
 
 #include "hmmTree.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include "nrutil.h"
 #include <math.h>
 #include "specfunc.h"
 
 static char rcsid[] = "$Id: baumwelch.c,v 1.6 1999/04/24 15:58:43 kanungo Exp kanungo $";
-
-#define DELTA 0.001
-#define MAXITER 200
 
 
 
@@ -35,7 +33,7 @@ void BaumWelchTree(HMMT *phmm, int T, double *O, int *P, double **logalpha, doub
 	int	i, j, k;
 	int	t, l = 0; /* l is number of iterations */
 
-	double	logprobf, logprobb,  threshold;
+	double	logprobf, logprobb;
 	double	 denominatorA;
 	double	 denominatorB;
 
@@ -118,6 +116,8 @@ void BaumWelchTree(HMMT *phmm, int T, double *O, int *P, double **logalpha, doub
 	}
 	while (delta > DELTA); /* if log probability does not
                                   change much, exit */
+	printf("%f",logprobf);
+
 	free_dmatrix(alpha2, 1, T, 1, phmm->N * phmm->N);
 	free_dmatrix(beta, 1, T, 1, phmm->N);
 	free_dmatrix(temp, 1, phmm->N * phmm->N, 1, phmm->N);
@@ -169,7 +169,7 @@ void MstepBeta(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double *
 			c = trigammaSum;
 			d = -trigamma(phmm->pmshape2[j], &i_fault) + trigammaSum;
 			determinant = (a * d)-(b * c);
-			if (determinant != 0.0) {
+			if (!((determinant/(fabs(shape1J) + fabs(shape2J))/2) < 0.001)) {
 				aNew = d/determinant;
 				bNew = -b/determinant;
 				cNew = -c/determinant;
@@ -273,7 +273,7 @@ void FindSiblings(int *sib, int *P, int numleaf, int T) {
 			if (P[j] == i && flag) {
 				s = j;
 				flag = 0;
-			} else if (j == s) {
+			} else if (P[j] == i) {
 				sib[j] = s;
 				sib[s] = j;
 			}

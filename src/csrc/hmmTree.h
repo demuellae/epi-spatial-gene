@@ -16,6 +16,9 @@
 #include <stdio.h>
 #include <math.h>
 
+#define DELTA 0.001
+#define MAXITER 200
+
 typedef struct {
 	int N;		/* number of states;  Q={1,2,...,N} */
 	int M; 		/* number of observation symbols; V={1,2,...,M}*/
@@ -70,9 +73,11 @@ void ReadHMM(FILE *fp, HMMT *phmm);
 void PrintHMM(FILE *fp, HMMT *phmm);
 void InitHMM(HMMT *phmm, int N, int M, int seed);
 void CopyHMM(HMMT *phmm1, HMMT *phmm2);
-void FreeHMM(HMMT *phmm);
 
-void ReadSequence(FILE *fp, int *pT, int **pO);
+double *ReadInputD(FILE *file, int *L);
+int *ReadInputI(FILE *file, int *L);
+void InitDelta(double **delta, double *O, int numLeaf);
+
 void PrintSequence(FILE *fp, int T, double *O);
 void GenSequenceArray(HMMT *phmm, int seed, int T, double *O, int *q);
 int GenInitalState(HMMT *phmm);
@@ -83,8 +88,6 @@ void FindSiblings(int *B, int *P, int numLeaf, int T);
 void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, double **logalpha2, double *LL,
 		ForwardConfig *conf);
 void BackwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logbeta, double **phi, double *scale, BackwardConfig *conf);
-void BackwardWithScale(HMMT *phmm, int T, double *O, double **beta,
-		double *scale, double *pprob);
 void BaumWelchTree(HMMT *phmm, int T, double *O, int *P, double **logalpha, double **logalpha2, double **logbeta,
 		double **gamma, int *niter, BaumConfig *baumConf, int maxiter);
 
@@ -94,11 +97,9 @@ void ComputeGamma(HMMT *phmm, int T, double **alpha, double **beta, int numLeaf,
 		double **gamma, double LL);
 void ComputeXi(HMMT* phmm, int T, double *O, int numLeaf, double **alpha2, double **beta, double LL,
 		double ***xi);
-void Viterbi(HMMT *phmm, int T, double *O, double **delta, int **psi,
-		int *q, double *pprob);
-void ViterbiLog(HMMT *phmm, int T, double *O, double **delta, int **psi,
-		int *q, double *pprob);
-void AllocateHMM(HMMT *phmm, int T, int N, int M, double *pmshape1, double *pmshape2);
+void AllocateHMM(HMMT *phmm, int T, int N, int M);
+void FreeHMM(HMMT *phmm, int T, int N, int M);
+void FreeConfigs(BaumConfig *baumConf, int T, int N, int numLeaf);
 void AllocateConfigs(BaumConfig *baumConf, int T, int N, int numLeaf);
 void MakeSymmetric(double **three, double ** temp, int row, int col);
 void MstepBeta(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double *O, int maxiter);
@@ -108,9 +109,6 @@ void ExpMatrices(double ** res1, double **res2, double **mat1, double **mat2, in
 
 /* random number generator related functions*/
 
-int hmmgetseed(void);
-void hmmsetseed(int seed);
-double hmmgetrand(void);
 
 #define MAX(x,y)        ((x) > (y) ? (x) : (y))
 #define MIN(x,y)        ((x) < (y) ? (x) : (y))

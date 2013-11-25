@@ -12,12 +12,15 @@ INCS=
 #CC=purify gcc
 CC=gcc
 DEPS = hmmTree.h specfunc.h
-OBJ = forwardTree.o backwardTree.o BaumWelchTree.o beta_function.o digamma_function.o gamma_function.o ln_gamma_function.o nrutil.o asa121.o driver.o
+OBJ = forwardTree.o backwardTree.o BaumWelchTree.o beta_function.o digamma_function.o gamma_function.o ln_gamma_function.o initHmm.o nrutil.o asa121.o readInput.o
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-driver : $(OBJ)
+driver : $(OBJ) driver.o
+	gcc -o $@ $^ $(CFLAGS)
+	
+simulatedTree: $(OBJ) simulatedTree.o
 	gcc -o $@ $^ $(CFLAGS)
 
 

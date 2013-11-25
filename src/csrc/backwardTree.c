@@ -63,12 +63,15 @@ void BackwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **beta, doub
 		}
 
 		for (i = 1; i <= phmm->N; i++) {
-			conf->theta[t][i] = conf->thetaTRow[i]/sumTheta;
+			if (sumTheta != 0.0)
+				conf->theta[t][i] = conf->thetaTRow[i]/sumTheta;
+			else
+				conf->theta[t][i] = 0.0;
 		}
 
 		conf->scaleB[t] = conf->scaleB[conf->P[t]] + scale1[conf->bro[t]] + log(sumTheta);
 
-		for (i = 1; i <= T; i++) {
+		for (i = 1; i <= phmm->N; i++) {
 			beta[t][i] = log(conf->theta[t][i]) + conf->scaleB[t];
 		}
 
