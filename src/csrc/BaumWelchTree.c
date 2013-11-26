@@ -30,27 +30,23 @@ static char rcsid[] = "$Id: baumwelch.c,v 1.6 1999/04/24 15:58:43 kanungo Exp ka
 void BaumWelchTree(HMMT *phmm, int T, double *O, int *P, double **logalpha, double **logalpha2, double **logbeta,
 		double **gamma, int *pniter, BaumConfig *baumConf, int maxiter)
 {
-	int	i, j, k;
+	int	i, j;
 	int	t, l = 0; /* l is number of iterations */
 
-	double	logprobf, logprobb;
-	double	 denominatorA;
-	double	 denominatorB;
+	double	logprobf;
 
-	double ***xi, *scale;
+	double ***xi;
 	double **beta, **alpha2;
-	double delta, deltaprev, logprobprev;
+	double delta, logprobprev;
 
 	double sum;
 
-	deltaprev = 10e-70;
 
 	double **temp = dmatrix(1, phmm->N * phmm->N, 1, phmm->N);
 
 
 	FindSiblings(baumConf->backConf->bro, P, baumConf->numLeaf, T);
 	xi = AllocXi(T, phmm->N);
-	scale = dvector(1, T);
 
 
 
@@ -116,15 +112,13 @@ void BaumWelchTree(HMMT *phmm, int T, double *O, int *P, double **logalpha, doub
 	}
 	while (delta > DELTA); /* if log probability does not
                                   change much, exit */
-	printf("%f",logprobf);
-
+	printf("%f\n",logprobf);
 	free_dmatrix(alpha2, 1, T, 1, phmm->N * phmm->N);
 	free_dmatrix(beta, 1, T, 1, phmm->N);
 	free_dmatrix(temp, 1, phmm->N * phmm->N, 1, phmm->N);
 	*pniter = l;
 	*baumConf->plogprobfinal = logprobf; /* log P(O|estimated model) */
-	FreeXi(xi, T, phmm->N);
-	free_dvector(scale, 1, T);
+	//FreeXi(xi, T, phmm->N);
 }
 
 /* Compute Maximization step for emission probabilities */
@@ -137,7 +131,6 @@ void MstepBeta(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double *
 	double a, b, c, d, determinant; /* top left, top right, bottom left, and bottom right entries */
 	double aNew, bNew, cNew, dNew;
 	double incr1, incr2;
-	double p1, p2;
 
 	for (i = 1; i <= phmm->N; i++) {
 		baumConf->betaDenom[i] = 0.0;
@@ -222,11 +215,9 @@ void ComputeXi(HMMT* phmm, int T, double *O, int numLeaf, double **alpha2, doubl
 {
 	int i, j;
 	int t;
-	double sum;
 
 	/* Note: Xi is indexed from 1 to T-numLeaf-1 but represents values of N from numleaf to T-1 */
 	for (t = 1; t <= T - numLeaf; t++) {
-		sum = 0.0;
 		for (i = 1; i <= phmm->N*phmm->N; i++)
 			for (j = 1; j <= phmm->N; j++) {
 				xi[t][i][j] = alpha2[t+numLeaf][i]*beta[t+numLeaf][j]
@@ -324,7 +315,7 @@ void ExpMatrices(double ** res1, double **res2, double **mat1, double **mat2, in
 }
 
 void MakeSymmetric(double **asym, double **temp, int row, int col) {
-	int i, j, l;
+	int i, j;
 	int x;
 	for (j = 1; j <= col; j++) {
 		x = 1;

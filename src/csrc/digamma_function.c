@@ -10,10 +10,10 @@
 //     x is the derivative of the log of the gamma function evaluated at x,   //
 //     i.e.  psi(x) = d ln gamma(x) / dx = (1 / gamma(x)) d gamma(x) / dx.    //
 ////////////////////////////////////////////////////////////////////////////////
-#include <math.h>                  // required for powl(), sinl(), and cosl().
 #include <float.h>                 // required for DBL_MAX and LDBL_MAX.
 #include <limits.h>     // required for LONG_MAX
 #include "specfunc.h"
+#include <math.h>
 
 
 //                         Internally Defined Routines                        //

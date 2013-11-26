@@ -13,9 +13,9 @@
 //     In terms of the gamma function the beta function is:                   //
 //               beta(a,b) = gamma(a) * gamma(b) / gamma(a+b).                //
 ////////////////////////////////////////////////////////////////////////////////
-#include <math.h>                   // required for logl() and expl()
 #include <float.h>                  // required for DBL_MAX and LDBL_MAX.
 #include "specfunc.h"
+#include <math.h>
 
 //                         Externally Defined Routines                        //
 

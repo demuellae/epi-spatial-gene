@@ -12,6 +12,8 @@ int main() {
 	int i, iter;
 	int T, numLeaf, N = 3;
 
+	int x = abs(3);
+
 	FILE *obsFile = fopen("Y", "r");
 	FILE *parFile = fopen("P", "r");
 
@@ -43,10 +45,12 @@ int main() {
 
 	BaumWelchTree(&hmm, T, O, baumConf->forwardConf->P, logalpha, logalpha2, logbeta, gamma, &iter, baumConf, 200);
 
-	//printf("Log-likelihood: %f", baumConf->plogprobfinal);
-	/* Need to initialize delta */
-
-
+	FreeHMM(&hmm, T, N, numLeaf);
+	free_dmatrix(logalpha, 1, T, 1, N);
+	free_dmatrix(logalpha2, 1, T, 1, N*N);
+	free_dmatrix(logbeta, 1, T, 1, N);
+	free_dmatrix(gamma, 1, T, 1, N);
+	//FreeConfigs(baumConf, T, N, numLeaf);
 
 	return 0;
 }

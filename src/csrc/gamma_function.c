@@ -26,10 +26,10 @@
 //     the Gamma function for arguments > 1 and return values of type long    //
 //     double.                                                                //
 ////////////////////////////////////////////////////////////////////////////////
-#include <math.h>      // required for powl(), sinl(), fabsl() and ldexpl().
 #include <float.h>     // required for DBL_MAX and LDBL_MAX
 #include <limits.h>    // required for LONG_MAX
 #include "specfunc.h"
+#include <math.h>
 
 //                         Internally Defined Routines                        //
 

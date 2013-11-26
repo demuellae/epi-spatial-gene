@@ -1,29 +1,26 @@
-#
-#
-# Make file for compiling HMM code in this directory.
-# Author: Tapas Kanungo
-# Date: 23 February 1998
-# $Id: Makefile,v 1.3 1998/02/23 08:12:35 kanungo Exp kanungo $
-# 
-#
-CFLAGS= -g
-INCS=
-# use the following line to "Purify" the code
-#CC=purify gcc
-CC=gcc
-DEPS = hmmTree.h specfunc.h
-OBJ = forwardTree.o backwardTree.o BaumWelchTree.o beta_function.o digamma_function.o gamma_function.o ln_gamma_function.o initHmm.o nrutil.o asa121.o readInput.o
+CC = gcc
+CFLAGS = -g
+OBJECTS = asa121.o BaumWelchTree.o beta_function.o digamma_function.o forwardTree.o backwardTree.o beta_function.o digamma_function.o gamma_function.o initHmm.o ln_gamma_function.o nrutil.o readInput.o simulatedTree.o
+LDFLAGS = -lm
+DEPS = hmmTree.h nrutil.h specfunc.h
 
-%.o: %.c $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGS)
-
-driver : $(OBJ) driver.o
-	gcc -o $@ $^ $(CFLAGS)
+%.o: %.c $(DEPS) 
+	${CC} ${CFLAGS} -c -o $@ $<
 	
-simulatedTree: $(OBJ) simulatedTree.o
-	gcc -o $@ $^ $(CFLAGS)
+simulatedTree: $(OBJECTS)
+	gcc $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
+asa121.o: specfunc.h
 
-clean:
-	rm *.o driver
+beta_function.o: specfunc.h
 
+digamma_fucntion.o: specfunc.h
+
+forwardTree.o: hmmTree.h
+
+backwardTree.o: hmmTree.h
+
+BaumWelchTree.o: hmmTree.h
+
+nrutil.o: nrutil.h
+	
