@@ -120,7 +120,7 @@ void CalcObsProb(HMMT *phmm, double *O, int T) {
 			if (O[i] <= 0 || O[i] >= 1)
 				phmm->B[i][j] = 0.0;
 			else
-				phmm->B[i][j] = (powl(O[i], phmm->pmshape1[j] - 1.0) * powl(1.0 - O[i], phmm->pmshape2[j] - 1.0))
+				phmm->B[i][j] = (powf(O[i], phmm->pmshape1[j] - 1.0) * powf(1.0 - O[i], phmm->pmshape2[j] - 1.0))
 									/ Beta_Function(phmm->pmshape1[j],phmm->pmshape2[j]);
 		}
 	}

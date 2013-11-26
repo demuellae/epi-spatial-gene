@@ -1,20 +1,17 @@
 CC = gcc
 CFLAGS = -g
-OBJECTS = asa121.o BaumWelchTree.o beta_function.o digamma_function.o forwardTree.o backwardTree.o beta_function.o digamma_function.o gamma_function.o initHmm.o ln_gamma_function.o nrutil.o readInput.o simulatedTree.o
+OBJECTS = BaumWelchTree.o forwardTree.o backwardTree.o  initHmm.o nrutil.o readInput.o simulatedTree.o
 LDFLAGS = -lm
 DEPS = hmmTree.h nrutil.h specfunc.h
 
-%.o: %.c $(DEPS) 
-	${CC} ${CFLAGS} -c -o $@ $<
+%.o: %.c
+	${CC} ${CFLAGS} -c -o $@ $< $(LDFLAGS)
 	
-simulatedTree: $(OBJECTS)
+simulatedTree: $(OBJECTS) specfunc.o
 	gcc $(CFLAGS) -o $@ $^ $(LDFLAGS)
-
-asa121.o: specfunc.h
-
-beta_function.o: specfunc.h
-
-digamma_fucntion.o: specfunc.h
+	
+specfunc.o: specfunc.h
+	gcc -g -I.C:\MinGW\include -c specfunc.c -o specfunc.o -lm
 
 forwardTree.o: hmmTree.h
 
@@ -23,4 +20,7 @@ backwardTree.o: hmmTree.h
 BaumWelchTree.o: hmmTree.h
 
 nrutil.o: nrutil.h
+
+clean:
+	rm *.o simulatedTree
 	

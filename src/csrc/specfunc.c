@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <float.h>
+#include <time.h>
 #include <limits.h>
 #include "specfunc.h"
 

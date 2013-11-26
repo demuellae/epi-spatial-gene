@@ -1,5 +1,3 @@
-#include <math.h>
-#include <time.h>
 
 #ifndef SPECFUNC_H_
 #define SPECFUNC_H_
