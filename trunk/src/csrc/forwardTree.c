@@ -28,14 +28,17 @@ void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, d
 	CalcObsProb(phmm, O, T);
 
 	/* Initialize phi2 to -1.0 */
-	for (t = 1; i <= T; i++) {
+	for (t = 1; t <= T; t++) {
 		conf->phi2[t][1] = -1.0;
 		conf->scale1[t] = 0.0;
 		conf->scale2[t] = 0.0;
-		conf->phiT[i] = 0.0;
 		for (j = 2; j <= phmm->N * phmm->N; j++) {
 			conf->phi2[t][j] = 0.0;
 		}
+	}
+
+	for (i = 1; i <= phmm->N; i++) {
+		conf->phiT[i] = 0.0;
 	}
 
 	/* Loop over sequence */
@@ -120,7 +123,7 @@ void CalcObsProb(HMMT *phmm, double *O, int T) {
 			if (O[i] <= 0 || O[i] >= 1)
 				phmm->B[i][j] = 0.0;
 			else
-				phmm->B[i][j] = (powf(O[i], phmm->pmshape1[j] - 1.0) * powf(1.0 - O[i], phmm->pmshape2[j] - 1.0))
+				phmm->B[i][j] = (powl(O[i], phmm->pmshape1[j] - 1.0) * powl(1.0 - O[i], phmm->pmshape2[j] - 1.0))
 									/ Beta_Function(phmm->pmshape1[j],phmm->pmshape2[j]);
 		}
 	}
