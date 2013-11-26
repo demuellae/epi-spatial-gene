@@ -10,7 +10,6 @@
  */
 #include <stdio.h>
 #include "hmmTree.h"
-#include <math.h>
 static char rcsid[] = "$Id: forward.c,v 1.2 1998/02/19 12:42:31 kanungo Exp kanungo $";
 
 

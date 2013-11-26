@@ -8,9 +8,9 @@
  **
  **      $Id: forward.c,v 1.2 1998/02/19 12:42:31 kanungo Exp kanungo $
  */
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include "hmmTree.h" /* All HMM declarations */
 #include "specfunc.h" /* All distribution calculations and special function declarations */
 //static char rcsid[] = "$Id: forward.c,v 1.2 1998/02/19 12:42:31 kanungo Exp kanungo $";
@@ -28,13 +28,13 @@ void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, d
 	CalcObsProb(phmm, O, T);
 
 	/* Initialize phi2 to -1.0 */
-	for (i = 1; i <= T; i++) {
-		conf->phi2[i][1] = -1.0;
-		conf->scale1[i] = 0.0;
-		conf->scale2[i] = 0.0;
+	for (t = 1; i <= T; i++) {
+		conf->phi2[t][1] = -1.0;
+		conf->scale1[t] = 0.0;
+		conf->scale2[t] = 0.0;
 		conf->phiT[i] = 0.0;
-		for (j = 2; j <= T; j++) {
-			conf->phi2[i][j] = 0.0;
+		for (j = 2; j <= phmm->N * phmm->N; j++) {
+			conf->phi2[t][j] = 0.0;
 		}
 	}
 
