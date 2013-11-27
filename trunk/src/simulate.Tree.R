@@ -53,17 +53,18 @@ fn <- function(node) {
    parent.id <- xmlAttrs(xmlParent(node))["id"]
    setNames(head(c(id, parent.id, NA), 2), c("id", "parent"))
 }
-parents.all <- t(xpathSApply(root, "//component", n))
+parents.all <- t(xpathSApply(root, "//component", fn))
 
 parents = as.data.frame(parents.all[1:1411,])
 findLeaf <- function(xx) which(!(xx$id %in% xx$parent))
 temp =1:nrow(parents)
-inx = list()
+nodes <- NULL
+P <- NULL
 while(TRUE){
   inxT = findLeaf(parents[temp,])
-  inx = c(inx,inxT)
-  inx = c
-
+  nodes <- c(nodes,as.character(parents[inxT, "id"]))
+  P <- c(P ,as.character(parents[inxT, "parent"]))
+  temp <- temp[-inxT]
+  if(length(temp) == 0) break;
 }
-findLeaf(parents)
 

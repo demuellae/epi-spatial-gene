@@ -268,7 +268,7 @@ fn <- function(node) {
    parent.id <- xmlAttrs(xmlParent(node))["id"]
    setNames(head(c(id, parent.id, NA), 2), c("id", "parent"))
 }
-parents.all <- t(xpathSApply(root, "//component", n))
+parents.all <- t(xpathSApply(root, "//component", fn))
 
 parents = as.data.frame(parents.all[1:1411,])
 findLeaf <- function(xx) which(!(xx$id %in% xx$parent))
