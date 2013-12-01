@@ -316,7 +316,23 @@ The unknown parameters transition and emission probabilities can be inferred by 
 	  f_{jk;i} &=& \sum \hat{v}_{jk;i}(t)
 \end{eqnarray*}
 Where, $\tilde{f}$ is normalized $f$. The shape parameter of emission probability can be found using the Newton's method that 
-involves digamma and trigamma function. 
+involves digamma and trigamma function.
+
+\subsection{Non-binary tree}
+In case of non-binary tree this can be easily extended for $\valpha$. If $ \Lambda = \{-1,0,1\}$\\
+\begin{eqnarray}
+    \alpha_t(i)&=&  \left(  \prod_{c\in des(t)} \sum_{l \in \Lambda} \alpha_c(l) \gamma_{li}  \right)Pr_t(i)\\
+    \valpha_t &=& \left(  \prod_{c\in des(t)} \valpha_c \vGamma \right)\circ \boldsymbol{Pr(Y_t)}
+\end{eqnarray}
+
+Similarly, it can be extended to $\vbeta$. 
+\begin{eqnarray}
+    \beta_t(i)&=& \sum_{j \in \Lambda } \gamma_{ij}\left(  \prod_{c\in des(par(t))/t} \sum_{l \in \Lambda} \alpha_c(l) \gamma_{lj}  \right)  
+    Pr_{par(t)}(j)\beta_{par(t)}(j)  \nonumber\\
+    \vbeta_t &=& \vGamma\left\{  \left(  \prod_{c\in des(par(t))/t} \valpha_c \vGamma \right)  \circ  \boldsymbol{Pr(Y_{par(t)}) \vbeta_{par(t)}}\right\}
+\end{eqnarray}
+
+
 \section{Results}
 \subsection{Convergence}
 The EM algorithm converge rapidly. Typically it takes less than 50 iteration to converge (change in likelihood $<$ 1e-6). 
