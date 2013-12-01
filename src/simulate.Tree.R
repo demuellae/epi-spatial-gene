@@ -5,11 +5,15 @@ numLeaf <- 100
 n = 2*numLeaf -1 
 h <- ceiling(log(numLeaf,base=2) +1)
 P  <-  rep(0,n-1)
+Pi = matrix(1/3,3,3) 
 Pi[1,] = c(0,1e-3, 1e-6)
-Pi[2,]=c(.1, 0, .05)
+#Pi[2,]=c(.1, 0, .05)
+Pi[2,]=rep(1/3,3)
 Pi[3,] = c(1e-6,1e-3,0)
-diag(Pi) = 1 - rowSums(Pi)
-Pi = matrix(1/3,9,3) 
+Pi[1,] <- c(.4999, .4999, .0002)
+Pi[2,] <- c(.0002, .9996, .0002)
+Pi[3,] <- c(.0002, .4999, .4999)
+diag(Pi) = 1 - rowSums(Pi[,c(1,3)])
 
 curr.nodes <-  seq(numLeaf); curr.parent <- numLeaf 
 for(jj in seq(numLeaf - 1)){
@@ -30,12 +34,22 @@ for(parent in seq(n,numLeaf+1, -1)){
 # generate Y
 Y <- rep(0, n)
 shape <- matrix(0, 3,2)
-shape[1,]= c(.2, .9)
-shape[2,] = c(.2, .5)
-shape[3,] = c(.9, .5)
+#shape[1,]= c(.2, .9)
+#shape[2,] = c(.2, .5)
+#shape[3,] = c(.9, .5)
+shape[1,]= c(1, 3)
+shape[2,] = c(2, 5)
+shape[3,] = c(.7, .2)
 for(node in seq(n)){
   Y[node]  <- rbeta(1,shape1=shape[z[node]+2,1], shape2= shape[z[node]+2,2])
 }
+z[1:numLeaf] <- 1
+z[Y[1:numLeaf] < .5] <- -1
+delta <- matrix(0,n,3); delta[Y > .5, 1] <- 1; delta[Y <= .5,3] <- 1
+tree.object <- dthmm(Y, Pi, delta, "beta", list(shape1=c(1, 2, .5), shape2=c(3,5, .7)))
+tree.object$P = P
+control = bwcontrol(tol = 1e-6, posdiff = F, converge = expression(abs(diff) < tol))
+tree.out = BaumWelch.dthmm.Tree(tree.object, control)
 
 write.table(file="P",x = c(P, 0) , row.names = F, col.names =F,  sep=",", quote=F )
 write.table(file="z",x = z, row.names = F, col.names =F,  sep=",", quote=F )

@@ -332,6 +332,14 @@ ad <- as.dendrogram(a)
 
 
 #creating hmm  object
+sourceDir <- function(path, trace = TRUE, ...) {
+    for (nm in list.files(path, pattern = "\\.[RrSsQq]$")) {
+       if(trace) cat(nm,":")           
+       source(file.path(path, nm), ...)
+       if(trace) cat("\n")
+    }
+}
+sourceDir("myR/")
 environment(BaumWelch.dthmm.Tree) = asNamespace("HiddenMarkov")
 environment(Estep.Tree) = asNamespace("HiddenMarkov")
 environment(forwardback.Tree) = asNamespace("HiddenMarkov")
