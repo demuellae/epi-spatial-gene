@@ -110,9 +110,12 @@ void BaumWelchTree(HMMT *phmm, int T, double *O, int *P, double **logalpha, doub
 		l++;
 
 	}
-	while (delta > DELTA); /* if log probability does not
+	while (fabs(delta) > DELTA); /* if log probability does not
                                   change much, exit */
 	printf("%f\n",logprobf);
+	printf("delta: %f\n", delta);
+	printf("DELTA: %.10f\n", DELTA);
+	printf("iter: %d\n", l);
 	free_dmatrix(alpha2, 1, T, 1, phmm->N * phmm->N);
 	free_dmatrix(beta, 1, T, 1, phmm->N);
 	free_dmatrix(temp, 1, phmm->N * phmm->N, 1, phmm->N);
