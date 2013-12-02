@@ -9,7 +9,7 @@ int main() {
 	HMMT hmm;
 	BaumConfig *baumConf = (BaumConfig *) malloc(sizeof(BaumConfig));
 
-	int i, iter;
+	int i, t, iter;
 	int T, numLeaf, N = 3;
 
 	int x = abs(3);
@@ -34,6 +34,7 @@ int main() {
 	double ** logbeta = (double **) dmatrix(1,T,1,N);
 	double ** gamma = (double **) dmatrix(1,T,1,N);
 	double LL;
+	int *Z = (int *) ivector(1,T);
 
 	hmm.pmshape1[1] = 1;
 	hmm.pmshape1[2] = 2;
@@ -44,6 +45,15 @@ int main() {
 
 
 	BaumWelchTree(&hmm, T, O, baumConf->forwardConf->P, logalpha, logalpha2, logbeta, gamma, &iter, baumConf, 200);
+	GenerateZ(gamma, T, Z);
+
+	for (t = 1; t <= T; t++) {
+	  printf("%d: %f, %f, %f\n", t, gamma[t][1], gamma[t][2], gamma[t][3]); 
+	}
+
+	//for (t = 1; t <= T; t++) {
+	//  printf("%d\n", Z[t]);
+	//}
 
 	FreeHMM(&hmm, T, N, numLeaf);
 	free_dmatrix(logalpha, 1, T, 1, N);
@@ -51,6 +61,8 @@ int main() {
 	free_dmatrix(logbeta, 1, T, 1, N);
 	free_dmatrix(gamma, 1, T, 1, N);
 	//FreeConfigs(baumConf, T, N, numLeaf);
+
+
 
 	return 0;
 }

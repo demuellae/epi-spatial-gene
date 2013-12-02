@@ -90,6 +90,46 @@ void InitTrans(double **trans, int N) {
 	}
 }
 
+void GenerateZ(double **gamma, int T, int *Z) {
+  int t;
+  double max;
+  for (t = 1; t <= T; t++) {
+    max = 0.0;
+    if (gamma[t][1] > gamma[t][2]) {
+      max = gamma[t][1];
+      Z[t] = -1;
+    } else {
+      max = gamma[t][2];
+      Z[t] = 0;
+    }
+
+    if (gamma[t][3] > max) {
+      max = gamma[t][3];
+      Z[t] = 1;
+    }
+  }
+}
+
+void ReadCommaSequence(char *buffer, double *O) {
+  int i = 0;
+  int j = 0;
+  int oIdx = 0;
+  double sum = 0.0;
+  while (buffer[i] != '\0') {
+    while (buffer[i] != ',') {
+      if (buffer[i] == '\0')
+	break;
+      i++;
+    }
+    buffer[i] = '\0';
+    O[oIdx] = atof(&buffer[j]);
+    i++;
+    j = i;
+    oIdx++;
+  }
+  printf("Sum = %f\n", sum);
+}
+
 void InitDelta(double **delta, double *O, int numLeaf) {
 	int i, j;
 	for (i = 1; i <= numLeaf; i++) {
