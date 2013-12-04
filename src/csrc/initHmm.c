@@ -83,10 +83,22 @@ void FreeHMM(HMMT *phmm, int T, int N, int numLeaf) {
 
 void InitTrans(double **trans, int N) {
 	int i, j;
+	double high = .9996;
+	double low = .0004;
 	for (i = 1; i <= N * N; i++) {
-		for (j = 1; j <= N; j++) {
-			trans[i][j] = 1.0/3;
-		}
+	  if (i == 1) {
+	    trans[i][1] = high;
+	    trans[i][2] = low;
+	    trans[i][3] = low;
+	  } else if (i == 9) {
+ 	    trans[i][1] = low;
+	    trans[i][2] = low;
+	    trans[i][3] = high;
+	  } else {
+ 	    trans[i][1] = low;
+	    trans[i][2] = high;
+	    trans[i][3] = low;
+	  }
 	}
 }
 
