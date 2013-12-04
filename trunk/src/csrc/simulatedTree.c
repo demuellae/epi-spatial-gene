@@ -38,22 +38,22 @@ int main() {
 
 	hmm.pmshape1[1] = 1;
 	hmm.pmshape1[2] = 2;
-	hmm.pmshape1[3] = 3;
+	hmm.pmshape1[3] = .5;
 	hmm.pmshape2[1] = 3;
 	hmm.pmshape2[2] = 5;
-	hmm.pmshape2[3] = 1;
+	hmm.pmshape2[3] = .7;
 
 
 	BaumWelchTree(&hmm, T, O, baumConf->forwardConf->P, logalpha, logalpha2, logbeta, gamma, &iter, baumConf, 200);
 	GenerateZ(gamma, T, Z);
 
-	for (t = 1; t <= T; t++) {
+	/*for (t = 1; t <= T; t++) {
 	  printf("%d: %f, %f, %f\n", t, gamma[t][1], gamma[t][2], gamma[t][3]); 
-	}
+	  } */
 
-	//for (t = 1; t <= T; t++) {
-	//  printf("%d\n", Z[t]);
-	//}
+	for (t = 1; t <= T; t++) {
+	  printf("%d\n", Z[t]);
+	}
 
 	FreeHMM(&hmm, T, N, numLeaf);
 	free_dmatrix(logalpha, 1, T, 1, N);
