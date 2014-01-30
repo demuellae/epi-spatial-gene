@@ -6,10 +6,6 @@ n = 2*numLeaf -1
 h <- ceiling(log(numLeaf,base=2) +1)
 P  <-  rep(0,n)
 Pi = matrix(1/3,9,3) 
-Pi[1,] = c(0,1e-3, 1e-6)
-#Pi[2,]=c(.1, 0, .05)
-Pi[2,]=rep(1/3,3)
-Pi[3,] = c(1e-6,1e-3,0)
 
 Pi[1,] <- c(.9996, .0002, .0002)
 Pi[2,] <- c(.0002, .9996, .0002)
@@ -21,9 +17,6 @@ Pi[7,] <- c(.0002, .9996, .0002)
 Pi[8,] <- c(.0002, .9996, .0002)
 Pi[9,] <- c(.0002, .0002, .9996)
 
-#diag(Pi) = 1 - rowSums(Pi[,c(1,3)])
-PiB <- threeD2twoD(Pi)
-#PiB[2,] <- c(.2, .6, .2)
 curr.nodes <-  seq(numLeaf); curr.parent <- numLeaf 
 for(jj in seq(numLeaf - 1)){
   curr.child  <- sample(curr.nodes, replace=F, size=2)
@@ -39,10 +32,15 @@ for(jj in seq(numLeaf - 1)){
 
 z <- rep(0, n)
 z[n] <- 0 # initial state
+Y <- rep(0, n)
 
 for(child in seq(1, numLeaf)) {
+  #Randomly select z for the leaves
   z[child] <- sample(c(-1, 1), size=1, prob=c(.5,.5))
+  Y[child] <- rbeta(1,shape1=shape[z[child]+2,1], shape2= shape[z[child]+2,2])
 }
+z[1:numLeaf] <- 1
+z[1:numLeaf][Y[1:numLeaf] < .5] <- -1
 
 for(parent in seq(numLeaf+1, n)){
   curr.child <- which(P==parent)
@@ -50,7 +48,6 @@ for(parent in seq(numLeaf+1, n)){
 }
 
 # generate Y
-Y <- rep(0, n)
 shape <- matrix(0, 3,2)
 #shape[1,]= c(.2, .9)
 #shape[2,] = c(.2, .5)
@@ -58,11 +55,11 @@ shape <- matrix(0, 3,2)
 shape[1,]= c(1, 3)
 shape[2,] = c(2, 5)
 shape[3,] = c(.7, .2)
-for(node in seq(n)){
+
+for(node in seq(numLeaf+1, n)){
   Y[node]  <- rbeta(1,shape1=shape[z[node]+2,1], shape2= shape[z[node]+2,2])
 }
-z[1:numLeaf] <- 1
-z[1:numLeaf][Y[1:numLeaf] < .5] <- -1
+
 #delta <- matrix(0,n,3); delta[Y > .5, 1] <- 1; delta[Y <= .5,3] <- 1
 #tree.object <- dthmm(Y, Pi, delta, "beta", list(shape1=c(1, 2, .5), shape2=c(3,5, .7)))
 #tree.object$P = P
