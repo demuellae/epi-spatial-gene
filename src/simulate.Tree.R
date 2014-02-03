@@ -33,6 +33,10 @@ for(jj in seq(numLeaf - 1)){
 z <- rep(0, n)
 z[n] <- 0 # initial state
 Y <- rep(0, n)
+shape <- matrix(0, 3,2)
+shape[1,]= c(1, 3)
+shape[2,] = c(2, 5)
+shape[3,] = c(.7, .2)
 
 for(child in seq(1, numLeaf)) {
   #Randomly select z for the leaves
@@ -46,15 +50,6 @@ for(parent in seq(numLeaf+1, n)){
   curr.child <- which(P==parent)
   z[parent] <- sample(-1:1, size=1, prob=Pi[z[curr.child[1]]+2 + 3*(z[curr.child[2]]+1),], replace=T)
 }
-
-# generate Y
-shape <- matrix(0, 3,2)
-#shape[1,]= c(.2, .9)
-#shape[2,] = c(.2, .5)
-#shape[3,] = c(.9, .5)
-shape[1,]= c(1, 3)
-shape[2,] = c(2, 5)
-shape[3,] = c(.7, .2)
 
 for(node in seq(numLeaf+1, n)){
   Y[node]  <- rbeta(1,shape1=shape[z[node]+2,1], shape2= shape[z[node]+2,2])
