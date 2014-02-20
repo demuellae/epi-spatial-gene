@@ -9,6 +9,7 @@
 	    else aa = unlist(as.list(outer(aa[bbLen], bb)))
 	    aa
 	}
+browser()
 
 	m <- ncol(Pi)
 	n <- length(x)
@@ -78,7 +79,7 @@
 			      lscale, memory0, PACKAGE="HiddenMarkov")
 	    logbeta <- loop2[[6]]
 	}
-	#browser()
+	browser()
 	#stopifnot(all.equal(log(rowSums(exp(logbeta + logalpha))) ,rep(LL, dim(logbeta)[1])))
 	return(list(logalpha=logalpha, logbeta=logbeta, LL=LL, logalpha2=logalpha2))
     }
