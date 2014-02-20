@@ -29,14 +29,13 @@ for(jj in seq(numLeaf - 1)){
 #B  <- findBro(P)
 #generate z
 
-
 z <- rep(0, n)
 z[n] <- 0 # initial state
 Y <- rep(0, n)
 shape <- matrix(0, 3,2)
-shape[1,]= c(1, 3)
-shape[2,] = c(2, 5)
-shape[3,] = c(.7, .2)
+shape[1,]= c(1, 5)
+shape[2,] = c(5, 5)
+shape[3,] = c(5, 1)
 
 for(child in seq(1, numLeaf)) {
   #Randomly select z for the leaves
@@ -55,15 +54,92 @@ for(node in seq(numLeaf+1, n)){
   Y[node]  <- rbeta(1,shape1=shape[z[node]+2,1], shape2= shape[z[node]+2,2])
 }
 
-#delta <- matrix(0,n,3); delta[Y > .5, 1] <- 1; delta[Y <= .5,3] <- 1
+source("myR/BaumWelch.dthmm.Tree.R")
+source("myR/Estep.Tree.R")
+source("myR/forwardback.Tree.R")
+source("myR/makedensity.R")
+source("myR/getj.R")
+source("myR/dthmm.R")
+delta <- matrix(0,n,3); delta[Y > .5, 3] <- 1; delta[Y <= .5,1] <- 1
 #tree.object <- dthmm(Y, Pi, delta, "beta", list(shape1=c(1, 2, .5), shape2=c(3,5, .7)))
-#tree.object$P = P
-#control = bwcontrol(tol = 1e-6, posdiff = F, converge = expression(abs(diff) < tol))
-#tree.out = BaumWelch.dthmm.Tree(tree.object, control)
+tree.object <- dthmm(Y, Pi, delta, "beta", list(shape1=shape[,1], shape2=shape[,2]))
+tree.object$P = P
+control = bwcontrol(tol = 1e-6, posdiff = F, converge = expression(abs(diff) < tol))
+tree.out = BaumWelch.dthmm.Tree(tree.object, control)
 
 write.table(file="P",x = c(P, 0) , row.names = F, col.names =F,  sep=",", quote=F )
 write.table(file="z",x = z, row.names = F, col.names =F,  sep=",", quote=F )
 write.table(file="Y",x = Y, row.names = F, col.names =F,  sep=",", quote=F )
+
+
+##### binomial distribution
+numLeaf <- 3
+n = 2*numLeaf -1 
+h <- ceiling(log(numLeaf,base=2) +1)
+P  <-  rep(0,n)
+Pi = matrix(1/3,9,3) 
+
+Pi[1,] <- c(.9996, .0002, .0002)
+Pi[2,] <- c(.0002, .9996, .0002)
+Pi[3,] <- c(.0002, .9996, .0002)
+Pi[4,] <- c(.0002, .9996, .0002)
+Pi[5,] <- c(.0002, .9996, .0002)
+Pi[6,] <- c(.0002, .9996, .0002)
+Pi[7,] <- c(.0002, .9996, .0002)
+Pi[8,] <- c(.0002, .9996, .0002)
+Pi[9,] <- c(.0002, .0002, .9996)
+
+curr.nodes <-  seq(numLeaf); curr.parent <- numLeaf 
+for(jj in seq(numLeaf - 1)){
+  curr.child  <- sample(curr.nodes, replace=F, size=2)
+  curr.parent  <- curr.parent + 1
+  P[curr.child] <- curr.parent 
+  curr.nodes <- curr.nodes[!(curr.nodes %in% curr.child)]
+  curr.nodes <- c(curr.nodes, curr.parent)
+}
+
+#B  <- findBro(P)
+#generate z
+
+z <- rep(0, n)
+z[n] <- 0 # initial state
+Y <- rep(0, n)
+shape <- c(.02, .3, .7) 
+for(child in seq(1, numLeaf)) {
+  #Randomly select z for the leaves
+  z[child] <- sample(c(-1, 1), size=1, prob=c(.5,.5))
+  Y[child] <- rbinom(1,1, prob=shape[z[child]+2]) 
+}
+z[1:numLeaf] <- 1
+z[1:numLeaf][Y[1:numLeaf] < .5] <- -1
+
+for(parent in seq(numLeaf+1, n)){
+  curr.child <- which(P==parent)
+  z[parent] <- sample(-1:1, size=1, prob=Pi[z[curr.child[1]]+2 + 3*(z[curr.child[2]]+1),], replace=T)
+}
+
+for(node in seq(numLeaf+1, n)){
+  Y[node]  <- rbinom(1,1,prob=shape[z[node]+2] ) 
+}
+
+source("myR/BaumWelch.dthmm.Tree.R")
+source("myR/Estep.Tree.R")
+source("myR/forwardback.Tree.R")
+source("myR/makedensity.R")
+source("myR/getj.R")
+source("myR/dthmm.R")
+source("myR/bwcontrol.R")
+source("myR/Mstep.binom.R")
+
+delta <- matrix(0,n,3); delta[Y > .5, 3] <- 1; delta[Y <= .5,1] <- 1
+#tree.object <- dthmm(Y, Pi, delta, "beta", list(shape1=c(1, 2, .5), shape2=c(3,5, .7)))
+tree.object <- dthmm(Y, Pi, delta, "binom", list(prob=shape), list(size=2*numLeaf-1))
+tree.object$P = P
+control = bwcontrol(tol = 1e-6, posdiff = F, converge = expression(abs(diff) < tol))
+tree.out = BaumWelch.dthmm.Tree(tree.object, control)
+
+
+
 
 
 # tissue-tree infomation
@@ -93,7 +169,7 @@ write.table(file="Y",x = Y, row.names = F, col.names =F,  sep=",", quote=F )
 #}
 
 #P <- c(10,10,11,11,12,12,12,12,13,11,14,14,14,0)
-
+# binary tree simulation
 binaryP <- P
 binaryY <- Y
 numLeaf <- 9

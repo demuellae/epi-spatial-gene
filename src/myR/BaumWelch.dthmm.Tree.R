@@ -60,6 +60,7 @@ BaumWelch.dthmm.Tree <- function (object, control = bwcontrol(), ...){
         #if (diff < 0 & control$posdiff) stop("Worse log-likelihood on last iteration")
         if (eval(control$converge)) break
         #----  Mstep  ----
+	#browser()
         Pi <- diag(1/apply(cond$v, MARGIN = 2, FUN = sum)) %*% 
             apply(cond$v, MARGIN = c(2, 3), FUN = sum)
 	Pi = makeSymmetric(Pi)
