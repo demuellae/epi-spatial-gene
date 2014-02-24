@@ -13,11 +13,19 @@ Mstep.beta <- function(x, cond, pm, pn, maxiter = 200){
             p <- matrix(c(shape1[j], shape2[j]), ncol=1)
             y <- matrix(c(y1[j], y2[j]), ncol=1)
             for (iter in 1:maxiter){
+	    	if (j == 3) browser()
                 dLL <- digamma(sum(p)) - digamma(p) + y
-                #info <- solve(diag(-c(trigamma(p))) + trigamma(sum(p)))
-                info <- ginv(diag(-c(trigamma(p))) + trigamma(sum(p)))
-                incr <- info %*% dLL
-                
+		## Test ##
+		eq <- diag(-c(trigamma(p))) + trigamma(sum(p))
+		d <- det(eq)
+		info <- ginv(diag(-c(trigamma(p))) + trigamma(sum(p)))
+		if ((d/(abs(dLL[1] + abs(dLL[2])))/2) < .001) incr <- c(0, dLL[1]/eq[2,1])
+		else incr <- info %*% dLL
+                info <- solve(diag(-c(trigamma(p))) + trigamma(sum(p)))
+		## End Test ##
+		
+                #info <- ginv(diag(-c(trigamma(p))) + trigamma(sum(p)))
+                #incr <- info %*% dLL
                 #dLL1 <- -digamma(sum(p)) + digamma(p) - y
                 ##info <- solve(diag(-c(trigamma(p))) + trigamma(sum(p)))
                 #info1 <- ginv(diag(c(trigamma(p))) - trigamma(sum(p)))
