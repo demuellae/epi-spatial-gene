@@ -73,7 +73,7 @@ write.table(file="Y",x = Y, row.names = F, col.names =F,  sep=",", quote=F )
 
 
 ##### binomial distribution
-numLeaf <- 3
+numLeaf <- 4
 n = 2*numLeaf -1 
 h <- ceiling(log(numLeaf,base=2) +1)
 P  <-  rep(0,n)
@@ -131,13 +131,19 @@ source("myR/dthmm.R")
 source("myR/bwcontrol.R")
 source("myR/Mstep.binom.R")
 
+Pi = matrix(1/3,9,3) 
+
 delta <- matrix(0,n,3); delta[Y > .5, 3] <- 1; delta[Y <= .5,1] <- 1
 #tree.object <- dthmm(Y, Pi, delta, "beta", list(shape1=c(1, 2, .5), shape2=c(3,5, .7)))
-tree.object <- dthmm(Y, Pi, delta, "binom", list(prob=shape), list(size=2*numLeaf-1))
+tree.object <- dthmm(Y, Pi, delta, "binom", list(prob=shape), list(size=matrix(1, nrow=1, ncol=n)))
 tree.object$P = P
 control = bwcontrol(tol = 1e-6, posdiff = F, converge = expression(abs(diff) < tol))
-tree.out = BaumWelch.dthmm.Tree(tree.object, control)
 
+write.table(file="P",x = c(P, 0) , row.names = F, col.names =F,  sep=",", quote=F )
+write.table(file="z",x = z, row.names = F, col.names =F,  sep=",", quote=F )
+write.table(file="Y",x = Y, row.names = F, col.names =F,  sep=",", quote=F )
+
+tree.out = BaumWelch.dthmm.Tree(tree.object, control)
 
 
 
@@ -148,14 +154,14 @@ tree.out = BaumWelch.dthmm.Tree(tree.object, control)
 #URL <- "http://www.emouseatlas.org/emap/ema/theiler_stages/StageDefinition/Stage_xml/TS23.xml"
 #root <- xmlTreeParse(URL, useInternalNodes = TRUE)
 
-#fn <- function(node) {
-#   id <- xmlAttrs(node)["id"]
-#   parent.id <- xmlAttrs(xmlParent(node))["id"]
-#   setNames(head(c(id, parent.id, NA), 2), c("id", "parent"))
-#}
-#parents.all <- t(xpathSApply(root, "//component", fn))
+fn <- function(node) {
+   id <- xmlAttrs(node)["name"]
+   parent.id <- xmlAttrs(xmlParent(node))["name"]
+   setNames(head(c(id, parent.id, NA), 2), c("id", "parent"))
+}
+parents.all <- t(xpathSApply(root, "//component", fn))
 
-#parents = as.data.frame(parents.all[1:1411,])
+parents = as.data.frame(parents.all[1:1411,])
 #findLeaf <- function(xx) which(!(xx$id %in% xx$parent))
 #temp =1:nrow(parents)
 #nodes <- NULL
