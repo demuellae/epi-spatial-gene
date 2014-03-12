@@ -73,7 +73,7 @@ write.table(file="Y",x = Y, row.names = F, col.names =F,  sep=",", quote=F )
 
 
 ##### binomial distribution
-numLeaf <- 4
+numLeaf <- 10
 n = 2*numLeaf -1 
 h <- ceiling(log(numLeaf,base=2) +1)
 P  <-  rep(0,n)
@@ -89,14 +89,23 @@ Pi[7,] <- c(.0002, .9996, .0002)
 Pi[8,] <- c(.0002, .9996, .0002)
 Pi[9,] <- c(.0002, .0002, .9996)
 
-curr.nodes <-  seq(numLeaf); curr.parent <- numLeaf 
-for(jj in seq(numLeaf - 1)){
-  curr.child  <- sample(curr.nodes, replace=F, size=2)
-  curr.parent  <- curr.parent + 1
-  P[curr.child] <- curr.parent 
-  curr.nodes <- curr.nodes[!(curr.nodes %in% curr.child)]
-  curr.nodes <- c(curr.nodes, curr.parent)
+PiB <- threeD2twoD(Pi)
+
+#Binary Tree
+#curr.nodes <-  seq(numLeaf); curr.parent <- numLeaf 
+#for(jj in seq(numLeaf - 1)) {
+#  curr.child  <- sample(curr.nodes, replace=F, size=2)
+#  curr.parent  <- curr.parent + 1
+#  P[curr.child] <- curr.parent 
+#  curr.nodes <- curr.nodes[!(curr.nodes %in% curr.child)]
+#  curr.nodes <- c(curr.nodes, curr.parent)
+#}
+
+#Markov Chain
+for (j in seq(n)-1) {
+    P[j] <- j + 1  
 }
+
 
 #B  <- findBro(P)
 #generate z
@@ -104,23 +113,32 @@ for(jj in seq(numLeaf - 1)){
 z <- rep(0, n)
 z[n] <- 0 # initial state
 Y <- rep(0, n)
-shape <- c(.02, .3, .7) 
-for(child in seq(1, numLeaf)) {
-  #Randomly select z for the leaves
-  z[child] <- sample(c(-1, 1), size=1, prob=c(.5,.5))
-  Y[child] <- rbinom(1,1, prob=shape[z[child]+2]) 
-}
-z[1:numLeaf] <- 1
-z[1:numLeaf][Y[1:numLeaf] < .5] <- -1
+shape <- c(.02, .3, .7)
 
-for(parent in seq(numLeaf+1, n)){
-  curr.child <- which(P==parent)
-  z[parent] <- sample(-1:1, size=1, prob=Pi[z[curr.child[1]]+2 + 3*(z[curr.child[2]]+1),], replace=T)
+## Chain ##
+z[1] <- sample(c(-1, 1), size=1, prob=c(.5, .5))
+Y[1] <- rbinom(1,1, prob=shape[z[child]+2]) 
+for (x in seq(n-1, 2, -1)) {
+    z[x] <- sample(-1:1, size=1, prob=PiB[z[x],])
 }
 
-for(node in seq(numLeaf+1, n)){
-  Y[node]  <- rbinom(1,1,prob=shape[z[node]+2] ) 
-}
+###### Binary Tree ###### 
+#for(child in seq(1, numLeaf)) {
+#  #Randomly select z for the leaves
+#  z[child] <- sample(c(-1, 1), size=1, prob=c(.5,.5))
+#  Y[child] <- rbinom(1,1, prob=shape[z[child]+2]) 
+#}
+#z[1:numLeaf] <- 1
+#z[1:numLeaf][Y[1:numLeaf] < .5] <- -1
+
+#for(parent in seq(numLeaf+1, n)){
+#  curr.child <- which(P==parent)
+#  z[parent] <- sample(-1:1, size=1, prob=Pi[z[curr.child[1]]+2 + 3*(z[curr.child[2]]+1),], replace=T)
+#}
+#
+#for(node in seq(numLeaf+1, n)){
+#  Y[node]  <- rbinom(1,1,prob=shape[z[node]+2] ) 
+#}
 
 source("myR/BaumWelch.dthmm.Tree.R")
 source("myR/Estep.Tree.R")
@@ -131,7 +149,12 @@ source("myR/dthmm.R")
 source("myR/bwcontrol.R")
 source("myR/Mstep.binom.R")
 
-Pi = matrix(1/3,9,3) 
+#Pi = matrix(1/3,9,3) 
+
+for (i in seq(length(shape))) {
+    shape[i] = length(which(Y == 1 & z == i-2))/length(which(z == i-2)) 
+}
+
 
 delta <- matrix(0,n,3); delta[Y > .5, 3] <- 1; delta[Y <= .5,1] <- 1
 #tree.object <- dthmm(Y, Pi, delta, "beta", list(shape1=c(1, 2, .5), shape2=c(3,5, .7)))
@@ -143,10 +166,14 @@ write.table(file="P",x = c(P, 0) , row.names = F, col.names =F,  sep=",", quote=
 write.table(file="z",x = z, row.names = F, col.names =F,  sep=",", quote=F )
 write.table(file="Y",x = Y, row.names = F, col.names =F,  sep=",", quote=F )
 
-tree.out = BaumWelch.dthmm.Tree(tree.object, control)
+tree.out = BaumWelch.dthmm.Tree(tree.object, control) 
 
-
-
+x <- array(0, dim=n)
+for (i in seq(1:n)) {
+    x[i] <- which.max(tree.out$u[i,])
+}
+x <- x - 2
+percentError <- length(which(x != z))/(n - numLeaf)
 
 # tissue-tree infomation
 #library(XML)
