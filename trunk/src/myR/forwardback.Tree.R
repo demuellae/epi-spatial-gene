@@ -7,10 +7,9 @@
 	    bbLen = 1:length(bb)
 	    if(any(is.na(aa[bbLen]))) aa[bbLen] = bb
 	    else aa = unlist(as.list(outer(aa[bbLen], bb)))
+	    aa[which(is.na(aa))] <- 0
 	    aa
 	}
-browser()
-
 	m <- ncol(Pi)
 	n <- length(x)
 	dfunc <- makedensity(distn)
@@ -28,8 +27,7 @@ browser()
 	lscale <- as.double(rep(0, length(P))) # contains log(w_t)
 	if (fortran!=TRUE){
 	    #  loop1 using R code
-	    for (i in (1:n)){
-		#if(i==1) browser()
+	    for (i in (1:n)) {
 		if (i > numLeaf)  phiT <- phi2[i,] %*% PiF
 		else phiT  <-  delta[i,] 
 		phiT <- phiT*prob[i,] # prob[i,] is 1xM vector
@@ -67,10 +65,19 @@ browser()
 	    for (i in seq(n-1, 1, -1)){
 		thetaT <- PiF %*% (prob[P[i],]*theta[P[i],])
 		dim(thetaT)  <- c(m,m)
-		thetaT = phi[Bro[i],] %*% thetaT
+		#thetaT = phi[Bro[i],] %*% thetaT
+		if (!is.na(Bro[i])) {
+		   thetaT <-  thetaT %*% phi[Bro[i],]
+		} else {
+		   thetaT <- colSums(thetaT)
+		}
 		sumtheta <- sum(thetaT)
 		theta[i,] <- thetaT/sumtheta
-		lscaleB[i] <- lscaleB[P[i]] + lscale[Bro[i]] + log(sumtheta)
+		if (!is.na(Bro[i])) {
+		  lscaleB[i] <- lscaleB[P[i]] + lscale[Bro[i]] + log(sumtheta)
+		} else {
+		  lscaleB[i] <- lscaleB[P[i]] + log(sumtheta)
+		}
 		logbeta[i,] <- log(theta[i,]) + lscaleB[i] 
 	    }
 	} else{
@@ -80,7 +87,6 @@ browser()
 	    logbeta <- loop2[[6]]
 	}
 	browser()
-	#stopifnot(all.equal(log(rowSums(exp(logbeta + logalpha))) ,rep(LL, dim(logbeta)[1])))
+	stopifnot(all.equal(log(rowSums(exp(logbeta + logalpha))) ,rep(LL, dim(logbeta)[1])))
 	return(list(logalpha=logalpha, logbeta=logbeta, LL=LL, logalpha2=logalpha2))
     }
-environment(forwardback.Tree) = asNamespace("HiddenMarkov")

@@ -1,5 +1,5 @@
 "forwardback" <-
-function(x, Pi, delta, distn, pm, pn = NULL, fortran=TRUE){
+function(x, Pi, delta, distn, pm, pn = NULL, fortran=F){
     m <- nrow(Pi)
     n <- length(x)
     dfunc <- makedensity(distn)
