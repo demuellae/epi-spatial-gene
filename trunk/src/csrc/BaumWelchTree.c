@@ -91,9 +91,8 @@ void BaumWelchTree(HMMT *phmm, int T, double *O, int *P, double **logalpha, doub
 			}
 		}
 
-		/* Beta Maximization Step */
-		MstepBeta(phmm, T, baumConf, gamma, O, 200);
-
+		/* Maximization Step */
+		Mstep(phmm, T, baumConf, gamma, O);
 		MakeSymmetric(phmm->AF, temp, phmm->N*phmm->N, phmm->N);
 		ForwardTree(phmm, T, O, baumConf->numLeaf, logalpha, logalpha2, &logprobf, baumConf->forwardConf);
 		BackwardTree(phmm, T, O, baumConf->numLeaf, logbeta, baumConf->forwardConf->phi, baumConf->forwardConf->scale1, baumConf->backConf);
@@ -110,18 +109,41 @@ void BaumWelchTree(HMMT *phmm, int T, double *O, int *P, double **logalpha, doub
 		l++;
 
 	}
-	while (fabs(delta) > DELTA); /* if log probability does not
+	while (delta > DELTA); /* if log probability does not
                                   change much, exit */
 	printf("%f\n",logprobf);
-	printf("delta: %f\n", delta);
-	printf("DELTA: %.10f\n", DELTA);
-	printf("iter: %d\n", l);
 	free_dmatrix(alpha2, 1, T, 1, phmm->N * phmm->N);
 	free_dmatrix(beta, 1, T, 1, phmm->N);
 	free_dmatrix(temp, 1, phmm->N * phmm->N, 1, phmm->N);
 	*pniter = l;
 	*baumConf->plogprobfinal = logprobf; /* log P(O|estimated model) */
 	//FreeXi(xi, T, phmm->N);
+}
+
+void Mstep(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double *O, int dist) {
+	if (dist == 0) {
+		MstepBeta(phmm, T, baumConf, gamma, O, 200);
+	} else {
+		MstepBinom(phmm, T, baumConf, gamma, O);
+	}
+}
+
+void MstepBinom(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double *O) {
+	int i, j, t;
+	for (i = 1; i <= phmm->N; i++) {
+		phmm->pmshape1[i] = 0.0;
+		baumConf->betaDenom[i] = 0.0;
+	}
+	for (t = 1; t <= T; i++) {
+		for (i = 1; i <= phmm->N; i++) {
+			phmm->pmshape1[i] += gamma[t][i] * (double) O[t];
+			baumConf->betaDenom[i] += gamma[t][i];
+		}
+	}
+	for (i = 1; i <= phmm->N; i++) {
+		phmm->pmshape1[i] /= baumConf->betaDenom[i];
+	}
+
 }
 
 /* Compute Maximization step for emission probabilities */

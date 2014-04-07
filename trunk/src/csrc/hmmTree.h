@@ -16,8 +16,8 @@
 #include <stdio.h>
 #include <math.h>
 
-#define DELTA 0.00001
-#define MAXITER 500
+#define DELTA 0.001
+#define MAXITER 200
 
 typedef struct {
 	int N;		/* number of states;  Q={1,2,...,N} */
@@ -103,11 +103,12 @@ void FreeConfigs(BaumConfig *baumConf, int T, int N, int numLeaf);
 void AllocateConfigs(BaumConfig *baumConf, int T, int N, int numLeaf);
 void MakeSymmetric(double **three, double ** temp, int row, int col);
 void MstepBeta(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double *O, int maxiter);
+void Mstep(HMMT *phmm, int T, BaumConfig baumConf, double gamma, double *O);
+void MstepBinom(HMMT *phmm, int T, BaumConfig baumConf, double gamma, double *O);
+
 void CalcObsProb(HMMT *phmm, double *O, int T);
 double ** ExpMatrix(double **mat, int row, int col);
 void ExpMatrices(double ** res1, double **res2, double **mat1, double **mat2, int row, int col);
-void GenerateZ(double **gamma, int T, int *Z);
-void ReadCommaSequence(char *seq, double *O);
 
 /* random number generator related functions*/
 

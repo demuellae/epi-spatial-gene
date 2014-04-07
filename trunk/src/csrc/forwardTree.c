@@ -113,20 +113,37 @@ void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, d
 	*LL = conf->scale1[T];
 }
 
-
-void CalcObsProb(HMMT *phmm, double *O, int T) {
+/* 0 = Beta
+ * 1 = Binomial
+ */
+void CalcObsProb(HMMT *phmm, double *O, int T, int distribution) {
 	int i, j;
 	/* iterate through all observations */
-	for (i = 1; i <= T; i++) {
-		/* Beta distribution pdf */
-		for (j = 1; j <= phmm->N; j++) {
-			if (O[i] <= 0 || O[i] >= 1)
-				phmm->B[i][j] = 0.0;
-			else
-				phmm->B[i][j] = (powl(O[i], phmm->pmshape1[j] - 1.0) * powl(1.0 - O[i], phmm->pmshape2[j] - 1.0))
-									/ Beta_Function(phmm->pmshape1[j],phmm->pmshape2[j]);
+	if (distribution == 0) {
+		for (i = 1; i <= T; i++) {
+			/* Beta distribution pdf */
+			for (j = 1; j <= phmm->N; j++) {
+				if (O[i] <= 0 || O[i] >= 1)
+					phmm->B[i][j] = 0.0;
+				else
+					phmm->B[i][j] = (powl(O[i], phmm->pmshape1[j] - 1.0) * powl(1.0 - O[i], phmm->pmshape2[j] - 1.0))
+					/ Beta_Function(phmm->pmshape1[j],phmm->pmshape2[j]);
+			}
+		}
+	} else {
+		for (i = 1; i <= T; i++) {
+			/* Binom distribution pdf */
+			for (j = 1; j <= phmm->N; j++) {
+				if (O[i] == 1) {
+					phmm->B[i][j] = phmm->pmshape1[j];
+				} else {
+					phmm->B[i][j] = 1.0-phmm->pmshape1[j];
+				}
+			}
 		}
 	}
 }
+
+
 
 
