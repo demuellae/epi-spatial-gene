@@ -17,7 +17,8 @@
 	m <- ncol(Pi)
 	n <- length(x)
 	PiF  <- Pi
-	PiB  <- threeD2twoD(Pi)
+	PiB <- matrix(1/3, 3, 3)
+	#PiB  <- threeD2twoD(Pi)
 	y <- forwardback.Tree(x, numLeaf, PiF, PiB, P, Bro, delta, distn, pm, pn, fortran=F)
 	logbeta <- y$logbeta
 	logalpha2 <- y$logalpha2
@@ -47,4 +48,4 @@
 	}
 	return(list(u = u, v = v, LL = LL))
     }
-environment(Estep.Tree) = asNamespace("HiddenMarkov")
+#environment(Estep.Tree) = asNamespace("HiddenMarkov")

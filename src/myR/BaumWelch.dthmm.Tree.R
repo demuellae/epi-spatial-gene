@@ -11,6 +11,7 @@ BaumWelch.dthmm.Tree <- function (object, control = bwcontrol(), ...){
     }
    (aa + aa[equiC,])/2 
   }
+
     x <- object$x
     Pi <- object$Pi
     delta <- object$delta
@@ -18,14 +19,15 @@ BaumWelch.dthmm.Tree <- function (object, control = bwcontrol(), ...){
     pm <- object$pm
     P <- object$P
     tol <- control$tol
-    numLeaf <- (length(P) + 1)/2 
+    #numLeaf <- (length(P) + 1)/2 
+    numLeaf <- object$numLeaf
    findBro <- function(P)
    {
      #Bro = list()
      Bro = P
      for(ii in seq(numLeaf+1, length(P))){
        inx = which(P == ii)
-       stopifnot(length(inx) ==2)
+       #stopifnot(length(inx) ==2)
        Bro[inx[1]] = inx[2]
        Bro[inx[2]] = inx[1]
        #for(tt in seq(1,length(inx))){
@@ -47,6 +49,8 @@ BaumWelch.dthmm.Tree <- function (object, control = bwcontrol(), ...){
     n <- length(x)
     oldLL <- -Inf
     for (iter in 1:control$maxiter) {
+    	if (iter == 2)
+    	   browser()
 	cond  <- Estep.Tree(x, P, Bro, numLeaf, Pi, delta, distn, pm, object$pn) 
         #cond <- Estep.Tree(x, Pi, delta, distn, pm, object$pn)
         diff <- cond$LL - oldLL
@@ -82,6 +86,6 @@ BaumWelch.dthmm.Tree <- function (object, control = bwcontrol(), ...){
     object$LLvec <- LLvec
     return(object)
 }
-environment(Estep.Tree) = asNamespace("HiddenMarkov")
+#environment(Estep.Tree) = asNamespace("HiddenMarkov")
 
 
