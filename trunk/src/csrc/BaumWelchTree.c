@@ -28,7 +28,7 @@ static char rcsid[] = "$Id: baumwelch.c,v 1.6 1999/04/24 15:58:43 kanungo Exp ka
 
 
 void BaumWelchTree(HMMT *phmm, int T, double *O, int *P, double **logalpha, double **logalpha2, double **logbeta,
-		   double **gamma, int *pniter, BaumConfig *baumConf, int maxiter)
+		double **gamma, int *pniter, BaumConfig *baumConf, int maxiter)
 {
 	int	i, j;
 	int	t, l = 0; /* l is number of iterations */
@@ -56,9 +56,6 @@ void BaumWelchTree(HMMT *phmm, int T, double *O, int *P, double **logalpha, doub
 	BackwardTree(phmm, T, O, baumConf->numLeaf, logbeta, baumConf->forwardConf->phi, baumConf->forwardConf->scale1, baumConf->backConf);
 
 	/* Get exponentiated versions of beta and alpha2 */
-	beta = (double **) ExpMatrix(logbeta, T, phmm->N);
-	alpha2 = (double **) ExpMatrix(logalpha2, T, phmm->N * phmm->N);
-
 	ComputeGamma(phmm, T, logalpha, logbeta, baumConf->numLeaf, gamma, logprobf);
 	ComputeXi(phmm, T, O, baumConf->numLeaf, alpha2, beta, logprobf, xi);
 
@@ -91,14 +88,13 @@ void BaumWelchTree(HMMT *phmm, int T, double *O, int *P, double **logalpha, doub
 			}
 		}
 
-		/* Maximization Step */
+		/* Beta Maximization Step */
 		Mstep(phmm, T, baumConf, gamma, O);
 		MakeSymmetric(phmm->AF, temp, phmm->N*phmm->N, phmm->N);
 		ForwardTree(phmm, T, O, baumConf->numLeaf, logalpha, logalpha2, &logprobf, baumConf->forwardConf);
 		BackwardTree(phmm, T, O, baumConf->numLeaf, logbeta, baumConf->forwardConf->phi, baumConf->forwardConf->scale1, baumConf->backConf);
 		ComputeGamma(phmm, T, logalpha, logbeta, baumConf->numLeaf, gamma, logprobf);
-		ExpMatrices(beta, alpha2, logbeta, logalpha2, T, phmm->N);
-		ComputeXi(phmm, T, O, baumConf->numLeaf, alpha2, beta, logprobf, xi);
+		ComputeXi(phmm, T, O, baumConf->numLeaf, logalpha2, logbeta, logprobf, xi);
 
 		/* compute difference between log probability of
 		   two iterations */
@@ -112,16 +108,14 @@ void BaumWelchTree(HMMT *phmm, int T, double *O, int *P, double **logalpha, doub
 	while (delta > DELTA); /* if log probability does not
                                   change much, exit */
 	printf("%f\n",logprobf);
-	free_dmatrix(alpha2, 1, T, 1, phmm->N * phmm->N);
-	free_dmatrix(beta, 1, T, 1, phmm->N);
 	free_dmatrix(temp, 1, phmm->N * phmm->N, 1, phmm->N);
 	*pniter = l;
 	*baumConf->plogprobfinal = logprobf; /* log P(O|estimated model) */
 	//FreeXi(xi, T, phmm->N);
 }
 
-void Mstep(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double *O) {
-	if (phmm->dist == 0) {
+void Mstep(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double *O, int dist) {
+	if (dist == 0) {
 		MstepBeta(phmm, T, baumConf, gamma, O, 200);
 	} else {
 		MstepBinom(phmm, T, baumConf, gamma, O);
@@ -134,7 +128,7 @@ void MstepBinom(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double 
 		phmm->pmshape1[i] = 0.0;
 		baumConf->betaDenom[i] = 0.0;
 	}
-	for (t = 1; t <= T; t++) {
+	for (t = 1; t <= T; i++) {
 		for (i = 1; i <= phmm->N; i++) {
 			phmm->pmshape1[i] += gamma[t][i] * (double) O[t];
 			baumConf->betaDenom[i] += gamma[t][i];
@@ -235,7 +229,7 @@ void ComputeGamma(HMMT *phmm, int T, double **logalpha, double **logbeta, int nu
 
 
 /* Xi dimensions: (T-numLeaf) X N^2 X N */
-void ComputeXi(HMMT* phmm, int T, double *O, int numLeaf, double **alpha2, double **beta, double LL,
+void ComputeXi(HMMT* phmm, int T, double *O, int numLeaf, double **logalpha2, double **logbeta, double LL,
 		double ***xi)
 {
 	int i, j;
@@ -245,13 +239,14 @@ void ComputeXi(HMMT* phmm, int T, double *O, int numLeaf, double **alpha2, doubl
 	for (t = 1; t <= T - numLeaf; t++) {
 		for (i = 1; i <= phmm->N*phmm->N; i++)
 			for (j = 1; j <= phmm->N; j++) {
-				xi[t][i][j] = alpha2[t+numLeaf][i]*beta[t+numLeaf][j]
-				                                                   *(phmm->AF[i][j])
-				                                                   *(phmm->B[t+numLeaf][j])
-				                                                   /exp(LL);
+				xi[t][i][j] = logalpha2[t+numLeaf][i] + logbeta[t+numLeaf][j]
+				               + log(phmm->AF[i][j]) + log(phmm->B[t+numLeaf]) - LL;
 			}
-
-
+		for (i = 1; i <= phmm->N*phmm->N; i++) {
+			for (j = 1; j <= phmm->N; j++) {
+				xi[t][i][j] = exp(xi[t][i][j]);
+			}
+		}
 	}
 }
 
