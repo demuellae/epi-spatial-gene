@@ -28,7 +28,7 @@ static char rcsid[] = "$Id: baumwelch.c,v 1.6 1999/04/24 15:58:43 kanungo Exp ka
 
 
 void BaumWelchTree(HMMT *phmm, int T, double *O, int *P, double **logalpha, double **logalpha2, double **logbeta,
-		double **gamma, int *pniter, BaumConfig *baumConf, int maxiter)
+		   double **gamma, int *pniter, BaumConfig *baumConf, int maxiter)
 {
 	int	i, j;
 	int	t, l = 0; /* l is number of iterations */
@@ -120,8 +120,8 @@ void BaumWelchTree(HMMT *phmm, int T, double *O, int *P, double **logalpha, doub
 	//FreeXi(xi, T, phmm->N);
 }
 
-void Mstep(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double *O, int dist) {
-	if (dist == 0) {
+void Mstep(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double *O) {
+	if (phmm->dist == 0) {
 		MstepBeta(phmm, T, baumConf, gamma, O, 200);
 	} else {
 		MstepBinom(phmm, T, baumConf, gamma, O);
@@ -134,7 +134,7 @@ void MstepBinom(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double 
 		phmm->pmshape1[i] = 0.0;
 		baumConf->betaDenom[i] = 0.0;
 	}
-	for (t = 1; t <= T; i++) {
+	for (t = 1; t <= T; t++) {
 		for (i = 1; i <= phmm->N; i++) {
 			phmm->pmshape1[i] += gamma[t][i] * (double) O[t];
 			baumConf->betaDenom[i] += gamma[t][i];

@@ -9,16 +9,17 @@ int main() {
 	HMMT hmm;
 	BaumConfig *baumConf = (BaumConfig *) malloc(sizeof(BaumConfig));
 
-	int i, t, iter;
+	int i, j, t, iter;
 	int T, numLeaf, N = 3;
-
-	int x = abs(3);
+	double error = 0;
 
 	FILE *obsFile = fopen("Y", "r");
 	FILE *parFile = fopen("P", "r");
+	FILE *zFile= fopen("z", "r");
 
 	double *O = ReadInputD(obsFile, &T);
 	int *P = ReadInputI(parFile, &T);
+	int *correctZ = ReadInputI(zFile, &T);
 
 	numLeaf = (T+1)/2;
 
@@ -35,16 +36,19 @@ int main() {
 	double ** gamma = (double **) dmatrix(1,T,1,N);
 	double LL;
 	int *Z = (int *) ivector(1,T);
+	/* 0 -- Beta
+	   1 -- Binomial */
+	hmm.dist = 1;
 
-	hmm.pmshape1[1] = 1;
-	hmm.pmshape1[2] = 2;
-	hmm.pmshape1[3] = .5;
-	hmm.pmshape2[1] = 3;
+	hmm.pmshape1[1] = .02;
+	hmm.pmshape1[2] = .3;
+	hmm.pmshape1[3] = .7;
+	/*hmm.pmshape2[1] = 3;
 	hmm.pmshape2[2] = 5;
-	hmm.pmshape2[3] = .7;
+	hmm.pmshape2[3] = .7;*/
 
 
-	BaumWelchTree(&hmm, T, O, baumConf->forwardConf->P, logalpha, logalpha2, logbeta, gamma, &iter, baumConf, 200);
+	BaumWelchTree(&hmm, T, O, baumConf->forwardConf->P, logalpha, logalpha2, logbeta, gamma, &iter, baumConf, 500);
 	GenerateZ(gamma, T, Z);
 
 	/*for (t = 1; t <= T; t++) {
@@ -53,7 +57,32 @@ int main() {
 
 	for (t = 1; t <= T; t++) {
 	  printf("%d\n", Z[t]);
+	  if (Z[t] != correctZ[t]) {
+	    error+= 1.0;
+	  } 
 	}
+	printf("Percent Error: %f\n", error/(T-numLeaf));
+	printf("Pi: \n");
+	for (i = 1; i <= N*N; i++) {
+	  for (j = 1; j <= N; j++) {
+	    printf("%f ", hmm.AF[i][j]);
+	  }
+	  printf("\n");
+	}
+
+	printf("hmm.shape1: \n");
+	for (i = 1; i <= N; i++) {
+	  printf("%f ", hmm.pmshape1[i]);
+	}
+	printf("\n");
+
+	
+	printf("hmm.shape2: \n");
+	for (i = 1; i <= N; i++) {
+	  printf("%f ", hmm.pmshape2[i]);
+	}
+
+	printf("\n");
 
 	FreeHMM(&hmm, T, N, numLeaf);
 	free_dmatrix(logalpha, 1, T, 1, N);

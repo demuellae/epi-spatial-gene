@@ -72,7 +72,7 @@ double *ReadInputD(FILE *file, int *T) {
 			break;
 
 		for (j = strlen(buffer) -1; j >= 0 && (buffer[j] == '\n' || buffer[j] == '\r'); j--);
-		buffer[j] = '\0';
+		buffer[j+1] = '\0';
 		sequence[i] = atof(buffer);
 
 	}
