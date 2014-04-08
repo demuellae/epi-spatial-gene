@@ -110,16 +110,19 @@ void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, d
 			}
 		}
 	}
+	printf("POOP");
 	*LL = conf->scale1[T];
+	printf("Log-Likelihood %f\n", *LL);
+	printf("Likelihood %f\n", exp(*LL));
 }
 
 /* 0 = Beta
  * 1 = Binomial
  */
-void CalcObsProb(HMMT *phmm, double *O, int T, int distribution) {
+void CalcObsProb(HMMT *phmm, double *O, int T) {
 	int i, j;
 	/* iterate through all observations */
-	if (distribution == 0) {
+	if (phmm->dist == 0) {
 		for (i = 1; i <= T; i++) {
 			/* Beta distribution pdf */
 			for (j = 1; j <= phmm->N; j++) {

@@ -83,23 +83,28 @@ void FreeHMM(HMMT *phmm, int T, int N, int numLeaf) {
 
 void InitTrans(double **trans, int N) {
 	int i, j;
-	double high = .9996;
-	double low = .0004;
 	for (i = 1; i <= N * N; i++) {
-	  if (i == 1) {
-	    trans[i][1] = high;
-	    trans[i][2] = low;
-	    trans[i][3] = low;
-	  } else if (i == 9) {
- 	    trans[i][1] = low;
-	    trans[i][2] = low;
-	    trans[i][3] = high;
-	  } else {
- 	    trans[i][1] = low;
-	    trans[i][2] = high;
-	    trans[i][3] = low;
+	  for (j = 1; j <= N; j++) {
+	    trans[i][j] = 1.0/3;
 	  }
 	}
+}
+
+void TestInitTrans(double **trans, int N) {
+  int i, j;
+  
+  for (i = 1; i <= N*N; i++) {
+    for (j = 1; j <= N; j++) {
+      trans[i][j] = 0.002;
+      if (j == 2)
+	trans[i][j] = .996;
+    }
+  }
+  trans[1][1] = .996;
+  trans[N*N][N] = .996;
+  trans[1][2] = .002;
+  trans[9][2] = .002;
+  
 }
 
 void GenerateZ(double **gamma, int T, int *Z) {
@@ -139,16 +144,15 @@ void ReadCommaSequence(char *buffer, double *O) {
     j = i;
     oIdx++;
   }
-  printf("Sum = %f\n", sum);
 }
 
 void InitDelta(double **delta, double *O, int numLeaf) {
 	int i, j;
 	for (i = 1; i <= numLeaf; i++) {
-		if (O[i] > .5) {
-			delta[i][3] = 1.0;
-		} else {
-			delta[i][1] = 1.0;
-		}
+	  if (O[i] > .5) {
+	    delta[i][3] = 1.0;
+	  } else {
+	    delta[i][1] = 1.0;
+	  }
 	}
 }

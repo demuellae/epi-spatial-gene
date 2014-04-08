@@ -22,6 +22,7 @@
 typedef struct {
 	int N;		/* number of states;  Q={1,2,...,N} */
 	int M; 		/* number of observation symbols; V={1,2,...,M}*/
+        int dist;       /* probability distribution for Mstep (0 or 1) */
 	double	**AF;	/* A[1..N*N][1..N]. a[i][j] is the transition prob
 			   of going from state i at time t to state j at time t+1 */
 	double **AB;
@@ -89,7 +90,7 @@ void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, d
 		ForwardConfig *conf);
 void BackwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logbeta, double **phi, double *scale, BackwardConfig *conf);
 void BaumWelchTree(HMMT *phmm, int T, double *O, int *P, double **logalpha, double **logalpha2, double **logbeta,
-		double **gamma, int *niter, BaumConfig *baumConf, int maxiter);
+		   double **gamma, int *niter, BaumConfig *baumConf, int maxiter);
 
 double *** AllocXi(int T, int N);
 void FreeXi(double *** xi, int T, int N);
@@ -103,8 +104,8 @@ void FreeConfigs(BaumConfig *baumConf, int T, int N, int numLeaf);
 void AllocateConfigs(BaumConfig *baumConf, int T, int N, int numLeaf);
 void MakeSymmetric(double **three, double ** temp, int row, int col);
 void MstepBeta(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double *O, int maxiter);
-void Mstep(HMMT *phmm, int T, BaumConfig baumConf, double gamma, double *O);
-void MstepBinom(HMMT *phmm, int T, BaumConfig baumConf, double gamma, double *O);
+void Mstep(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double *O);
+void MstepBinom(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double *O);
 
 void CalcObsProb(HMMT *phmm, double *O, int T);
 double ** ExpMatrix(double **mat, int row, int col);

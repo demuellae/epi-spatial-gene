@@ -10,7 +10,7 @@ DEPS = hmmTree.h nrutil.h specfunc.h
 simulatedTree: $(OBJECTS) specfunc.o simulatedTree.o
 	gcc $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-main: $(OBJECTS) main.o hmmTree.h specfunc.o
+epiData: $(OBJECTS) epiData.o hmmTree.h specfunc.o
 	gcc $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 specfunc.o: specfunc.h
