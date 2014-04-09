@@ -96,7 +96,7 @@ double *** AllocXi(int T, int N);
 void FreeXi(double *** xi, int T, int N);
 void ComputeGamma(HMMT *phmm, int T, double **alpha, double **beta, int numLeaf,
 		double **gamma, double LL);
-void ComputeXi(HMMT* phmm, int T, double *O, int numLeaf, double **alpha2, double **beta, double LL,
+void ComputeXi(HMMT* phmm, int T, double *O, int numLeaf, double **logalpha2, double **logbeta, double LL,
 		double ***xi);
 void AllocateHMM(HMMT *phmm, int T, int N, int M);
 void FreeHMM(HMMT *phmm, int T, int N, int M);

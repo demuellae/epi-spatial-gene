@@ -110,10 +110,8 @@ void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, d
 			}
 		}
 	}
-	printf("POOP");
 	*LL = conf->scale1[T];
 	printf("Log-Likelihood %f\n", *LL);
-	printf("Likelihood %f\n", exp(*LL));
 }
 
 /* 0 = Beta

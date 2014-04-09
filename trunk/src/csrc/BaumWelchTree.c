@@ -57,7 +57,7 @@ void BaumWelchTree(HMMT *phmm, int T, double *O, int *P, double **logalpha, doub
 
 	/* Get exponentiated versions of beta and alpha2 */
 	ComputeGamma(phmm, T, logalpha, logbeta, baumConf->numLeaf, gamma, logprobf);
-	ComputeXi(phmm, T, O, baumConf->numLeaf, alpha2, beta, logprobf, xi);
+	ComputeXi(phmm, T, O, baumConf->numLeaf, logalpha2, logbeta, logprobf, xi);
 
 	logprobprev = logprobf;
 
@@ -114,8 +114,8 @@ void BaumWelchTree(HMMT *phmm, int T, double *O, int *P, double **logalpha, doub
 	//FreeXi(xi, T, phmm->N);
 }
 
-void Mstep(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double *O, int dist) {
-	if (dist == 0) {
+void Mstep(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double *O) {
+	if (phmm->dist == 0) {
 		MstepBeta(phmm, T, baumConf, gamma, O, 200);
 	} else {
 		MstepBinom(phmm, T, baumConf, gamma, O);
@@ -128,7 +128,7 @@ void MstepBinom(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double 
 		phmm->pmshape1[i] = 0.0;
 		baumConf->betaDenom[i] = 0.0;
 	}
-	for (t = 1; t <= T; i++) {
+	for (t = 1; t <= T; t++) {
 		for (i = 1; i <= phmm->N; i++) {
 			phmm->pmshape1[i] += gamma[t][i] * (double) O[t];
 			baumConf->betaDenom[i] += gamma[t][i];
@@ -229,18 +229,18 @@ void ComputeGamma(HMMT *phmm, int T, double **logalpha, double **logbeta, int nu
 
 
 /* Xi dimensions: (T-numLeaf) X N^2 X N */
-void ComputeXi(HMMT* phmm, int T, double *O, int numLeaf, double **logalpha2, double **logbeta, double LL,
+void ComputeXi(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha2, double **logbeta, double LL,
 		double ***xi)
 {
 	int i, j;
 	int t;
+	double g = log(phmm->AF[1][1]);
 
 	/* Note: Xi is indexed from 1 to T-numLeaf-1 but represents values of N from numleaf to T-1 */
 	for (t = 1; t <= T - numLeaf; t++) {
 		for (i = 1; i <= phmm->N*phmm->N; i++)
 			for (j = 1; j <= phmm->N; j++) {
-				xi[t][i][j] = logalpha2[t+numLeaf][i] + logbeta[t+numLeaf][j]
-				               + log(phmm->AF[i][j]) + log(phmm->B[t+numLeaf]) - LL;
+			  xi[t][i][j] = logalpha2[t+numLeaf][i] + logbeta[t+numLeaf][j] + log(phmm->AF[i][j]) + log(phmm->B[t+numLeaf][j]) - LL;
 			}
 		for (i = 1; i <= phmm->N*phmm->N; i++) {
 			for (j = 1; j <= phmm->N; j++) {
