@@ -40,15 +40,15 @@ int main() {
 	   1 -- Binomial */
 	hmm.dist = 1;
 
-	hmm.pmshape1[1] = .02;
-	hmm.pmshape1[2] = .3;
-	hmm.pmshape1[3] = .7;
+	hmm.pmshape1[1] = .5;
+	hmm.pmshape1[2] = .5;
+	hmm.pmshape1[3] = .5;
 	/*hmm.pmshape2[1] = 3;
 	hmm.pmshape2[2] = 5;
 	hmm.pmshape2[3] = .7;*/
 
 
-	BaumWelchTree(&hmm, T, O, baumConf->forwardConf->P, logalpha, logalpha2, logbeta, gamma, &iter, baumConf, 500);
+	BaumWelchTree(&hmm, T, O, baumConf->forwardConf->P, logalpha, logalpha2, logbeta, gamma, &iter, baumConf, 600);
 	GenerateZ(gamma, T, Z);
 
 	/*for (t = 1; t <= T; t++) {
