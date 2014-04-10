@@ -33,11 +33,8 @@ void BaumWelchTree(HMMT *phmm, int T, double *O, int *P, double ***logalpha, dou
 	int	i, j, g;
 	int	t, l = 0; /* l is number of iterations */
 
-	double	logprobf;
-
 	double ***xi;
-	double **beta, **alpha2;
-	double delta, logprobprev;
+	double delta, logprobprev, logprobf;
 
 	double sum;
 
@@ -52,18 +49,14 @@ void BaumWelchTree(HMMT *phmm, int T, double *O, int *P, double ***logalpha, dou
 
 	/* Intial forward backward call */
 	for (g = 1; g <= numGenes; g++) {
-		ForwardTree(phmm, T, O[g], baumConf->numLeaf, logalpha[g], logalpha2[g], &logprobf[g], baumConf->forwardConf[g]);
+	        ForwardTree(phmm, T, O[g], baumConf[g]->numLeaf, logalpha[g], logalpha2[g], &logprobf[g], baumConf[g]->pmshape1, baumConf[g]->pmshape2, baumConf[g]->B, baumConf->forwardConf[g]);
 		*baumConf->plogprobinit = logprobf; /* log P(O |initial model) */
-		BackwardTree(phmm, T, O[g], baumConf->numLeaf, logbeta[g], baumConf->forwardConf->phi[g], baumConf->forwardConf->scale1[g], baumConf->backConf[g]);
+		BackwardTree(phmm, T, O[g], baumConf[g]->numLeaf, logbeta[g], baumConf[g]->forwardConf->phi, baumConf[g]->forwardConf->scale1, baumConf[g]->backConf);
 	}
-	ForwardTree(phmm, T, O, baumConf->numLeaf, logalpha, logalpha2, &logprobf, baumConf->forwardConf);
-	*baumConf->plogprobinit = logprobf; /* log P(O |initial model) */
-	BackwardTree(phmm, T, O, baumConf->numLeaf, logbeta, baumConf->forwardConf->phi, baumConf->forwardConf->scale1, baumConf->backConf);
 
-	/* Get exponentiated versions of beta and alpha2 */
-
-	ComputeGamma(phmm, T, logalpha, logbeta, baumConf->numLeaf, gamma, logprobf);
-	ComputeXi(phmm, T, O, baumConf->numLeaf, logalpha2, logbeta, logprobf, xi);
+	CombinedEStep();
+	//ComputeGamma(phmm, T, logalpha, logbeta, baumConf->numLeaf, gamma, logprobf);
+	//ComputeXi(phmm, T, O, baumConf->numLeaf, logalpha2, logbeta, logprobf, xi);
 
 	logprobprev = logprobf;
 
@@ -97,10 +90,15 @@ void BaumWelchTree(HMMT *phmm, int T, double *O, int *P, double ***logalpha, dou
 		/* Beta Maximization Step */
 		Mstep(phmm, T, baumConf, gamma, O);
 		MakeSymmetric(phmm->AF, temp, phmm->N*phmm->N, phmm->N);
-		ForwardTree(phmm, T, O, baumConf->numLeaf, logalpha, logalpha2, &logprobf, baumConf->forwardConf);
-		BackwardTree(phmm, T, O, baumConf->numLeaf, logbeta, baumConf->forwardConf->phi, baumConf->forwardConf->scale1, baumConf->backConf);
-		ComputeGamma(phmm, T, logalpha, logbeta, baumConf->numLeaf, gamma, logprobf);
-		ComputeXi(phmm, T, O, baumConf->numLeaf, logalpha2, logbeta, logprobf, xi);
+		for (g = 1; g <= numGenes; g++) {
+		  ForwardTree(phmm, T, O[g], baumConf[g]->numLeaf, logalpha[g], logalpha2[g], &logprobf[g], baumConf[g]->pmshape1, baumConf[g]->pmshape2, baumConf[g]->B, baumConf->forwardConf[g]);
+		BackwardTree(phmm, T, O[g], baumConf[g]->numLeaf, logbeta[g], baumConf[g]->forwardConf->phi, baumConf[g]->forwardConf->scale1, baumConf[g]->backConf);
+		}
+		logprobf = GetMaxLL(baumConf->LL);
+		
+		CombinedEStep();
+		//ComputeGamma(phmm, T, logalpha, logbeta, baumConf->numLeaf, gamma);
+		//ComputeXi(phmm, T, O, baumConf->numLeaf, logalpha2, logbeta, xi);
 
 		/* compute difference between log probability of
 		   two iterations */
@@ -113,7 +111,7 @@ void BaumWelchTree(HMMT *phmm, int T, double *O, int *P, double ***logalpha, dou
 	}
 	while (delta > DELTA); /* if log probability does not
                                   change much, exit */
-	printf("%f\n",logprobf);
+	printf("%f\n", );
 	free_dmatrix(temp, 1, phmm->N * phmm->N, 1, phmm->N);
 	*pniter = l;
 	*baumConf->plogprobfinal = logprobf; /* log P(O|estimated model) */
@@ -145,6 +143,17 @@ void MstepBinom(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double 
 		phmm->pmshape1[i] /= baumConf->betaDenom[i];
 	}
 
+}
+
+double MaxLL(double *LL, int G) {
+  int g;
+  double max = -1.0/0;
+  for (g = 1; g <= G; g++) {
+    if (LL[g] > max) {
+      max = LL[g]
+    }
+  }
+  return max;
 }
 
 /* Compute Maximization step for emission probabilities */
@@ -265,25 +274,7 @@ void CombinedEstep(HMMT *phmm, int T, int numGenes, double ***logalpha, double *
 
 
 /* Xi dimensions: (T-numLeaf) X N^2 X N */
-void ComputeXi(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha2, double **logbeta, double LL,
-		double ***xi)
-{
-	int i, j;
-	int t;
 
-	/* Note: Xi is indexed from 1 to T-numLeaf-1 but represents values of N from numleaf to T-1 */
-	for (t = 1; t <= T - numLeaf; t++) {
-		for (i = 1; i <= phmm->N*phmm->N; i++)
-			for (j = 1; j <= phmm->N; j++) {
-				xi[t][i][j] = logalpha2[t+numLeaf][i] + logbeta[t+numLeaf][j] + log(phmm->AF[i][j]) + log(phmm->B[t+numLeaf][j]) - LL;
-			}
-		for (i = 1; i <= phmm->N*phmm->N; i++) {
-			for (j = 1; j <= phmm->N; j++) {
-				xi[t][i][j] = exp(xi[t][i][j]);
-			}
-		}
-	}
-}
 
 double *** AllocXi(int T, int N)
 {

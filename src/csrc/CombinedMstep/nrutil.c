@@ -109,7 +109,7 @@ double *** d3array(int dim1, int dim2, dim3)
 	return xi;
 }
 
-int *** i3array(int dim1, int dim2, dim3)
+int *** i3array(int dim1, int dim2, int dim3)
 {
 	int t;
 	int ***xi;

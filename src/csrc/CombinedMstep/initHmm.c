@@ -5,11 +5,9 @@
 #include "specfunc.h"
 #include <math.h>
 
-HMMT InitHMM(double *O, int T, int N, int *P, int numLeaf, BaumConfig *baumConf) {
+HMMT InitHMM(double *O, int T, int N, int *P, int numLeaf, BaumConfig **baumConf) {
 	HMMT hmm;
-	AllocateConfigs(baumConf, T, N, numLeaf);
-	baumConf->forwardConf->P = P;
-	baumConf->backConf->P = P;
+	AllocateConfigs(baumConf, T, N, numLeaf, P);
 	AllocateHMM(&hmm, T, N, numLeaf);
 	InitTrans(hmm.AF, N);
 	InitDelta(hmm.pi, O, numLeaf);
@@ -18,15 +16,15 @@ HMMT InitHMM(double *O, int T, int N, int *P, int numLeaf, BaumConfig *baumConf)
 
 void AllocateHMM(HMMT *phmm, int T, int N, int numLeaf) {
 	phmm->AF = (double **) dmatrix(1,N*N,1,N);
-	phmm->B = (double **) dmatrix(1,T,1,N);
+	//phmm->B = (double **) dmatrix(1,T,1,N);
 	phmm->pi = (double **) dmatrix(1,numLeaf,1,N);
 	phmm->N = N;
-	phmm->pmshape1 = (double *) dvector(1, N);
-	phmm->pmshape2 = (double *) dvector(1, N);
+	//phmm->pmshape1 = (double *) dvector(1, N);
+	//phmm->pmshape2 = (double *) dvector(1, N);
 
 }
 
-void AllocateConfigs(BaumConfig **baumConf, int T, int G, int N, int numLeaf) {
+void AllocateConfigs(BaumConfig **baumConf, int T, int G, int N, int numLeaf, int *P) {
 	int g;
 	for (g = 1; g <= G; g++) {
 		baumConf[g] = (BaumConfig *) malloc(sizeof(BaumConfig));
@@ -35,6 +33,11 @@ void AllocateConfigs(BaumConfig **baumConf, int T, int G, int N, int numLeaf) {
 	for (g = 1; g <= G; g++) {
 		baumConf[g]->forwardConf = malloc(sizeof(ForwardConfig));
 		baumConf[g]->backConf = malloc(sizeof(BackwardConfig));
+		
+		baumConf[g]->pmshape1 = (double *) dvector(1, N);
+	        baumConf[g]->pmshape2 = (double *) dvector(1, N);
+		baumConf[g]->B = (double **) dmatrix(1,T,1,N);
+
 
 		baumConf[g]->forwardConf->phi = (double **) dmatrix(1,T,1,N);
 		baumConf[g]->forwardConf->phi2 = (double **) dmatrix(1,T,1,N*N);
@@ -58,6 +61,10 @@ void AllocateConfigs(BaumConfig **baumConf, int T, int G, int N, int numLeaf) {
 		baumConf[g]->betaY2 = (double *) dvector(1, N);
 		baumConf[g]->plogprobinit = malloc(sizeof(double));
 		baumConf[g]->plogprobfinal = malloc(sizeof(double));
+
+		baumConf->forwardConf->P = P;
+		baumConf->backConf->P = P;
+
 	}
 }
 

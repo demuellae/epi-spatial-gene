@@ -7,10 +7,10 @@
 #define LINELENGTH 1000
 #define DIGITS 20
 
-int *ReadInputMatI(FILE *file, int numRows, int numCols) {
+int *ReadInputMatD(FILE *file, int numRows, int numCols) {
 	char buffer[LINELENGTH];
 
-	int **matrix = (int **) imatrix(1, numRows, 1, numCols);
+	double **matrix = (double **) dmatrix(1, numRows, 1, numCols);
 	int i, j, k, l;
 	for (i=1; 1; i++) {
 		if (fgets(buffer, LINELENGTH-1, file) == NULL)
@@ -22,12 +22,12 @@ int *ReadInputMatI(FILE *file, int numRows, int numCols) {
 			while (buffer[k] != ',')
 				k++;
 			buffer[k] = '\0';
-			matrix[i][j] = atoi(&buffer[l]);
+			matrix[i][j] = atof(&buffer[l]);
 			l = k;
 			j++;
 
 		}
-		matrix[i][j+1] = atoi(&buffer[l]);
+		matrix[i][j+1] = atof(&buffer[l]);
 
 	}
 

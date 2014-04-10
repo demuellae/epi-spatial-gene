@@ -51,6 +51,8 @@ unsigned long *lvector(int nl, int nh);
 double *dvector(int nl, int nh);
 float **matrix(int nrl, int nrh, int ncl, int nch);
 double **dmatrix(int nrl, int nrh, int ncl, int nch);
+double ***d3array(int dim1, int dim2, int dim3);
+int ***i3array(int dim1, int dim2, int dim3);
 int **imatrix(int nrl, int nrh, int ncl, int nch);
 float **submatrix(float **a, int oldrl, int oldrh, int oldcl, int oldch,
 	int newrl, int newcl);
