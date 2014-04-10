@@ -28,30 +28,30 @@ static char rcsid[] = "$Id: baumwelch.c,v 1.6 1999/04/24 15:58:43 kanungo Exp ka
 
 
 void BaumWelchTree(HMMT *phmm, int T, double **O, int *P, double ***logalpha, double ***logalpha2, double ***logbeta,
-		double **gamma, int *pniter, BaumConfig **baumConf, int numGenes, int maxiter)
+		double **gamma, int *pniter, BaumConfig **baumConf, TreeConfig *treeConf, int numGenes, int maxiter)
 {
 	int	i, j, g;
 	int	t, l = 0; /* l is number of iterations */
 
-	double ***xi;
+	double ****xi = (double ****) malloc(sizeof(double ****));
 	double delta, logprobprev, logprobf;
 
-	double sum;
+	double sum, denom;
 
 
 	double **temp = dmatrix(1, phmm->N * phmm->N, 1, phmm->N);
 
 
-	FindSiblings(baumConf->backConf->bro, P, baumConf->numLeaf, T);
-	xi = AllocXi(T, phmm->N);
+	FindSiblings(treeConf->bro, P, treeConf->numLeaf, T);
 
 
 
 	/* Intial forward backward call */
 	for (g = 1; g <= numGenes; g++) {
-		ForwardTree(phmm, T, O[g], baumConf[g]->numLeaf, logalpha[g], logalpha2[g], baumConf[g]);
+		xi[g] = AllocXi(T, phmm->N);
+		ForwardTree(phmm, T, O[g], treeConf->numLeaf, logalpha[g], logalpha2[g], baumConf[g]);
 		*baumConf->plogprobinit = logprobf; /* log P(O |initial model) */
-		BackwardTree(phmm, T, O[g], baumConf[g]->numLeaf, logbeta[g], baumConf[g]->forwardConf->phi, baumConf[g]->forwardConf->scale1, baumConf[g]->backConf);
+		BackwardTree(phmm, T, O[g], treeConf->numLeaf, logbeta[g], baumConf[g]->forwardConf->phi, baumConf[g]->forwardConf->scale1, baumConf[g]->backConf);
 	}
 
 	CombinedEStep();
@@ -64,41 +64,52 @@ void BaumWelchTree(HMMT *phmm, int T, double **O, int *P, double ***logalpha, do
 
 		/* reestimate frequency of state i in time t=1 */
 		for (i = 1; i <= phmm->N; i++)
-			for (j = 1; j <= baumConf->numLeaf; j++)
+			for (j = 1; j <= treeConf->numLeaf; j++)
 				phmm->pi[j][i] = gamma[j][i];
 
 
 		/* R Code Translated EStep*/
 		for (i = 1; i <= phmm->N*phmm->N; i++) {
-			sum = 0.0;
+			denom = 0.0;
 			for (j = 1; j <= phmm->N; j++) {
-				baumConf->F[i][j] = 0.0;
-				for (t = 1; t <= T - baumConf->numLeaf; t++) {
-					baumConf->F[i][j] += xi[t][i][j];
+				//baumConf->F[i][j] = 0.0;
+				sum = 0.0;
+				for (g = 1; g <= numGenes; g++) {
+					for (t = 1; t <= T - treeConf->numLeaf; t++) {
+						sum += xi[t][i][j]; //sum = F[i, j, g]
+					}
+				denom += sum;
 				}
-				sum += baumConf->F[i][j];
+				if (denom == 0.0)
+					phmm->AF[i][j] = 0.0;
+				else
+					phmm->AF[i][j] = sum / denom;
+
 			}
 
-			for (j = 1; j <= phmm->N; j++) {
+			/*for (j = 1; j <= phmm->N; j++) {
 				if (sum == 0.0)
 					phmm->AF[i][j] = 0.0;
 				else
-					phmm->AF[i][j] = baumConf->F[i][j] / sum;
-			}
+					phmm->AF[i][j] = baumConf->F[i][j] / denom;
+			}*/
 		}
 
 		/* Beta Maximization Step */
 		Mstep(phmm, T, baumConf, gamma, O);
 		MakeSymmetric(phmm->AF, temp, phmm->N*phmm->N, phmm->N);
+		// MultiThreading here
 		for (g = 1; g <= numGenes; g++) {
-			ForwardTree(phmm, T, O[g], baumConf[g]->numLeaf, logalpha[g], logalpha2[g], baumConf[g]);
-			BackwardTree(phmm, T, O[g], baumConf[g]->numLeaf, logbeta[g], baumConf[g]->forwardConf->phi, baumConf[g]->forwardConf->scale1, baumConf[g]->backConf);
+			ForwardTree(phmm, T, O[g], treeConf->numLeaf, logalpha[g], logalpha2[g], baumConf[g]);
+			BackwardTree(phmm, T, O[g], treeConf->numLeaf, logbeta[g], baumConf[g]->forwardConf->phi,
+					baumConf[g]->forwardConf->scale1, baumConf[g]->backConf);
+			ComputeXi(phmm, T, O[g], treeConf->numLeaf, logalpha2[g], logbeta[g], xi[g]);
+
 		}
 		logprobf = MaxLL(baumConf, numGenes);
-
-		CombinedEStep();
+		ComputeGamma(phmm, T, numGenes, logalpha, logbeta, logalpha2, treeConf->numLeaf,
+				gamma, baumConf);
 		//ComputeGamma(phmm, T, logalpha, logbeta, baumConf->numLeaf, gamma);
-		//ComputeXi(phmm, T, O, baumConf->numLeaf, logalpha2, logbeta, xi);
 
 		/* compute difference between log probability of
 		   two iterations */
@@ -230,17 +241,12 @@ void MstepBeta(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double *
 }
 
 
-void CombinedEstep(HMMT *phmm, int T, int numGenes, double ***logalpha, double ***logbeta, double ***logalpha2, int numLeaf,
-		double **gamma, double ***xi, double LL) {
+void ComputeGamma(HMMT *phmm, int T, int numGenes, double ***logalpha, double ***logbeta, double ***logalpha2, int numLeaf,
+		double **gamma, BaumConfig **baumConf) {
 	int i,j,t,g;
 	for (i = 1; i <= phmm->N; i++) {
 		for (t = 1; t <= T; t++) {
 			gamma[t][i] = 0.0;
-			if (t <= T - numLeaf) {
-				for (j = 1; j <= phmm->N * phmm->N; j++) {
-					xi[t][j][i] = 0.0;
-				}
-			}
 		}
 
 	}
@@ -248,32 +254,46 @@ void CombinedEstep(HMMT *phmm, int T, int numGenes, double ***logalpha, double *
 	for (g = 1; g <= numGenes; g++) {
 		for (i = 1; i <= phmm->N; i++) {
 			for (t = 1; t <= T; t++) {
-				if (logalpha[g][t][i] + logbeta[g][t][i] - LL == -1.0/0.0) {
+				if (logalpha[g][t][i] + logbeta[g][t][i] - baumConf[g]->LL == -1.0/0.0) {
 					gamma[t][i] += 0.0;
 				} else {
-					gamma[t][i] += exp(logalpha[g][t][i] + logbeta[g][t][i] - LL);
+					gamma[t][i] += exp(logalpha[g][t][i] + logbeta[g][t][i] - baumConf[g]->LL);
 				}
 			}
-		}
-
-		for (t = 1; t <= T - numLeaf; t++) {
-			for (i = 1; i <= phmm->N*phmm->N; i++)
-				for (j = 1; j <= phmm->N; j++) {
-					xi[t][i][j] = logalpha2[t+numLeaf][i] + logbeta[t+numLeaf][j] + log(phmm->AF[i][j]) + log(phmm->B[t+numLeaf][j]) - LL;
-				}
-			for (i = 1; i <= phmm->N*phmm->N; i++) {
-				for (j = 1; j <= phmm->N; j++) {
-					xi[t][i][j] = exp(xi[t][i][j]);
-				}
-			}
-
 		}
 	}
+	for (i = 1; i <= phmm->N; i++) {
+		for (t = 1; t <= T; t++) {
+			gamma[t][i] /= numGenes;
+		}
+	}
+
 }
 
 
 /* Xi dimensions: (T-numLeaf) X N^2 X N */
 
+
+void ComputeXi(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha2, double **logbeta, double LL,
+		double ***xi)
+{
+	int i, j;
+	int t;
+	double g = log(phmm->AF[1][1]);
+
+	/* Note: Xi is indexed from 1 to T-numLeaf-1 but represents values of N from numleaf to T-1 */
+	for (t = 1; t <= T - numLeaf; t++) {
+		for (i = 1; i <= phmm->N*phmm->N; i++)
+			for (j = 1; j <= phmm->N; j++) {
+				xi[t][i][j] = logalpha2[t+numLeaf][i] + logbeta[t+numLeaf][j] + log(phmm->AF[i][j]) + log(phmm->B[t+numLeaf][j]) - LL;
+			}
+		for (i = 1; i <= phmm->N*phmm->N; i++) {
+			for (j = 1; j <= phmm->N; j++) {
+				xi[t][i][j] = exp(xi[t][i][j]);
+			}
+		}
+	}
+}
 
 double *** AllocXi(int T, int N)
 {

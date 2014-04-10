@@ -35,7 +35,12 @@ typedef struct {
 	//double *pmshape2; /* parameter of beta distribution */
 } HMMT;
 
+typedef struct {
+	int *bro;
+	int numLeaf;
+	int *P;
 
+} TreeConfig;
 
 typedef struct {
 	double **phi;
@@ -44,24 +49,20 @@ typedef struct {
 	double *phi2Temp;
 	double *scale1;
 	double *scale2;
-	int *P;
 } ForwardConfig;
 
 typedef struct {
 	double **theta;
 	double **thetaT;
 	double *thetaTRow;
-	int *bro;
 	double *scale;
 	double *scaleB;
-	int *P;
 } BackwardConfig;
 
 //Each gene has its own BaumConfig
 typedef struct {
 	ForwardConfig *forwardConf;
 	BackwardConfig *backConf;
-	int numLeaf;
 	double LL;
 	double *plogprobinit;
 	double *plogprobfinal;
@@ -77,7 +78,6 @@ typedef struct {
 
 void ReadHMM(FILE *fp, HMMT *phmm);
 void PrintHMM(FILE *fp, HMMT *phmm);
-void InitHMM(double *O, int T, int N, int *P, int numLeaf, BaumConfig **baumConf);
 void CopyHMM(HMMT *phmm1, HMMT *phmm2);
 
 double *ReadInputD(FILE *file, int *L);
@@ -85,7 +85,7 @@ double *ReadInputMatD(FILE *file, int numRows, int numcols);
 int *ReadInputI(FILE *file, int *L);
 void InitDelta(double **delta, double *O, int numLeaf);
 
-HMMT InitHMM(double *O, int T, int N, int *P, int numLeaf, BaumConfig *baumConf);
+HMMT InitHMM(double *O, int T, int N, int *P, int numLeaf, BaumConfig *baumConf, TreeConfig *treeConf);
 
 void PrintSequence(FILE *fp, int T, double *O);
 void GenSequenceArray(HMMT *phmm, int seed, int T, double *O, int *q);
@@ -97,14 +97,14 @@ void FindSiblings(int *B, int *P, int numLeaf, int T);
 void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, double **logalpha2, BaumConfig *baumConf);
 void BackwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logbeta, double **phi, double *scale, BackwardConfig *conf);
 void BaumWelchTree(HMMT *phmm, int T, double **O, int *P, double ***logalpha, double ***logalpha2, double ***logbeta,
-		double **gamma, int *pniter, BaumConfig **baumConf, int numGenes, int maxiter);
+		double **gamma, int *pniter, BaumConfig **baumConf, TreeConfig *treeConf, int numGenes, int maxiter);
 
 double *** AllocXi(int T, int N);
 void FreeXi(double *** xi, int T, int N);
 void AllocateHMM(HMMT *phmm, int T, int N, int M);
 void FreeHMM(HMMT *phmm, int T, int N, int M);
 void FreeConfigs(BaumConfig *baumConf, int T, int N, int numLeaf);
-void AllocateConfigs(BaumConfig *baumConf, int T, int N, int numLeaf, int *P);
+void AllocateConfigs(BaumConfig *baumConf, TreeConfig *treeConf, int T, int N, int numLeaf, int *P);
 void MakeSymmetric(double **three, double ** temp, int row, int col);
 void MstepBeta(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double *O, int maxiter);
 void Mstep(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double *O);
