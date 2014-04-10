@@ -18,6 +18,7 @@ int main() {
 
 
 	double **O = ReadInputMatD(obsFile, numGenes, T);
+	/*
 	int *P = ReadInputI(parFile, numGenes, T);
 	int **correctZ = ReadInputMatI(zFile, numGenes, T);
 
@@ -35,6 +36,7 @@ int main() {
 	int *Z = (int *) ivector(1,T);
 	/* 0 -- Beta
 	   1 -- Binomial */
+	/*
 	hmm.dist = 1;
 
 	hmm.pmshape1[1] = .5;
@@ -43,7 +45,7 @@ int main() {
 	/*hmm.pmshape2[1] = 3;
 	hmm.pmshape2[2] = 5;
 	hmm.pmshape2[3] = .7;*/
-
+/*
 
 	BaumWelchTree(&hmm, T, O, baumConf->forwardConf->P, logalpha, logalpha2, logbeta, gamma, &iter, baumConf, 600);
 	/*

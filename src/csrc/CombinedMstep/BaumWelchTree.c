@@ -49,7 +49,7 @@ void BaumWelchTree(HMMT *phmm, int T, double *O, int *P, double ***logalpha, dou
 
 	/* Intial forward backward call */
 	for (g = 1; g <= numGenes; g++) {
-	        ForwardTree(phmm, T, O[g], baumConf[g]->numLeaf, logalpha[g], logalpha2[g], &logprobf[g], baumConf[g]->pmshape1, baumConf[g]->pmshape2, baumConf[g]->B, baumConf->forwardConf[g]);
+		ForwardTree(phmm, T, O[g], baumConf[g]->numLeaf, logalpha[g], logalpha2[g], &logprobf[g], baumConf[g]->pmshape1, baumConf[g]->pmshape2, baumConf[g]->B, baumConf->forwardConf[g]);
 		*baumConf->plogprobinit = logprobf; /* log P(O |initial model) */
 		BackwardTree(phmm, T, O[g], baumConf[g]->numLeaf, logbeta[g], baumConf[g]->forwardConf->phi, baumConf[g]->forwardConf->scale1, baumConf[g]->backConf);
 	}
@@ -91,11 +91,11 @@ void BaumWelchTree(HMMT *phmm, int T, double *O, int *P, double ***logalpha, dou
 		Mstep(phmm, T, baumConf, gamma, O);
 		MakeSymmetric(phmm->AF, temp, phmm->N*phmm->N, phmm->N);
 		for (g = 1; g <= numGenes; g++) {
-		  ForwardTree(phmm, T, O[g], baumConf[g]->numLeaf, logalpha[g], logalpha2[g], &logprobf[g], baumConf[g]->pmshape1, baumConf[g]->pmshape2, baumConf[g]->B, baumConf->forwardConf[g]);
-		BackwardTree(phmm, T, O[g], baumConf[g]->numLeaf, logbeta[g], baumConf[g]->forwardConf->phi, baumConf[g]->forwardConf->scale1, baumConf[g]->backConf);
+			ForwardTree(phmm, T, O[g], baumConf[g]->numLeaf, logalpha[g], logalpha2[g], &logprobf[g], baumConf[g]->pmshape1, baumConf[g]->pmshape2, baumConf[g]->B, baumConf->forwardConf[g]);
+			BackwardTree(phmm, T, O[g], baumConf[g]->numLeaf, logbeta[g], baumConf[g]->forwardConf->phi, baumConf[g]->forwardConf->scale1, baumConf[g]->backConf);
 		}
-		logprobf = GetMaxLL(baumConf->LL);
-		
+		logprobf = MaxLL(baumConf, numGenes);
+
 		CombinedEStep();
 		//ComputeGamma(phmm, T, logalpha, logbeta, baumConf->numLeaf, gamma);
 		//ComputeXi(phmm, T, O, baumConf->numLeaf, logalpha2, logbeta, xi);
@@ -111,7 +111,7 @@ void BaumWelchTree(HMMT *phmm, int T, double *O, int *P, double ***logalpha, dou
 	}
 	while (delta > DELTA); /* if log probability does not
                                   change much, exit */
-	printf("%f\n", );
+	//printf("%f\n", );
 	free_dmatrix(temp, 1, phmm->N * phmm->N, 1, phmm->N);
 	*pniter = l;
 	*baumConf->plogprobfinal = logprobf; /* log P(O|estimated model) */
@@ -145,15 +145,15 @@ void MstepBinom(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double 
 
 }
 
-double MaxLL(double *LL, int G) {
-  int g;
-  double max = -1.0/0;
-  for (g = 1; g <= G; g++) {
-    if (LL[g] > max) {
-      max = LL[g]
-    }
-  }
-  return max;
+double MaxLL(BaumConfig baumConf, int G) {
+	int g;
+	double max = -1.0/0;
+	for (g = 1; g <= G; g++) {
+		if (baumConf[g]->LL > max) {
+			max = baumConf[g]->LL;
+		}
+	}
+	return max;
 }
 
 /* Compute Maximization step for emission probabilities */
@@ -245,7 +245,6 @@ void CombinedEstep(HMMT *phmm, int T, int numGenes, double ***logalpha, double *
 
 	}
 
-	//Multithreaded loop
 	for (g = 1; g <= numGenes; g++) {
 		for (i = 1; i <= phmm->N; i++) {
 			for (t = 1; t <= T; t++) {

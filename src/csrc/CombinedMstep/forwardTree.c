@@ -16,15 +16,15 @@
 //static char rcsid[] = "$Id: forward.c,v 1.2 1998/02/19 12:42:31 kanungo Exp kanungo $";
 
 
-void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, double **logalpha2, double *pmshape1, double *pmshape2, double **B, int g, BaumConfig *baumConf)
+void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, double **logalpha2, int g, BaumConfig *baumConf)
 {
 	int	i, j, k; 	/* state indices */
 	int	t;	/* time index */
 
 	double sum;	/* partial sum */
 	double sumPhi;
-	ForwardConfig *conf = baumConf->forwardConf
-	CalcObsProb(phmm, O, T);
+	ForwardConfig *conf = baumConf->forwardConf;
+	CalcObsProb(phmm, O, T, baumConf);
 
 	/* Initialize phi2 to -1.0 */
 	for (t = 1; t <= T; t++) {
@@ -46,7 +46,7 @@ void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, d
 		/* Initialization */
 		if (t <= numLeaf) {
 			for (i = 1; i <= phmm->N; i++) {
-				conf->phiT[i] = phmm->pi[t][i] * B[t][i];
+				conf->phiT[i] = phmm->pi[t][i] * baumConf->B[t][i];
 			}
 		} else {
 			/* Matrix multiplication of transition prob and row t of phi2
@@ -56,7 +56,7 @@ void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, d
 				for (i = 1; i <= phmm->N*phmm->N; i++)
 					sum += conf->phi2[t][i] * (phmm->AF[i][j]);
 
-				conf->phiT[j] = sum*(B[t][j]);
+				conf->phiT[j] = sum*(baumConf->B[t][j]);
 			}
 		}
 
@@ -109,14 +109,14 @@ void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, d
 			}
 		}
 	}
-	baumConf->LL[g] = conf->scale1[T];
+	baumConf->LL = conf->scale1[T];
 	//printf("Log-Likelihood %f\n", *LL);
 }
 
 /* 0 = Beta
  * 1 = Binomial
  */
-void CalcObsProb(HMMT *phmm, double *O, int T) {
+void CalcObsProb(HMMT *phmm, double *O, int T, BaumConfig *baumConf) {
 	int i, j;
 	/* iterate through all observations */
 	if (phmm->dist == 0) {
@@ -124,10 +124,11 @@ void CalcObsProb(HMMT *phmm, double *O, int T) {
 			/* Beta distribution pdf */
 			for (j = 1; j <= phmm->N; j++) {
 				if (O[i] <= 0 || O[i] >= 1)
-					B[i][j] = 0.0;
+					baumConf->B[i][j] = 0.0;
 				else
-					B[i][j] = (powl(O[i], pmshape1[j] - 1.0) * powl(1.0 - O[i],pmshape2[j] - 1.0))
-					/ Beta_Function(pmshape1[j],pmshape2[j]);
+					baumConf->B[i][j] = (powl(O[i], baumConf->pmshape1[j] - 1.0) *
+							powl(1.0 - O[i],baumConf->pmshape2[j] - 1.0))
+					/ Beta_Function(baumConf->pmshape1[j],baumConf->pmshape2[j]);
 			}
 		}
 	} else {
@@ -135,9 +136,9 @@ void CalcObsProb(HMMT *phmm, double *O, int T) {
 			/* Binom distribution pdf */
 			for (j = 1; j <= phmm->N; j++) {
 				if (O[i] == 1) {
-					B[i][j] = pmshape1[j];
+					baumConf->B[i][j] = baumConf->pmshape1[j];
 				} else {
-					B[i][j] = 1.0-pmshape1[j];
+					baumConf->B[i][j] = 1.0-baumConf->pmshape1[j];
 				}
 			}
 		}
