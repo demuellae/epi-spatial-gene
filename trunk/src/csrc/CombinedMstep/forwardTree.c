@@ -16,7 +16,7 @@
 //static char rcsid[] = "$Id: forward.c,v 1.2 1998/02/19 12:42:31 kanungo Exp kanungo $";
 
 
-void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, double **logalpha2, BaumConfig *baumConf)
+void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, double **logalpha2, BaumConfig *baumConf, TreeConfig treeConf)
 {
 	int	i, j, k; 	/* state indices */
 	int	t;	/* time index */
@@ -84,28 +84,28 @@ void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, d
 			 * also check if phi2 contains negative values in range 1:N
 			 */
 			/* Don't compute outer product if phi2[t] from 1:N has negative values */
-			if (conf->phi2[conf->P[t]][1] < -.1) {
+			if (conf->phi2[treeConf->P[t]][1] < -.1) {
 				for (i = 1; i <= phmm->N; i++) {
-					conf->phi2[conf->P[t]][i] = conf->phi[t][i];
+					conf->phi2[treeConf->P[t]][i] = conf->phi[t][i];
 				}
 			} else {
 				/* Store a temporary copy of phi2T[i] for the computation of the outerproduct */
 				for (i = 1; i <= phmm->N; i++) {
-					conf->phi2Temp[i] = conf->phi2[conf->P[t]][i];
+					conf->phi2Temp[i] = conf->phi2[treeConf->P[t]][i];
 				}
 				/* outer product of row t of phi2 and row t of phi */
 				/* store result as a row vector in phi2 instead of a matrix */
 				k = 1;
 				for (i = 1; i <= phmm->N; i++) {
 					for (j = 1; j <= phmm->N; j++) {
-						conf->phi2[conf->P[t]][k] = conf->phi2Temp[j] * conf->phi[t][i];
+						conf->phi2[treeConf->P[t]][k] = conf->phi2Temp[j] * conf->phi[t][i];
 						k++;
 					}
 				}
 			}
-			conf->scale2[conf->P[t]] = conf->scale1[t] + conf->scale2[conf->P[t]];
+			conf->scale2[treeConf->P[t]] = conf->scale1[t] + conf->scale2[treeConf->P[t]];
 			for (i = 1; i <= phmm->N*phmm->N; i++) {
-				logalpha2[conf->P[t]][i] = log(conf->phi2[conf->P[t]][i]) + conf->scale2[conf->P[t]];
+				logalpha2[treeConf->P[t]][i] = log(conf->phi2[treeConf->P[t]][i]) + conf->scale2[treeConf->P[t]];
 			}
 		}
 	}
