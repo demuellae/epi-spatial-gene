@@ -22,7 +22,7 @@
 typedef struct {
 	int N;		/* number of states;  Q={1,2,...,N} */
 	int M; 		/* number of observation symbols; V={1,2,...,M}*/
-        int dist;       /* probability distribution for Mstep (0 or 1) */
+	int dist;       /* probability distribution for Mstep (0 or 1) */
 	double	**AF;	/* A[1..N*N][1..N]. a[i][j] is the transition prob
 			   of going from state i at time t to state j at time t+1 */
 	double **AB;
@@ -31,8 +31,8 @@ typedef struct {
 			   of observing symbol k in state j */
 	double	**pi;	/* pi[1..N] pi[i] is the initial state distribution.
 	 */
-  //double *pmshape1;
-  //double *pmshape2; /* parameter of beta distribution */
+	//double *pmshape1;
+	//double *pmshape2; /* parameter of beta distribution */
 } HMMT;
 
 
@@ -62,15 +62,16 @@ typedef struct {
 	ForwardConfig *forwardConf;
 	BackwardConfig *backConf;
 	int numLeaf;
-        double LL;
+	double LL;
 	double *plogprobinit;
 	double *plogprobfinal;
 	double **F;
 	double *betaDenom;
 	double *betaY2;
 	double *betaY1;
-        double *pmshape1;
-        double *pmshape2;
+	double **B;
+	double *pmshape1;
+	double *pmshape2;
 } BaumConfig;
 
 
@@ -93,11 +94,11 @@ int GenNextState(HMMT *phmm, int q_t);
 int GenSymbol(HMMT *phmm, int q_t);
 
 void FindSiblings(int *B, int *P, int numLeaf, int T);
-void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, double **logalpha2, double *LL,
-		ForwardConfig *conf);
+void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, double **logalpha2,
+		 int G, BaumConfig *baumConf);
 void BackwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logbeta, double **phi, double *scale, BackwardConfig *conf);
 void BaumWelchTree(HMMT *phmm, int T, double *O, int *P, double **logalpha, double **logalpha2, double **logbeta,
-		   double **gamma, int *niter, BaumConfig *baumConf, int maxiter);
+		double **gamma, int *niter, BaumConfig *baumConf, int maxiter);
 
 double *** AllocXi(int T, int N);
 void FreeXi(double *** xi, int T, int N);
@@ -109,8 +110,12 @@ void MakeSymmetric(double **three, double ** temp, int row, int col);
 void MstepBeta(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double *O, int maxiter);
 void Mstep(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double *O);
 void MstepBinom(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double *O);
+void CombinedEstep(HMMT *phmm, int T, int numGenes, double ***logalpha, double ***logbeta, double ***logalpha2, int numLeaf,
+		double **gamma, double ***xi, double LL);
+double MaxLL(BaumConfig baumConf, int G);
 
-void CalcObsProb(HMMT *phmm, double *O, int T);
+
+void CalcObsProb(HMMT *phmm, double *O, int T, BaumConfig *baumConf);
 double ** ExpMatrix(double **mat, int row, int col);
 void ExpMatrices(double ** res1, double **res2, double **mat1, double **mat2, int row, int col);
 
