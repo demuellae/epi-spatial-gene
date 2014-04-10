@@ -16,7 +16,7 @@
 //static char rcsid[] = "$Id: forward.c,v 1.2 1998/02/19 12:42:31 kanungo Exp kanungo $";
 
 
-void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, double **logalpha2, int g, BaumConfig *baumConf)
+void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, double **logalpha2, BaumConfig *baumConf)
 {
 	int	i, j, k; 	/* state indices */
 	int	t;	/* time index */

@@ -27,8 +27,8 @@ static char rcsid[] = "$Id: baumwelch.c,v 1.6 1999/04/24 15:58:43 kanungo Exp ka
 
 
 
-void BaumWelchTree(HMMT *phmm, int T, double *O, int *P, double ***logalpha, double ***logalpha2, double ***logbeta,
-		double **gamma, int *pniter, BaumConfig *baumConf, int numGenes, int maxiter)
+void BaumWelchTree(HMMT *phmm, int T, double **O, int *P, double ***logalpha, double ***logalpha2, double ***logbeta,
+		double **gamma, int *pniter, BaumConfig **baumConf, int numGenes, int maxiter)
 {
 	int	i, j, g;
 	int	t, l = 0; /* l is number of iterations */
@@ -49,7 +49,7 @@ void BaumWelchTree(HMMT *phmm, int T, double *O, int *P, double ***logalpha, dou
 
 	/* Intial forward backward call */
 	for (g = 1; g <= numGenes; g++) {
-		ForwardTree(phmm, T, O[g], baumConf[g]->numLeaf, logalpha[g], logalpha2[g], &logprobf[g], baumConf[g]->pmshape1, baumConf[g]->pmshape2, baumConf[g]->B, baumConf->forwardConf[g]);
+		ForwardTree(phmm, T, O[g], baumConf[g]->numLeaf, logalpha[g], logalpha2[g], baumConf[g]);
 		*baumConf->plogprobinit = logprobf; /* log P(O |initial model) */
 		BackwardTree(phmm, T, O[g], baumConf[g]->numLeaf, logbeta[g], baumConf[g]->forwardConf->phi, baumConf[g]->forwardConf->scale1, baumConf[g]->backConf);
 	}
@@ -91,7 +91,7 @@ void BaumWelchTree(HMMT *phmm, int T, double *O, int *P, double ***logalpha, dou
 		Mstep(phmm, T, baumConf, gamma, O);
 		MakeSymmetric(phmm->AF, temp, phmm->N*phmm->N, phmm->N);
 		for (g = 1; g <= numGenes; g++) {
-			ForwardTree(phmm, T, O[g], baumConf[g]->numLeaf, logalpha[g], logalpha2[g], &logprobf[g], baumConf[g]->pmshape1, baumConf[g]->pmshape2, baumConf[g]->B, baumConf->forwardConf[g]);
+			ForwardTree(phmm, T, O[g], baumConf[g]->numLeaf, logalpha[g], logalpha2[g], baumConf[g]);
 			BackwardTree(phmm, T, O[g], baumConf[g]->numLeaf, logbeta[g], baumConf[g]->forwardConf->phi, baumConf[g]->forwardConf->scale1, baumConf[g]->backConf);
 		}
 		logprobf = MaxLL(baumConf, numGenes);
@@ -130,22 +130,22 @@ void Mstep(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double *O) {
 void MstepBinom(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double *O) {
 	int i, j, t;
 	for (i = 1; i <= phmm->N; i++) {
-		phmm->pmshape1[i] = 0.0;
+		baumConf->pmshape1[i] = 0.0;
 		baumConf->betaDenom[i] = 0.0;
 	}
 	for (t = 1; t <= T; t++) {
 		for (i = 1; i <= phmm->N; i++) {
-			phmm->pmshape1[i] += gamma[t][i] * (double) O[t];
+			baumConf->pmshape1[i] += gamma[t][i] * (double) O[t];
 			baumConf->betaDenom[i] += gamma[t][i];
 		}
 	}
 	for (i = 1; i <= phmm->N; i++) {
-		phmm->pmshape1[i] /= baumConf->betaDenom[i];
+		baumConf->pmshape1[i] /= baumConf->betaDenom[i];
 	}
 
 }
 
-double MaxLL(BaumConfig baumConf, int G) {
+double MaxLL(BaumConfig **baumConf, int G) {
 	int g;
 	double max = -1.0/0;
 	for (g = 1; g <= G; g++) {
@@ -188,14 +188,14 @@ void MstepBeta(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double *
 
 	for (j = 1; j <= phmm->N; j++) {
 		for (iter = 1; iter <= maxiter; iter++) {
-			trigammaSum = trigamma(phmm->pmshape1[j] + phmm->pmshape2[j], &i_fault);
-			shape1J = DiGamma_Function(phmm->pmshape1[j] + phmm->pmshape2[j]) - DiGamma_Function(phmm->pmshape1[j]) + baumConf->betaY1[j];
-			shape2J = DiGamma_Function(phmm->pmshape1[j] + phmm->pmshape2[j]) - DiGamma_Function(phmm->pmshape2[j]) + baumConf->betaY2[j];
+			trigammaSum = trigamma(baumConf->pmshape1[j] + baumConf->pmshape2[j], &i_fault);
+			shape1J = DiGamma_Function(baumConf->pmshape1[j] + baumConf->pmshape2[j]) - DiGamma_Function(baumConf->pmshape1[j]) + baumConf->betaY1[j];
+			shape2J = DiGamma_Function(baumConf->pmshape1[j] + baumConf->pmshape2[j]) - DiGamma_Function(baumConf->pmshape2[j]) + baumConf->betaY2[j];
 			/* general inverse of 2x2 matrix with pmshape1J and pmshape2J as diagonals */
-			a = -trigamma(phmm->pmshape1[j], &i_fault) + trigammaSum; // [ a  b ]
+			a = -trigamma(baumConf->pmshape1[j], &i_fault) + trigammaSum; // [ a  b ]
 			b = trigammaSum;										   // [ c  d ]
 			c = trigammaSum;
-			d = -trigamma(phmm->pmshape2[j], &i_fault) + trigammaSum;
+			d = -trigamma(baumConf->pmshape2[j], &i_fault) + trigammaSum;
 			determinant = (a * d)-(b * c);
 			if (!((determinant/(fabs(shape1J) + fabs(shape2J))/2) < 0.001)) {
 				aNew = d/determinant;
@@ -209,17 +209,17 @@ void MstepBeta(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double *
 				incr1 = 0;
 				incr2 = shape1J/b;
 			}
-			if (phmm->pmshape1[j] - incr1 <= 0) { /* new estimates of shape1 are negative */
-				phmm->pmshape1[j] = .01;
+			if (baumConf->pmshape1[j] - incr1 <= 0) { /* new estimates of shape1 are negative */
+				baumConf->pmshape1[j] = .01;
 			} else {
-				phmm->pmshape1[j] -= incr1;
+				baumConf->pmshape1[j] -= incr1;
 			}
-			if (phmm->pmshape2[j] - incr2 <= 0) {
-				phmm->pmshape2[j] = .01;
+			if (baumConf->pmshape2[j] - incr2 <= 0) {
+				baumConf->pmshape2[j] = .01;
 			} else {
-				phmm->pmshape2[j] -= incr2;
+				baumConf->pmshape2[j] -= incr2;
 			}
-			if (phmm->pmshape1[j] <= 0 || phmm->pmshape2[j] <= 0) {
+			if (baumConf->pmshape1[j] <= 0 || baumConf->pmshape2[j] <= 0) {
 				/* invalid parameters */
 			}
 			if ((incr1 < .00001 && incr1 > -.00001)  && (incr2 < .00001 && incr2 > -.00001))
