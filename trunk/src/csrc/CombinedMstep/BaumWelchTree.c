@@ -53,7 +53,7 @@ void BaumWelchTree(HMMT *phmm, int T, double **O, int *P, double ***logalpha, do
 		//*baumConf->plogprobinit = logprobf; /* log P(O |initial model) */
 		BackwardTree(phmm, T, O[g], treeConf->numLeaf, logbeta[g], baumConf[g]->forwardConf->phi,
 				baumConf[g]->forwardConf->scale1, baumConf[g]->backConf);
-		ComputeXi(phmm, T, O[g], treeConf->numLeaf, logalpha2[g], logbeta[g], xi[g]);
+		ComputeXi(phmm, T, O[g], treeConf->numLeaf, logalpha2[g], logbeta[g], baumConf[g], xi[g]);
 	}
 	ComputeGamma(phmm, T, numGenes, logalpha, logbeta, logalpha2, treeConf->numLeaf,
 			gamma, baumConf);
