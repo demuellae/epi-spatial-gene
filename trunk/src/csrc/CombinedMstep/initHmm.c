@@ -5,9 +5,9 @@
 #include "specfunc.h"
 #include <math.h>
 
-HMMT InitHMM(double *O, int T, int N, int *P, int numLeaf, BaumConfig **baumConf) {
+HMMT InitHMM(double *O, int T, int N, int *P, int numLeaf, BaumConfig **baumConf, TreeConfig *treeConf) {
 	HMMT hmm;
-	AllocateConfigs(baumConf, T, N, numLeaf, P);
+	AllocateConfigs(baumConf, treeConf, T, N, numLeaf, P);
 	AllocateHMM(&hmm, T, N, numLeaf);
 	InitTrans(hmm.AF, N);
 	InitDelta(hmm.pi, O, numLeaf);
@@ -19,23 +19,27 @@ void AllocateHMM(HMMT *phmm, int T, int N, int numLeaf) {
 	//phmm->B = (double **) dmatrix(1,T,1,N);
 	phmm->pi = (double **) dmatrix(1,numLeaf,1,N);
 	phmm->N = N;
+
 	//phmm->pmshape1 = (double *) dvector(1, N);
 	//phmm->pmshape2 = (double *) dvector(1, N);
 
 }
 
-void AllocateConfigs(BaumConfig **baumConf, int T, int G, int N, int numLeaf, int *P) {
+void AllocateConfigs(BaumConfig **baumConf, TreeConfig *treeConf, int T, int G, int N, int numLeaf, int *P) {
 	int g;
 	for (g = 1; g <= G; g++) {
 		baumConf[g] = (BaumConfig *) malloc(sizeof(BaumConfig));
 	}
+	treeConf->P = P;
+	treeConf->bro = (int *) ivector(1, T);
+	treeConf->numLeaf = numLeaf;
 
 	for (g = 1; g <= G; g++) {
 		baumConf[g]->forwardConf = malloc(sizeof(ForwardConfig));
 		baumConf[g]->backConf = malloc(sizeof(BackwardConfig));
-		
+
 		baumConf[g]->pmshape1 = (double *) dvector(1, N);
-	        baumConf[g]->pmshape2 = (double *) dvector(1, N);
+		baumConf[g]->pmshape2 = (double *) dvector(1, N);
 		baumConf[g]->B = (double **) dmatrix(1,T,1,N);
 
 
@@ -43,27 +47,20 @@ void AllocateConfigs(BaumConfig **baumConf, int T, int G, int N, int numLeaf, in
 		baumConf[g]->forwardConf->phi2 = (double **) dmatrix(1,T,1,N*N);
 		baumConf[g]->forwardConf->phiT = (double *) dvector(1,N);
 		baumConf[g]->forwardConf->phi2Temp = (double *) dvector(1,N*N);
-		baumConf[g]->forwardConf->P = (int *) ivector(1,T);
 		baumConf[g]->forwardConf->scale1 = (double *) dvector(1, T);
 		baumConf[g]->forwardConf->scale2 = (double *) dvector(1, T);
 
-		baumConf[g]->backConf->P = (int *) ivector(1,T);
-		baumConf[g]->backConf->bro = (int *) ivector(1,T);
 		baumConf[g]->backConf->scaleB = (double *) dvector(1, T);
 		baumConf[g]->backConf->thetaT = (double **) dmatrix(1,N,1,N);
 		baumConf[g]->backConf->theta = (double **) dmatrix(1,T,1,N*N);
 		baumConf[g]->backConf->thetaTRow = (double *) dvector(1, N);
 
 		baumConf[g]->F = (double **) dmatrix(1, N*N, 1, N);
-		baumConf[g]->numLeaf = numLeaf;
 		baumConf[g]->betaDenom = (double *) dvector(1, N);
 		baumConf[g]->betaY1 = (double *) dvector(1, N);
 		baumConf[g]->betaY2 = (double *) dvector(1, N);
 		baumConf[g]->plogprobinit = malloc(sizeof(double));
 		baumConf[g]->plogprobfinal = malloc(sizeof(double));
-
-		baumConf->forwardConf->P = P;
-		baumConf->backConf->P = P;
 
 	}
 }
@@ -74,12 +71,9 @@ void FreeConfigs(BaumConfig *baumConf, int T, int N, int numLeaf) {
 	free_dmatrix(baumConf->forwardConf->phi2,1,T,1,N*N);
 	free_dvector(baumConf->forwardConf->phiT,1,N);
 	free_dvector(baumConf->forwardConf->phi2Temp,1,N*N);
-	free_ivector(baumConf->forwardConf->P,1,T);
 	free_dvector(baumConf->forwardConf->scale1, 1, T);
 	free_dvector(baumConf->forwardConf->scale2, 1, T);
 
-	free_ivector(baumConf->backConf->P,1,T);
-	free_ivector(baumConf->backConf->bro,1,T);
 	free_dvector(baumConf->backConf->scaleB,1, T);
 	free_dmatrix(baumConf->backConf->thetaT,1,N,1,N);
 	free_dmatrix(baumConf->backConf->theta,1,T,1,N*N);

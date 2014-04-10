@@ -7,6 +7,7 @@
 
 int main() {
 	BaumConfig *baumConf = (BaumConfig **) malloc(sizeof(BaumConfig **));
+	TreeConfig *treeConf = (TreeConfig *) malloc(sizeof(TreeConfig *));
 
 	int i, j, t, iter;
 	int T = 19, numLeaf, numGenes = 100, N = 3;
