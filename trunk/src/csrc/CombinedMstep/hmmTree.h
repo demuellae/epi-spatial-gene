@@ -31,8 +31,8 @@ typedef struct {
 			   of observing symbol k in state j */
 	double	**pi;	/* pi[1..N] pi[i] is the initial state distribution.
 	 */
-	double *pmshape1;
-	double *pmshape2; /* parameter of beta distribution */
+  //double *pmshape1;
+  //double *pmshape2; /* parameter of beta distribution */
 } HMMT;
 
 
@@ -57,16 +57,20 @@ typedef struct {
 	int *P;
 } BackwardConfig;
 
+//Each gene has its own BaumConfig
 typedef struct {
 	ForwardConfig *forwardConf;
 	BackwardConfig *backConf;
 	int numLeaf;
+        double LL;
 	double *plogprobinit;
 	double *plogprobfinal;
 	double **F;
 	double *betaDenom;
 	double *betaY2;
 	double *betaY1;
+        double *pmshape1;
+        double *pmshape2;
 } BaumConfig;
 
 
@@ -76,8 +80,11 @@ void InitHMM(HMMT *phmm, int N, int M, int seed);
 void CopyHMM(HMMT *phmm1, HMMT *phmm2);
 
 double *ReadInputD(FILE *file, int *L);
+double *ReadInputMatD(FILE *file, int numRows, int numcols);
 int *ReadInputI(FILE *file, int *L);
 void InitDelta(double **delta, double *O, int numLeaf);
+
+HMMT InitHMM(double *O, int T, int N, int *P, int numLeaf, BaumConfig *baumConf);
 
 void PrintSequence(FILE *fp, int T, double *O);
 void GenSequenceArray(HMMT *phmm, int seed, int T, double *O, int *q);
@@ -94,14 +101,10 @@ void BaumWelchTree(HMMT *phmm, int T, double *O, int *P, double **logalpha, doub
 
 double *** AllocXi(int T, int N);
 void FreeXi(double *** xi, int T, int N);
-void ComputeGamma(HMMT *phmm, int T, double **alpha, double **beta, int numLeaf,
-		double **gamma, double LL);
-void ComputeXi(HMMT* phmm, int T, double *O, int numLeaf, double **logalpha2, double **logbeta, double LL,
-		double ***xi);
 void AllocateHMM(HMMT *phmm, int T, int N, int M);
 void FreeHMM(HMMT *phmm, int T, int N, int M);
 void FreeConfigs(BaumConfig *baumConf, int T, int N, int numLeaf);
-void AllocateConfigs(BaumConfig *baumConf, int T, int N, int numLeaf);
+void AllocateConfigs(BaumConfig *baumConf, int T, int N, int numLeaf, int *P);
 void MakeSymmetric(double **three, double ** temp, int row, int col);
 void MstepBeta(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double *O, int maxiter);
 void Mstep(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double *O);
