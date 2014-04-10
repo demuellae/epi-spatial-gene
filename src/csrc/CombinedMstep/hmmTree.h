@@ -77,7 +77,7 @@ typedef struct {
 
 void ReadHMM(FILE *fp, HMMT *phmm);
 void PrintHMM(FILE *fp, HMMT *phmm);
-void InitHMM(HMMT *phmm, int N, int M, int seed);
+void InitHMM(double *O, int T, int N, int *P, int numLeaf, BaumConfig **baumConf);
 void CopyHMM(HMMT *phmm1, HMMT *phmm2);
 
 double *ReadInputD(FILE *file, int *L);
@@ -94,11 +94,10 @@ int GenNextState(HMMT *phmm, int q_t);
 int GenSymbol(HMMT *phmm, int q_t);
 
 void FindSiblings(int *B, int *P, int numLeaf, int T);
-void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, double **logalpha2,
-		 int G, BaumConfig *baumConf);
+void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, double **logalpha2, BaumConfig *baumConf);
 void BackwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logbeta, double **phi, double *scale, BackwardConfig *conf);
-void BaumWelchTree(HMMT *phmm, int T, double *O, int *P, double **logalpha, double **logalpha2, double **logbeta,
-		double **gamma, int *niter, BaumConfig *baumConf, int maxiter);
+void BaumWelchTree(HMMT *phmm, int T, double **O, int *P, double ***logalpha, double ***logalpha2, double ***logbeta,
+		double **gamma, int *pniter, BaumConfig **baumConf, int numGenes, int maxiter);
 
 double *** AllocXi(int T, int N);
 void FreeXi(double *** xi, int T, int N);
@@ -112,7 +111,8 @@ void Mstep(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double *O);
 void MstepBinom(HMMT *phmm, int T, BaumConfig *baumConf, double **gamma, double *O);
 void CombinedEstep(HMMT *phmm, int T, int numGenes, double ***logalpha, double ***logbeta, double ***logalpha2, int numLeaf,
 		double **gamma, double ***xi, double LL);
-double MaxLL(BaumConfig baumConf, int G);
+double MaxLL(BaumConfig **baumConf, int G);
+
 
 
 void CalcObsProb(HMMT *phmm, double *O, int T, BaumConfig *baumConf);
