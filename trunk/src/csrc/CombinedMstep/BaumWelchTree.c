@@ -49,7 +49,7 @@ void BaumWelchTree(HMMT *phmm, int T, double **O, int *P, double ***logalpha, do
 	/* Intial forward backward call */
 	for (g = 1; g <= numGenes; g++) {
 		xi[g] = AllocXi(T, phmm->N);
-		ForwardTree(phmm, T, O[g], treeConf->numLeaf, logalpha[g], logalpha2[g], baumConf[g]);
+		ForwardTree(phmm, T, O[g], treeConf->numLeaf, logalpha[g], logalpha2[g], baumConf[g], treeConf);
 		//*baumConf->plogprobinit = logprobf; /* log P(O |initial model) */
 		BackwardTree(phmm, T, O[g], treeConf->numLeaf, logbeta[g], baumConf[g]->forwardConf->phi,
 				baumConf[g]->forwardConf->scale1, baumConf[g]->backConf);
@@ -91,14 +91,14 @@ void BaumWelchTree(HMMT *phmm, int T, double **O, int *P, double ***logalpha, do
 		}
 
 		/* Beta Maximization Step */
-		Mstep(phmm, T, baumConf, gamma, O);
 		MakeSymmetric(phmm->AF, temp, phmm->N*phmm->N, phmm->N);
 		// MultiThreading here
 		for (g = 1; g <= numGenes; g++) {
-			ForwardTree(phmm, T, O[g], treeConf->numLeaf, logalpha[g], logalpha2[g], baumConf[g]);
+			Mstep(phmm, T, baumConf[g], gamma, O[g]);
+			ForwardTree(phmm, T, O[g], treeConf->numLeaf, logalpha[g], logalpha2[g], baumConf[g], treeConf);
 			BackwardTree(phmm, T, O[g], treeConf->numLeaf, logbeta[g], baumConf[g]->forwardConf->phi,
 					baumConf[g]->forwardConf->scale1, baumConf[g]->backConf);
-			ComputeXi(phmm, T, O[g], treeConf->numLeaf, logalpha2[g], logbeta[g], xi[g]);
+			ComputeXi(phmm, T, O[g], treeConf->numLeaf, logalpha2[g], logbeta[g], baumConf[g], xi[g]);
 
 		}
 		logprobf = MaxLL(baumConf, numGenes);
@@ -120,7 +120,7 @@ void BaumWelchTree(HMMT *phmm, int T, double **O, int *P, double ***logalpha, do
 	//printf("%f\n", );
 	free_dmatrix(temp, 1, phmm->N * phmm->N, 1, phmm->N);
 	*pniter = l;
-	*baumConf->plogprobfinal = logprobf; /* log P(O|estimated model) */
+	//*baumConf->plogprobfinal = logprobf; /* log P(O|estimated model) */
 	//FreeXi(xi, T, phmm->N);
 }
 
@@ -269,7 +269,7 @@ void ComputeGamma(HMMT *phmm, int T, int numGenes, double ***logalpha, double **
 /* Xi dimensions: (T-numLeaf) X N^2 X N */
 
 
-void ComputeXi(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha2, double **logbeta, double LL,
+void ComputeXi(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha2, double **logbeta, BaumConfig *baumConf,
 		double ***xi)
 {
 	int i, j;
@@ -280,7 +280,7 @@ void ComputeXi(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha2, do
 	for (t = 1; t <= T - numLeaf; t++) {
 		for (i = 1; i <= phmm->N*phmm->N; i++)
 			for (j = 1; j <= phmm->N; j++) {
-				xi[t][i][j] = logalpha2[t+numLeaf][i] + logbeta[t+numLeaf][j] + log(phmm->AF[i][j]) + log(phmm->B[t+numLeaf][j]) - LL;
+				xi[t][i][j] = logalpha2[t+numLeaf][i] + logbeta[t+numLeaf][j] + log(phmm->AF[i][j]) + log(phmm->B[t+numLeaf][j]) - baumConf->LL;
 			}
 		for (i = 1; i <= phmm->N*phmm->N; i++) {
 			for (j = 1; j <= phmm->N; j++) {

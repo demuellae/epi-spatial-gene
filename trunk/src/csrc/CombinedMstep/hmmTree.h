@@ -103,7 +103,7 @@ double *** AllocXi(int T, int N);
 void FreeXi(double *** xi, int T, int N);
 void ComputeGamma(HMMT *phmm, int T, int numGenes, double ***logalpha, double ***logbeta, double ***logalpha2, int numLeaf,
 		double **gamma, BaumConfig **baumConf);
-void ComputeXi(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha2, double **logbeta, double LL,
+void ComputeXi(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha2, double **logbeta, BaumConfig *baumConf,
 		double ***xi);
 void AllocateHMM(HMMT *phmm, int T, int N, int M);
 void FreeHMM(HMMT *phmm, int T, int N, int M);
