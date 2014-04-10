@@ -94,13 +94,17 @@ int GenNextState(HMMT *phmm, int q_t);
 int GenSymbol(HMMT *phmm, int q_t);
 
 void FindSiblings(int *B, int *P, int numLeaf, int T);
-void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, double **logalpha2, BaumConfig *baumConf);
+void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, double **logalpha2, BaumConfig *baumConf, TreeConfig *treeConf);
 void BackwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logbeta, double **phi, double *scale, BackwardConfig *conf);
 void BaumWelchTree(HMMT *phmm, int T, double **O, int *P, double ***logalpha, double ***logalpha2, double ***logbeta,
 		double **gamma, int *pniter, BaumConfig **baumConf, TreeConfig *treeConf, int numGenes, int maxiter);
 
 double *** AllocXi(int T, int N);
 void FreeXi(double *** xi, int T, int N);
+void ComputeGamma(HMMT *phmm, int T, int numGenes, double ***logalpha, double ***logbeta, double ***logalpha2, int numLeaf,
+		double **gamma, BaumConfig **baumConf);
+void ComputeXi(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha2, double **logbeta, double LL,
+		double ***xi);
 void AllocateHMM(HMMT *phmm, int T, int N, int M);
 void FreeHMM(HMMT *phmm, int T, int N, int M);
 void FreeConfigs(BaumConfig *baumConf, int T, int N, int numLeaf);

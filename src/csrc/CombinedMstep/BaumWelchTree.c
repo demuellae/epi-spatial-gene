@@ -50,13 +50,14 @@ void BaumWelchTree(HMMT *phmm, int T, double **O, int *P, double ***logalpha, do
 	for (g = 1; g <= numGenes; g++) {
 		xi[g] = AllocXi(T, phmm->N);
 		ForwardTree(phmm, T, O[g], treeConf->numLeaf, logalpha[g], logalpha2[g], baumConf[g]);
-		*baumConf->plogprobinit = logprobf; /* log P(O |initial model) */
-		BackwardTree(phmm, T, O[g], treeConf->numLeaf, logbeta[g], baumConf[g]->forwardConf->phi, baumConf[g]->forwardConf->scale1, baumConf[g]->backConf);
+		//*baumConf->plogprobinit = logprobf; /* log P(O |initial model) */
+		BackwardTree(phmm, T, O[g], treeConf->numLeaf, logbeta[g], baumConf[g]->forwardConf->phi,
+				baumConf[g]->forwardConf->scale1, baumConf[g]->backConf);
+		ComputeXi(phmm, T, O[g], treeConf->numLeaf, logalpha2[g], logbeta[g], xi[g]);
 	}
-
-	CombinedEStep();
-	//ComputeGamma(phmm, T, logalpha, logbeta, baumConf->numLeaf, gamma, logprobf);
-	//ComputeXi(phmm, T, O, baumConf->numLeaf, logalpha2, logbeta, logprobf, xi);
+	ComputeGamma(phmm, T, numGenes, logalpha, logbeta, logalpha2, treeConf->numLeaf,
+			gamma, baumConf);
+	logprobf = MaxLL(baumConf, numGenes);
 
 	logprobprev = logprobf;
 
@@ -76,7 +77,7 @@ void BaumWelchTree(HMMT *phmm, int T, double **O, int *P, double ***logalpha, do
 				sum = 0.0;
 				for (g = 1; g <= numGenes; g++) {
 					for (t = 1; t <= T - treeConf->numLeaf; t++) {
-						sum += xi[t][i][j]; //sum = F[i, j, g]
+						sum += xi[g][t][i][j]; //sum = F[i, j, g]
 					}
 				denom += sum;
 				}
@@ -87,12 +88,6 @@ void BaumWelchTree(HMMT *phmm, int T, double **O, int *P, double ***logalpha, do
 
 			}
 
-			/*for (j = 1; j <= phmm->N; j++) {
-				if (sum == 0.0)
-					phmm->AF[i][j] = 0.0;
-				else
-					phmm->AF[i][j] = baumConf->F[i][j] / denom;
-			}*/
 		}
 
 		/* Beta Maximization Step */
