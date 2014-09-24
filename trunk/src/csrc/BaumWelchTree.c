@@ -1,18 +1,5 @@
 /*
- **      Author: Tapas Kanungo, kanungo@cfar.umd.edu
- **      Date:   15 December 1997
- **      File:   baumwelch.c
- **      Purpose: Baum-Welch algorithm for estimating the parameters
- **              of a HMM model, given an observation sequence.
- **      Organization: University of Maryland
- **
- **	Update:
- **	Author: Tapas Kanungo
- **	Date:	19 April 1999
- **	Purpose: Changed the convergence criterion from ratio
- **		to absolute value.
- **
- **      $Id: baumwelch.c,v 1.6 1999/04/24 15:58:43 kanungo Exp kanungo $
+
  */
 
 
@@ -23,7 +10,6 @@
 #include <math.h>
 #include "specfunc.h"
 
-static char rcsid[] = "$Id: baumwelch.c,v 1.6 1999/04/24 15:58:43 kanungo Exp kanungo $";
 
 
 
