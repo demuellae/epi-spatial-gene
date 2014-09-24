@@ -22,7 +22,10 @@
 typedef struct {
 	int N;		/* number of states;  Q={1,2,...,N} */
 	int M; 		/* number of observation symbols; V={1,2,...,M}*/
-        int dist;       /* probability distribution for Mstep (0 or 1) */
+        int dist;       /* probability distribution for Mstep 
+			   (0 == Beta)
+			   (1 == Binomial)
+			 */
 	double	**AF;	/* A[1..N*N][1..N]. a[i][j] is the transition prob
 			   of going from state i at time t to state j at time t+1 */
 	double **AB;
@@ -31,7 +34,7 @@ typedef struct {
 			   of observing symbol k in state j */
 	double	**pi;	/* pi[1..N] pi[i] is the initial state distribution.
 	 */
-	double *pmshape1;
+        double *pmshape1; /* parameter independent of HMM */
 	double *pmshape2; /* parameter of beta distribution */
 } HMMT;
 
@@ -78,12 +81,6 @@ void CopyHMM(HMMT *phmm1, HMMT *phmm2);
 double *ReadInputD(FILE *file, int *L);
 int *ReadInputI(FILE *file, int *L);
 void InitDelta(double **delta, double *O, int numLeaf);
-
-void PrintSequence(FILE *fp, int T, double *O);
-void GenSequenceArray(HMMT *phmm, int seed, int T, double *O, int *q);
-int GenInitalState(HMMT *phmm);
-int GenNextState(HMMT *phmm, int q_t);
-int GenSymbol(HMMT *phmm, int q_t);
 
 void FindSiblings(int *B, int *P, int numLeaf, int T);
 void ForwardTree(HMMT *phmm, int T, double *O, int numLeaf, double **logalpha, double **logalpha2, double *LL,
